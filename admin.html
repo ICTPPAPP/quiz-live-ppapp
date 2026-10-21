@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ms">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin • QUIZ LIVE PPAPP</title><link rel="stylesheet" href="style.css"></head>
+<body class="admin-body">
+<header class="topbar"><a class="brand" href="index.html"><span class="brand-mark">Q</span><span>QUIZ LIVE <b>PPAPP</b><small>ADMIN CONSOLE</small></span></a><a class="back-link" href="index.html">← Halaman utama</a></header>
+<main class="admin-wrap">
+  <div class="admin-heading"><div><div class="eyebrow"><span class="spark">✦</span> PUSAT KAWALAN</div><h1>Selamat datang, <span>Admin.</span></h1><p>Urus kandungan kuiz dan persediaan permainan anda.</p></div><div class="admin-status"><i></i> MODE PROTOTAIP</div></div>
+  <div class="notice"><b>ℹ️ Sambungan backend</b><p>Masukkan URL Web App Google Apps Script anda di bahagian tetapan. Paparan ini ialah prototaip awal; uji integrasi sebelum digunakan dengan peserta sebenar.</p></div>
+  <div class="admin-grid">
+    <section class="panel">
+      <div class="panel-head"><span class="panel-icon">✚</span><div><h2>Cipta kuiz baharu</h2><p>Mulakan dengan tajuk dan penerangan ringkas.</p></div></div>
+      <form id="quizForm">
+        <label for="quizTitle">TAJUK KUIZ</label><input id="quizTitle" required maxlength="100" placeholder="Contoh: ICT Quick Quiz PPAPP">
+        <label for="quizDescription">PENERANGAN</label><textarea id="quizDescription" rows="3" placeholder="Penerangan ringkas tentang kuiz ini"></textarea>
+        <button class="btn btn-primary full" type="submit">Cipta kuiz <span>→</span></button>
+      </form>
+      <div id="quizMsg" class="message" role="status"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><span class="panel-icon blue">⚙</span><div><h2>Tetapan API</h2><p>Simpan URL deployment Apps Script dalam pelayar ini.</p></div></div>
+      <label for="apiUrl">GOOGLE APPS SCRIPT WEB APP URL</label><input id="apiUrl" placeholder="https://script.google.com/macros/s/.../exec">
+      <button id="saveApi" class="btn btn-secondary full" type="button">Simpan URL</button>
+      <button id="testApi" class="btn btn-ghost full" type="button">Uji sambungan</button>
+      <div id="apiMsg" class="message" role="status">URL disimpan pada pelayar ini sahaja.</div>
+      <div class="small-note">Jangan masukkan kata laluan, token peribadi atau maklumat sulit dalam fail frontend.</div>
+    </section>
+  </div>
+  <section class="panel wide-panel">
+    <div class="panel-head"><span class="panel-icon gold">▤</span><div><h2>Senarai kuiz</h2><p>Kuiz yang anda cipta dalam sesi pelayar ini.</p></div></div>
+    <div id="quizList" class="quiz-list"><div class="empty-state">Belum ada kuiz dicipta melalui panel ini.</div></div>
+  </section>
+  <div class="next-steps"><b>Langkah selepas ini</b><span>Tambah soalan → Jana PIN sesi → Paparkan bilik menunggu → Main secara langsung → Leaderboard.</span></div>
+</main>
+<footer><span>QUIZ LIVE PPAPP</span><span>Panel pentadbir · prototaip</span><a href="index.html">Halaman peserta ↗</a></footer>
+<script src="app.js"></script>
+</body></html>
