@@ -23,6 +23,23 @@
       <input id="playerName" maxlength="30" placeholder="Masukkan nama anda" autocomplete="name">
       <button id="joinBtn" class="btn btn-primary full">Sertai kuiz <span>→</span></button>
       <p id="joinMsg" class="message" role="status">Masukkan PIN yang diberikan oleh hos.</p>
+<div id="waitingRoom" class="panel wide-panel" hidden>
+  <div class="panel-head">
+    <span class="panel-icon gold">🎮</span>
+    <div>
+      <h2>Anda sudah menyertai kuiz!</h2>
+      <p>Berjaya masuk ke bilik menunggu.</p>
+    </div>
+  </div>
+  <p>PIN permainan:</p>
+  <h1 id="waitingPin">------</h1>
+
+  <p id="waitingName">Peserta: —</p>
+  <p id="waitingStatus" class="message">
+    Menunggu hos memulakan kuiz...
+  </p>
+</div>
+
     </div>
     <div class="hero-foot"><span>✦</span> Dibina untuk pembelajaran yang lebih menyeronokkan</div>
   </section>
