@@ -275,7 +275,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!result.success) {
         throw new Error(result.message || "Sesi gagal dicipta.");
       }
-
+      
+localStorage.setItem("qlp_session_id", result.sessionId);
+localStorage.setItem("qlp_host_token", result.hostToken);
+      
       $("sessionPin").textContent = result.pin;
       $("sessionStatus").textContent = "Status: Menunggu peserta";
       $("sessionResult").hidden = false;
