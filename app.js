@@ -42,18 +42,35 @@ setMessage(
 );
 
 if (result.success) {
+  // Sembunyikan borang penyertaan
+  document.querySelector(".hero").hidden = true;
+
+  // Sembunyikan grafik hiasan halaman utama
+  const visual = document.querySelector(".visual");
+  if (visual) visual.hidden = true;
+
+  // Paparkan bilik menunggu
+  const waitingRoom = $("waitingRoom");
+  waitingRoom.hidden = false;
+
+  // Jadikan bilik menunggu sebagai paparan utama
+  waitingRoom.style.display = "block";
+  waitingRoom.style.width = "min(600px, 100%)";
+  waitingRoom.style.margin = "60px auto";
+  waitingRoom.style.padding = "32px";
+
   $("waitingPin").textContent = p;
   $("waitingName").textContent = "Peserta: " + name;
   $("waitingStatus").textContent =
-    "Berjaya menyertai kuiz! Menunggu hos memulakan permainan...";
+    "Menunggu hos memulakan kuiz...";
 
-  $("waitingRoom").hidden = false;
-  $("waitingRoom").scrollIntoView({
-    behavior: "smooth",
-    block: "center"
+  // Tukar tajuk tab pelayar
+  document.title = "Bilik Menunggu | QUIZ LIVE PPAPP";
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
   });
-
-  $("joinBtn").disabled = true;
 }
       } catch (e) {
         setMessage($("joinMsg"), "Sambungan API belum berjaya. Semak URL deployment dan tetapan akses Apps Script. ("+e.message+")", "error");
