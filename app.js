@@ -169,3 +169,70 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+  const select = $("sessionQuiz");
+  const button = $("createSessionBtn");
+
+  if (!select || !button) return;
+
+  function loadSessionQuizzes() {
+    const items = JSON.parse(
+      localStorage.getItem("qlp_quizzes") || "[]"
+    );
+
+    select.innerHTML = '<option value="">Pilih kuiz dahulu</option>';
+
+    items.forEach((q) => {
+      if (!q.quizId) return;
+
+      const option = document.createElement("option");
+      option.value = q.quizId;
+      option.textContent = q.title;
+      select.appendChild(option);
+    });
+  }
+
+  loadSessionQuizzes();
+
+  button.addEventListener("click", async () => {
+    const quizId = select.value;
+
+    if (!quizId) {
+      setMessage($("sessionMsg"), "Sila pilih kuiz dahulu.", "error");
+      return;
+    }
+
+    button.disabled = true;
+    setMessage($("sessionMsg"), "Sedang menjana PIN sesi…");
+
+    try {
+      const result = await apiPost({
+        action: "createSession",
+        quizId: quizId
+      });
+
+      if (!result.success) {
+        throw new Error(result.message || "Sesi gagal dicipta.");
+      }
+
+      $("sessionPin").textContent = result.pin;
+      $("sessionStatus").textContent = "Status: Menunggu peserta";
+      $("sessionResult").hidden = false;
+
+      setMessage(
+        $("sessionMsg"),
+        "Sesi berjaya dicipta!",
+        "success"
+      );
+    } catch (error) {
+      setMessage(
+        $("sessionMsg"),
+        "Gagal menjana PIN: " + error.message,
+        "error"
+      );
+    } finally {
+      button.disabled = false;
+    }
+  });
+});
