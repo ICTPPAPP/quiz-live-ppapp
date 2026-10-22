@@ -1,8 +1,14 @@
 /* QUIZ LIVE PPAPP - frontend starter
  * Browser-only demo list; API actions require compatible Apps Script deployment.
  */
+
 const $ = (id) => document.getElementById(id);
-const getApiUrl = () => (localStorage.getItem("qlp_api_url") || "").trim();
+
+const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbxlHmVrFF84wSGQF3z0F_qEvVWZpirbgo0D06FclCDkhZTWXv_YgFTAHIAx381FERKT/exec";
+
+const getApiUrl = () =>
+  (localStorage.getItem("qlp_api_url") || DEFAULT_API_URL).trim();
+
 const setMessage = (el, text, kind="") => { if(!el) return; el.textContent=text; el.className="message"+(kind ? " "+kind : ""); };
 
 async function apiPost(payload) {
