@@ -29,6 +29,59 @@
     <div class="panel-head"><span class="panel-icon gold">▤</span><div><h2>Senarai kuiz</h2><p>Kuiz yang anda cipta dalam sesi pelayar ini.</p></div></div>
     <div id="quizList" class="quiz-list"><div class="empty-state">Belum ada kuiz dicipta melalui panel ini.</div></div>
   </section>
+  
+<section class="panel">
+  <div class="panel-head">
+    <span class="panel-icon gold">✎</span>
+    <div>
+      <h2>Tambah soalan</h2>
+      <p>Pilih kuiz dan masukkan soalan berserta jawapan.</p>
+    </div>
+  </div>
+
+  <form id="questionForm">
+    <label for="questionQuiz">PILIH KUIZ</label>
+    <select id="questionQuiz" required>
+      <option value="">Pilih kuiz dahulu</option>
+    </select>
+
+    <label for="questionText">SOALAN</label>
+    <textarea id="questionText" rows="3" required
+      placeholder="Contoh: Apakah fungsi utama RAM?"></textarea>
+
+    <label for="optionA">PILIHAN A</label>
+    <input id="optionA" required placeholder="Jawapan A">
+
+    <label for="optionB">PILIHAN B</label>
+    <input id="optionB" required placeholder="Jawapan B">
+
+    <label for="optionC">PILIHAN C</label>
+    <input id="optionC" required placeholder="Jawapan C">
+
+    <label for="optionD">PILIHAN D</label>
+    <input id="optionD" required placeholder="Jawapan D">
+
+    <label for="correctOption">JAWAPAN BETUL</label>
+    <select id="correctOption" required>
+      <option value="">Pilih jawapan betul</option>
+      <option value="A">A</option>
+      <option value="B">B</option>
+      <option value="C">C</option>
+      <option value="D">D</option>
+    </select>
+
+    <label for="questionTime">MASA MENJAWAB (SAAT)</label>
+    <input id="questionTime" type="number" min="5" max="120"
+      value="20" required>
+
+    <button class="btn btn-primary full" type="submit">
+      Simpan soalan →
+    </button>
+  </form>
+
+  <div id="questionMsg" class="message" role="status"></div>
+</section>
+
   <div class="next-steps"><b>Langkah selepas ini</b><span>Tambah soalan → Jana PIN sesi → Paparkan bilik menunggu → Main secara langsung → Leaderboard.</span></div>
 </main>
 <footer><span>QUIZ LIVE PPAPP</span><span>Panel pentadbir · prototaip</span><a href="index.html">Halaman peserta ↗</a></footer>
