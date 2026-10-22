@@ -353,3 +353,127 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+/* LIVE PARTICIPANT: semak status dan paparkan soalan */
+document.addEventListener("DOMContentLoaded", () => {
+  if (!$("joinBtn") || !$("waitingRoom")) return;
+
+  let polling = false;
+  let lastQuestionId = "";
+
+  async function checkLiveSession() {
+    if (polling) return;
+    polling = true;
+
+    try {
+      const sessionId = localStorage.getItem("qlp_player_session_id");
+      if (!sessionId) return;
+
+      const result = await apiPost({
+        action: "getSessionState",
+        sessionId: sessionId
+      });
+
+      if (!result.success) {
+        throw new Error(result.message || "Gagal menyemak sesi.");
+      }
+
+      const waitingRoom = $("waitingRoom");
+
+      if (result.status === "waiting") {
+        if ($("waitingStatus")) {
+          $("waitingStatus").textContent =
+            "Menunggu hos memulakan kuiz...";
+        }
+        return;
+      }
+
+      if (result.status === "completed") {
+        let panel = $("liveQuestionPanel");
+
+        if (!panel) {
+          panel = document.createElement("section");
+          panel.id = "liveQuestionPanel";
+          panel.style.cssText =
+            "max-width:600px;margin:30px auto;padding:24px;" +
+            "border-radius:20px;background:#fff;color:#222;";
+          document.body.appendChild(panel);
+        }
+
+        if (waitingRoom) waitingRoom.hidden = true;
+        panel.hidden = false;
+        panel.innerHTML =
+          "<h2>Kuiz telah tamat</h2><p>Terima kasih kerana menyertai!</p>";
+        document.title = "Kuiz Tamat | QUIZ LIVE PPAPP";
+        return;
+      }
+
+      if (result.status !== "active" || !result.question) return;
+
+      const q = result.question;
+      let panel = $("liveQuestionPanel");
+
+      if (!panel) {
+        panel = document.createElement("section");
+        panel.id = "liveQuestionPanel";
+        panel.style.cssText =
+          "max-width:600px;width:calc(100% - 32px);" +
+          "box-sizing:border-box;margin:24px auto;padding:24px;" +
+          "border-radius:20px;background:#fff;color:#222;" +
+          "box-shadow:0 8px 30px rgba(0,0,0,.12);";
+        document.body.appendChild(panel);
+      }
+
+      if (waitingRoom) waitingRoom.hidden = true;
+      panel.hidden = false;
+
+      if (lastQuestionId !== q.questionId) {
+        lastQuestionId = q.questionId;
+
+        const escape = (value) => {
+          const div = document.createElement("div");
+          div.textContent = String(value ?? "");
+          return div.innerHTML;
+        };
+
+        panel.innerHTML = `
+          <p style="color:#6b7280;font-weight:700">
+            SOALAN ${escape(q.order)}
+          </p>
+          <h2 style="font-size:24px;line-height:1.4">
+            ${escape(q.questionText)}
+          </h2>
+          <div style="display:grid;gap:12px;margin-top:24px">
+            <div style="padding:16px;border-radius:12px;background:#f1f5f9">
+              <b>A.</b> ${escape(q.optionA)}
+            </div>
+            <div style="padding:16px;border-radius:12px;background:#f1f5f9">
+              <b>B.</b> ${escape(q.optionB)}
+            </div>
+            <div style="padding:16px;border-radius:12px;background:#f1f5f9">
+              <b>C.</b> ${escape(q.optionC)}
+            </div>
+            <div style="padding:16px;border-radius:12px;background:#f1f5f9">
+              <b>D.</b> ${escape(q.optionD)}
+            </div>
+          </div>
+          <p style="margin-top:20px;color:#6b7280">
+            Masa menjawab: ${escape(q.timeLimitSeconds)} saat
+          </p>
+          <p style="color:#6b7280">
+            Paparan soalan aktif. Fungsi menghantar jawapan akan disambungkan
+            dalam langkah seterusnya.
+          </p>
+        `;
+
+        document.title = "Kuiz Langsung | QUIZ LIVE PPAPP";
+      }
+    } catch (error) {
+      console.error("Semakan sesi gagal:", error);
+    } finally {
+      polling = false;
+    }
+  }
+
+  window.setInterval(checkLiveSession, 2500);
+});
