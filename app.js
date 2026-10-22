@@ -299,3 +299,52 @@ localStorage.setItem("qlp_host_token", result.hostToken);
     }
   });
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+  const button = $("startQuizBtn");
+
+  if (!button) return;
+
+  button.addEventListener("click", async () => {
+    const sessionId = localStorage.getItem("qlp_session_id");
+    const hostToken = localStorage.getItem("qlp_host_token");
+
+    if (!sessionId || !hostToken) {
+      setMessage(
+        $("startQuizMsg"),
+        "Sila jana PIN sesi terlebih dahulu.",
+        "error"
+      );
+      return;
+    }
+
+    button.disabled = true;
+    setMessage($("startQuizMsg"), "Sedang memulakan kuiz…");
+
+    try {
+      const result = await apiPost({
+        action: "startSession",
+        sessionId: sessionId,
+        hostToken: hostToken
+      });
+
+      if (!result.success) {
+        throw new Error(result.message || "Kuiz gagal dimulakan.");
+      }
+
+      $("sessionStatus").textContent = "Status: Kuiz sedang berlangsung";
+      setMessage(
+        $("startQuizMsg"),
+        "Kuiz berjaya dimulakan!",
+        "success"
+      );
+    } catch (error) {
+      setMessage(
+        $("startQuizMsg"),
+        "Gagal memulakan kuiz: " + error.message,
+        "error"
+      );
+      button.disabled = false;
+    }
+  });
+});
