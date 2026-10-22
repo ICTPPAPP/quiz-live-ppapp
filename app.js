@@ -42,22 +42,25 @@ setMessage(
 );
 
 if (result.success) {
-  // Sembunyikan borang penyertaan
-  document.querySelector(".hero").hidden = true;
+// Ambil bilik menunggu dan keluarkan daripada halaman utama
+const waitingRoom = $("waitingRoom");
+const heroWrap = document.querySelector(".hero-wrap");
 
-  // Sembunyikan grafik hiasan halaman utama
-  const visual = document.querySelector(".visual");
-  if (visual) visual.hidden = true;
+if (waitingRoom && heroWrap) {
+  heroWrap.insertAdjacentElement("afterend", waitingRoom);
+}
 
-  // Paparkan bilik menunggu
-  const waitingRoom = $("waitingRoom");
-  waitingRoom.hidden = false;
+// Sembunyikan halaman utama sahaja
+if (heroWrap) {
+  heroWrap.hidden = true;
+}
 
-  // Jadikan bilik menunggu sebagai paparan utama
-  waitingRoom.style.display = "block";
-  waitingRoom.style.width = "min(600px, 100%)";
-  waitingRoom.style.margin = "60px auto";
-  waitingRoom.style.padding = "32px";
+// Paparkan bilik menunggu
+waitingRoom.hidden = false;
+waitingRoom.style.display = "block";
+waitingRoom.style.width = "min(600px, 100%)";
+waitingRoom.style.margin = "60px auto";
+waitingRoom.style.padding = "32px";
 
   $("waitingPin").textContent = p;
   $("waitingName").textContent = "Peserta: " + name;
