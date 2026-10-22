@@ -50,10 +50,19 @@ if (waitingRoom && heroWrap) {
   heroWrap.insertAdjacentElement("afterend", waitingRoom);
 }
 
-// Sembunyikan halaman utama sahaja
+// Pastikan halaman utama tidak mengambil ruang
 if (heroWrap) {
-  heroWrap.hidden = true;
+  heroWrap.style.display = "none";
 }
+
+// Jadikan bilik menunggu paparan utama
+document.body.classList.add("waiting-page");
+document.body.style.minHeight = "100vh";
+
+waitingRoom.style.display = "block";
+waitingRoom.style.width = "min(600px, calc(100% - 32px))";
+waitingRoom.style.margin = "40px auto";
+waitingRoom.style.boxSizing = "border-box";
 
 // Paparkan bilik menunggu
 waitingRoom.hidden = false;
