@@ -28,8 +28,33 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!name) return setMessage($("joinMsg"), "Masukkan nama paparan dahulu.", "error");
       setMessage($("joinMsg"), "Sedang menyemak PIN…");
       try {
-        const result = await apiPost({action:"join", pin:p, displayName:name});
-        setMessage($("joinMsg"), result.message || (result.success ? "Berjaya!" : "Tidak berjaya."), result.success ? "success":"error");
+
+const result = await apiPost({
+  action: "join",
+  pin: p,
+  displayName: name
+});
+
+setMessage(
+  $("joinMsg"),
+  result.message || (result.success ? "Berjaya!" : "Tidak berjaya."),
+  result.success ? "success" : "error"
+);
+
+if (result.success) {
+  $("waitingPin").textContent = p;
+  $("waitingName").textContent = "Peserta: " + name;
+  $("waitingStatus").textContent =
+    "Berjaya menyertai kuiz! Menunggu hos memulakan permainan...";
+
+  $("waitingRoom").hidden = false;
+  $("waitingRoom").scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
+
+  $("joinBtn").disabled = true;
+}
       } catch (e) {
         setMessage($("joinMsg"), "Sambungan API belum berjaya. Semak URL deployment dan tetapan akses Apps Script. ("+e.message+")", "error");
       }
