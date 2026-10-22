@@ -48,6 +48,11 @@ setMessage(
 );
 
 if (result.success) {
+localStorage.setItem("qlp_player_session_id", result.sessionId);
+localStorage.setItem("qlp_player_id", result.playerId);
+localStorage.setItem("qlp_player_name", result.displayName || name);
+localStorage.setItem("qlp_player_pin", p);
+  
 // Ambil bilik menunggu dan keluarkan daripada halaman utama
 const waitingRoom = $("waitingRoom");
 const heroWrap = document.querySelector(".hero-wrap");
