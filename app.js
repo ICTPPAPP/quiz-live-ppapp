@@ -89,3 +89,83 @@ function renderQuizList() {
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 }
+
+function loadQuestionQuizOptions() {
+  const select = $("questionQuiz");
+  if (!select) return;
+
+  const items = JSON.parse(localStorage.getItem("qlp_quizzes") || "[]");
+  select.innerHTML = '<option value="">Pilih kuiz dahulu</option>';
+
+  items.forEach((q) => {
+    if (!q.quizId) return;
+
+    const option = document.createElement("option");
+    option.value = q.quizId;
+    option.textContent = q.title;
+    select.appendChild(option);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const form = $("questionForm");
+  if (!form) return;
+
+  loadQuestionQuizOptions();
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const payload = {
+      action: "addQuestion",
+      quizId: $("questionQuiz").value,
+      questionText: $("questionText").value.trim(),
+      optionA: $("optionA").value.trim(),
+      optionB: $("optionB").value.trim(),
+      optionC: $("optionC").value.trim(),
+      optionD: $("optionD").value.trim(),
+      correctOption: $("correctOption").value,
+      timeLimitSeconds: Number($("questionTime").value),
+      points: 1000
+    };
+
+    if (!payload.quizId) {
+      return setMessage(
+        $("questionMsg"),
+        "Pilih kuiz dahulu. Jika senarai kosong, cipta kuiz melalui panel ini.",
+        "error"
+      );
+    }
+
+    setMessage($("questionMsg"), "Sedang menyimpan soalan…");
+
+    try {
+      const result = await apiPost(payload);
+
+      if (!result.success) {
+        throw new Error(result.message || "Soalan gagal disimpan.");
+      }
+
+      setMessage(
+        $("questionMsg"),
+        "Soalan berjaya disimpan ke Google Sheets!",
+        "success"
+      );
+
+      $("questionText").value = "";
+      $("optionA").value = "";
+      $("optionB").value = "";
+      $("optionC").value = "";
+      $("optionD").value = "";
+      $("correctOption").value = "";
+      $("questionTime").value = "20";
+
+    } catch (err) {
+      setMessage(
+        $("questionMsg"),
+        "Gagal menyimpan soalan: " + err.message,
+        "error"
+      );
+    }
+  });
+});
