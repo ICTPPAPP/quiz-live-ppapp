@@ -25,6 +25,34 @@
       <div class="small-note">Jangan masukkan kata laluan, token peribadi atau maklumat sulit dalam fail frontend.</div>
     </section>
   </div>
+  
+<section class="panel wide-panel">
+  <div class="panel-head">
+    <span class="panel-icon gold">🎮</span>
+    <div>
+      <h2>Jana PIN sesi</h2>
+      <p>Pilih kuiz yang telah mempunyai soalan untuk memulakan sesi.</p>
+    </div>
+  </div>
+
+  <label for="sessionQuiz">PILIH KUIZ</label>
+  <select id="sessionQuiz" required>
+    <option value="">Pilih kuiz dahulu</option>
+  </select>
+
+  <button id="createSessionBtn" class="btn btn-primary full" type="button">
+    Jana PIN sesi →
+  </button>
+
+  <div id="sessionMsg" class="message" role="status"></div>
+
+  <div id="sessionResult" hidden>
+    <p>PIN untuk peserta:</p>
+    <h2 id="sessionPin"></h2>
+    <p id="sessionStatus">Status: Menunggu peserta</p>
+  </div>
+</section>
+  
   <section class="panel wide-panel">
     <div class="panel-head"><span class="panel-icon gold">▤</span><div><h2>Senarai kuiz</h2><p>Kuiz yang anda cipta dalam sesi pelayar ini.</p></div></div>
     <div id="quizList" class="quiz-list"><div class="empty-state">Belum ada kuiz dicipta melalui panel ini.</div></div>
