@@ -620,6 +620,7 @@ if (!$("startQuizBtn") && !$("hostLiveQuestionPanel")) return;
     const buttons = [...panel.querySelectorAll("[data-option]")];
     buttons.forEach((button) => {
       button.addEventListener("click", async () => {
+        alert("Butang jawapan ditekan!");
         if (button.dataset.submitting === "true" || button.dataset.answered === "true") return;
         buttons.forEach((item) => {
           item.disabled = true;
