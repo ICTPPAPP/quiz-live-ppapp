@@ -511,7 +511,7 @@ async function refreshQuizzesFromServer() {
   }
 
   function initLiveHost() {
-    if (!$("startQuizBtn")) return;
+if (!$("startQuizBtn") && !$("hostLiveQuestionPanel")) return;
     let polling = false;
     let lastQuestionId = "";
     let lastStatus = "";
