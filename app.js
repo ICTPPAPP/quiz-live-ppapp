@@ -468,6 +468,7 @@ async function refreshQuizzesFromServer() {
           storageSet("qlp_host_started_session_id", sessionId);
           if ($("sessionStatus")) $("sessionStatus").textContent = "Status: Kuiz sedang berlangsung";
           setMessage("startQuizMsg", "Kuiz berjaya dimulakan!", "success");
+          window.location.href = "host.html";
         } catch (error) {
           setMessage("startQuizMsg", `Gagal memulakan kuiz: ${getErrorMessage(error)}`, "error");
         } finally {
