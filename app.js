@@ -380,11 +380,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const waitingRoom = $("waitingRoom");
 
+
       if (result.status === "waiting") {
+        const panel = $("liveQuestionPanel");
+
+        if (panel) {
+          panel.hidden = true;
+        }
+
+        if (waitingRoom) {
+          waitingRoom.hidden = false;
+        }
+
         if ($("waitingStatus")) {
           $("waitingStatus").textContent =
             "Menunggu hos memulakan kuiz...";
         }
+
         return;
       }
 
