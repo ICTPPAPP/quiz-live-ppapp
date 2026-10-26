@@ -436,37 +436,105 @@ document.addEventListener("DOMContentLoaded", () => {
           return div.innerHTML;
         };
 
-        panel.innerHTML = `
-          <p style="color:#6b7280;font-weight:700">
-            SOALAN ${escape(q.order)}
-          </p>
-          <h2 style="font-size:24px;line-height:1.4">
-            ${escape(q.questionText)}
-          </h2>
-          <div style="display:grid;gap:12px;margin-top:24px">
-            <div style="padding:16px;border-radius:12px;background:#f1f5f9">
-              <b>A.</b> ${escape(q.optionA)}
-            </div>
-            <div style="padding:16px;border-radius:12px;background:#f1f5f9">
-              <b>B.</b> ${escape(q.optionB)}
-            </div>
-            <div style="padding:16px;border-radius:12px;background:#f1f5f9">
-              <b>C.</b> ${escape(q.optionC)}
-            </div>
-            <div style="padding:16px;border-radius:12px;background:#f1f5f9">
-              <b>D.</b> ${escape(q.optionD)}
-            </div>
-          </div>
-          <p style="margin-top:20px;color:#6b7280">
-            Masa menjawab: ${escape(q.timeLimitSeconds)} saat
-          </p>
-          <p style="color:#6b7280">
-            Paparan soalan aktif. Fungsi menghantar jawapan akan disambungkan
-            dalam langkah seterusnya.
-          </p>
-        `;
 
-        document.title = "Kuiz Langsung | QUIZ LIVE PPAPP";
+panel.innerHTML = `
+  <div style="text-align:center;margin-bottom:20px">
+    <p style="color:#64748b;font-weight:800;letter-spacing:2px">
+      QUIZ LIVE PPAPP
+    </p>
+    <p style="color:#64748b;font-weight:700">
+      SOALAN ${escape(q.order)}
+    </p>
+    <h2 style="font-size:clamp(22px,5vw,32px);line-height:1.4">
+      ${escape(q.questionText)}
+    </h2>
+  </div>
+
+  <div id="answerOptions"
+       style="display:grid;grid-template-columns:1fr;gap:12px;margin-top:24px">
+    ${[
+      ["A", q.optionA],
+      ["B", q.optionB],
+      ["C", q.optionC],
+      ["D", q.optionD]
+    ].map(([option, value]) => `
+      <button type="button"
+        data-option="${option}"
+        style="width:100%;padding:18px;text-align:left;
+        border:0;border-radius:14px;background:#f1f5f9;
+        color:#111827;font-size:17px;font-weight:600;
+        cursor:pointer">
+        <span style="display:inline-block;min-width:32px;
+        font-weight:900">${option}.</span>
+        ${escape(value)}
+      </button>
+    `).join("")}
+  </div>
+
+  <p style="margin-top:20px;color:#64748b;text-align:center">
+    Masa menjawab: ${escape(q.timeLimitSeconds)} saat
+  </p>
+  <p id="answerStatus"
+     style="text-align:center;font-weight:700;margin-top:12px">
+    Pilih satu jawapan untuk menghantar respons anda.
+  </p>
+`;
+
+const answerButtons = panel.querySelectorAll("[data-option]");
+let answerSubmitted = false;
+
+answerButtons.forEach((button) => {
+  button.addEventListener("click", async () => {
+    if (answerSubmitted) return;
+
+    answerSubmitted = true;
+
+    answerButtons.forEach((item) => {
+      item.disabled = true;
+      item.style.opacity = "0.65";
+    });
+
+    const status = panel.querySelector("#answerStatus");
+    status.textContent = "Menghantar jawapan...";
+
+    try {
+      const playerId = localStorage.getItem("qlp_player_id");
+
+      if (!playerId) {
+        throw new Error("ID peserta tidak dijumpai. Sila sertai semula.");
+      }
+
+      const response = await apiPost({
+        action: "submitAnswer",
+        sessionId: localStorage.getItem("qlp_player_session_id"),
+        playerId: playerId,
+        questionId: q.questionId,
+        selectedOption: button.dataset.option,
+        responseMs: 1000
+      });
+
+      if (!response.success) {
+        throw new Error(response.message || "Jawapan gagal dihantar.");
+      }
+
+      status.textContent = "Jawapan diterima! Markah: " +
+        response.pointsAwarded;
+      status.style.color = "#15803d";
+      button.style.background = "#bbf7d0";
+      button.style.opacity = "1";
+    } catch (error) {
+      answerSubmitted = false;
+      answerButtons.forEach((item) => {
+        item.disabled = false;
+        item.style.opacity = "1";
+      });
+      status.textContent = error.message || "Gagal menghantar jawapan.";
+      status.style.color = "#b91c1c";
+    }
+  });
+});
+
+document.title = "Kuiz Langsung | QUIZ LIVE PPAPP";
       }
     } catch (error) {
       console.error("Semakan sesi gagal:", error);
