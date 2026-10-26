@@ -480,18 +480,10 @@ async function refreshQuizzesFromServer() {
 
   // ---------- Live host display ----------
 
-  function ensureHostPanel() {
-    let panel = $("hostLiveQuestionPanel");
-    if (panel) return panel;
-    panel = document.createElement("section");
-    panel.id = "hostLiveQuestionPanel";
-    panel.hidden = true;
-    panel.style.cssText = "max-width:1100px;width:calc(100% - 32px);box-sizing:border-box;margin:28px auto;padding:clamp(18px,3vw,36px);border-radius:24px;background:#111827;color:#fff;box-shadow:0 16px 40px rgba(0,0,0,.18);";
-    const anchor = $("sessionResult") || $("startQuizMsg") || $("startQuizBtn");
-    if (anchor && anchor.insertAdjacentElement) anchor.insertAdjacentElement("afterend", panel);
-    else document.body.appendChild(panel);
-    return panel;
-  }
+
+function ensureHostPanel() {
+    return $("hostLiveQuestionPanel");
+}
 
   function renderHostQuestion(panel, question) {
     const options = [question.optionA, question.optionB, question.optionC, question.optionD];
