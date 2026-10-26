@@ -266,7 +266,8 @@
       });
     }
 
-    renderQuizList();
+renderQuizList();
+refreshQuizzesFromServer();
     const quizForm = $("quizForm");
     if (quizForm) {
       quizForm.addEventListener("submit", async (event) => {
@@ -321,6 +322,22 @@
       </div>
     `).join("");
   }
+async function refreshQuizzesFromServer() {
+  try {
+    const result = await apiPost({ action: "getQuizzes" });
+
+    if (!result.success || !Array.isArray(result.quizzes)) {
+      throw new Error(result.message || "Senarai kuiz tidak sah.");
+    }
+
+    storageSet("qlp_quizzes", JSON.stringify(result.quizzes));
+    renderQuizList();
+    loadQuestionQuizOptions();
+    loadSessionQuizOptions();
+  } catch (error) {
+    console.error("Gagal memuatkan kuiz dari server:", error);
+  }
+}
 
   // ---------- Question creation ----------
 
