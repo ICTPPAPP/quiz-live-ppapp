@@ -418,6 +418,13 @@
         if (!result.sessionId || !result.hostToken || !result.pin) throw new Error("Respons backend tidak lengkap: sessionId, hostToken atau PIN tiada.");
         storageSet("qlp_session_id", result.sessionId);
         storageSet("qlp_host_token", result.hostToken);
+        // Sesi baharu belum dimulakan oleh hos; elakkan paparan sesi lama.
+        storageSet("qlp_host_started_session_id", "");
+        const oldHostPanel = $("hostLiveQuestionPanel");
+        if (oldHostPanel) {
+          oldHostPanel.hidden = true;
+          oldHostPanel.style.display = "none";
+        }
         if ($("sessionPin")) $("sessionPin").textContent = result.pin;
         if ($("sessionStatus")) $("sessionStatus").textContent = "Status: Menunggu peserta";
         if ($("sessionResult")) $("sessionResult").hidden = false;
@@ -440,6 +447,8 @@
         try {
           const result = await apiPost({ action: "startSession", sessionId, hostToken });
           if (!result.success) throw new Error(result.message || "Kuiz gagal dimulakan.");
+          // Hanya benarkan panel hos muncul selepas backend mengesahkan MULA KUIZ.
+          storageSet("qlp_host_started_session_id", sessionId);
           if ($("sessionStatus")) $("sessionStatus").textContent = "Status: Kuiz sedang berlangsung";
           setMessage("startQuizMsg", "Kuiz berjaya dimulakan!", "success");
         } catch (error) {
@@ -490,29 +499,60 @@
     let lastQuestionId = "";
     let lastStatus = "";
 
+    // Sembunyikan paparan live semasa halaman dibuka. Ia hanya dipaparkan
+    // selepas tindakan MULA KUIZ berjaya untuk ID sesi semasa.
+    const initialPanel = $("hostLiveQuestionPanel");
+    if (initialPanel) {
+      initialPanel.hidden = true;
+      initialPanel.style.display = "none";
+    }
+
     async function pollHost() {
       if (polling) return;
       const sessionId = storageGet("qlp_session_id");
       if (!sessionId) return;
+
+      const startedSessionId = storageGet("qlp_host_started_session_id");
+      if (startedSessionId !== sessionId) {
+        const panel = $("hostLiveQuestionPanel");
+        if (panel) {
+          panel.hidden = true;
+          panel.style.display = "none";
+        }
+        return;
+      }
+
       polling = true;
       try {
         const result = await apiPost({ action: "getSessionState", sessionId });
         if (!result.success) throw new Error(result.message || "Gagal mendapatkan status sesi.");
         const panel = ensureHostPanel();
+
         if (result.status === "waiting") {
           panel.hidden = true;
+          panel.style.display = "none";
           lastStatus = "waiting";
+          lastQuestionId = "";
           return;
         }
+
         if (result.status === "completed") {
           panel.hidden = false;
+          panel.style.display = "block";
           panel.innerHTML = '<h2 style="text-align:center">Kuiz telah tamat</h2>';
           lastStatus = "completed";
           return;
         }
-        if (result.status !== "active" || !result.question) return;
+
+        if (result.status !== "active" || !result.question) {
+          panel.hidden = true;
+          panel.style.display = "none";
+          return;
+        }
+
         const question = result.question;
         panel.hidden = false;
+        panel.style.display = "block";
         if (lastQuestionId === question.questionId && lastStatus === result.status) return;
         lastQuestionId = question.questionId;
         lastStatus = result.status;
