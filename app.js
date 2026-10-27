@@ -664,8 +664,11 @@ if (!$("startQuizBtn") && !$("hostLiveQuestionPanel")) return;
     });
   }
 
-  function initLiveParticipant() {
-    if (!$("joinBtn") || !$("waitingRoom")) return;
+function initLiveParticipant() {
+
+    if (!$("waitingRoom"))
+        return;
+
     let polling = false;
     let lastQuestionId = "";
     let answerSubmittedFor = "";
