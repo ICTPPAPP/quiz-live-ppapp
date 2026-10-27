@@ -1,75 +1,342 @@
-
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QUIZ LIVE PPAPP — Paparan Hos</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      padding: 24px;
-      background: #080d1c;
-      color: #fff;
-      font-family: Arial, sans-serif;
-    }
-    header {
-      max-width: 1100px;
-      margin: 0 auto 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .brand { font-weight: 900; letter-spacing: 1px; }
-    .sub { color: #a5b4fc; font-size: 13px; margin-top: 6px; }
-    a {
-      color: white;
-      text-decoration: none;
-      background: #29334d;
-      padding: 12px 16px;
-      border-radius: 10px;
-    }
-    #hostLiveQuestionPanel {
-      max-width: 1100px;
-      margin: 24px auto;
-      padding: clamp(18px, 3vw, 36px);
-      border-radius: 24px;
-      background: #111827;
-      box-shadow: 0 16px 40px rgba(0,0,0,.25);
-    }
-    #hostLiveQuestionPanel:empty::after {
-      content: "Menunggu soalan kuiz dimuatkan…";
-      display: block;
-      padding: 50px 10px;
-      text-align: center;
-      color: #cbd5e1;
-      font-weight: 700;
-    }
-    #hostLiveQuestionPanel[hidden] { display: none; }
-    #hostPageMsg {
-      max-width: 1100px;
-      margin: 18px auto;
-      color: #cbd5e1;
-      text-align: center;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>QUIZ LIVE PPAPP — Paparan Hos</title>
+
+<style>
+
+*{
+box-sizing:border-box;
+}
+
+body{
+margin:0;
+min-height:100vh;
+padding:24px;
+background:#080d1c;
+color:white;
+font-family:Arial,sans-serif;
+}
+
+header{
+max-width:1200px;
+margin:auto;
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:15px;
+flex-wrap:wrap;
+}
+
+.brand{
+font-size:24px;
+font-weight:900;
+}
+
+.sub{
+color:#a5b4fc;
+margin-top:6px;
+font-size:13px;
+}
+
+a{
+text-decoration:none;
+color:white;
+background:#29334d;
+padding:12px 18px;
+border-radius:10px;
+}
+
+.host-bar{
+max-width:1200px;
+margin:25px auto;
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+gap:15px;
+}
+
+.card{
+background:#111827;
+padding:20px;
+border-radius:18px;
+box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+
+.card-title{
+font-size:12px;
+color:#94a3b8;
+margin-bottom:8px;
+letter-spacing:1px;
+}
+
+.card-value{
+font-size:28px;
+font-weight:800;
+}
+
+#hostLiveQuestionPanel{
+max-width:1200px;
+margin:auto;
+padding:30px;
+background:#111827;
+border-radius:24px;
+box-shadow:0 16px 40px rgba(0,0,0,.25);
+}
+
+#hostControlPanel{
+max-width:1200px;
+margin:25px auto;
+display:flex;
+justify-content:center;
+flex-wrap:wrap;
+gap:12px;
+}
+
+.btn{
+border:none;
+padding:14px 22px;
+border-radius:12px;
+font-weight:700;
+cursor:pointer;
+font-size:15px;
+}
+
+.btn-next{
+background:#4f46e5;
+color:white;
+}
+
+.btn-end{
+background:#dc2626;
+color:white;
+}
+
+.btn:hover{
+opacity:.9;
+}
+
+#hostPageMsg{
+text-align:center;
+margin:20px auto;
+color:#cbd5e1;
+max-width:1200px;
+}
+
+</style>
+
 </head>
+
 <body>
-  <header>
-    <div>
-      <div class="brand">QUIZ LIVE PPAPP</div>
-      <div class="sub">PAPARAN HOS · KUIZ LANGSUNG</div>
-    </div>
-    <a href="admin.html">← Kembali ke Panel Admin</a>
-  </header>
 
-  <p id="hostPageMsg">Menyambungkan paparan hos…</p>
-  <section id="hostLiveQuestionPanel"></section>
+<header>
 
-  <script src="app.js"></script>
+<div>
+<div class="brand">
+QUIZ LIVE PPAPP
+</div>
+
+<div class="sub">
+PAPARAN HOS · KUIZ LANGSUNG
+</div>
+</div>
+
+<a href="admin.html">
+← Kembali ke Panel Admin
+</a>
+
+</header>
+
+<div class="host-bar">
+
+<div class="card">
+
+<div class="card-title">
+PIN PERMAINAN
+</div>
+
+<div
+id="gamePin"
+class="card-value">
+------
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="card-title">
+STATUS
+</div>
+
+<div
+id="gameStatus"
+class="card-value">
+LIVE
+</div>
+
+</div>
+
+</div>
+
+<p id="hostPageMsg">
+Menyambungkan paparan hos...
+</p>
+
+<section
+id="hostLiveQuestionPanel">
+</section>
+
+<div id="hostControlPanel">
+
+<button
+id="nextQuestionBtn"
+class="btn btn-next">
+
+➡ SOALAN SETERUSNYA
+
+</button>
+
+<button
+id="endQuizBtn"
+class="btn btn-end">
+
+⛔ TAMATKAN KUIZ
+
+</button>
+
+</div>
+
+<script src="app.js"></script>
+
+<script>
+
+const pinBox =
+document.getElementById("gamePin");
+
+const sessionPin =
+localStorage.getItem(
+"qlp_player_pin"
+);
+
+if(sessionPin){
+
+pinBox.textContent =
+sessionPin;
+
+}
+
+const nextBtn =
+document.getElementById(
+"nextQuestionBtn"
+);
+
+const endBtn =
+document.getElementById(
+"endQuizBtn"
+);
+
+async function apiPost(payload){
+
+const url =
+localStorage.getItem(
+"qlp_api_url"
+);
+
+const response =
+await fetch(url,{
+method:"POST",
+headers:{
+"Content-Type":
+"text/plain;charset=utf-8"
+},
+body:JSON.stringify(payload)
+});
+
+return await response.json();
+}
+
+nextBtn.addEventListener(
+"click",
+async()=>{
+
+try{
+
+await apiPost({
+
+action:
+"nextQuestion",
+
+sessionId:
+localStorage.getItem(
+"qlp_session_id"
+),
+
+hostToken:
+localStorage.getItem(
+"qlp_host_token"
+)
+
+});
+
+}
+catch(error){
+
+alert(
+"Next question gagal"
+);
+
+}
+
+}
+);
+
+endBtn.addEventListener(
+"click",
+async()=>{
+
+const ok =
+confirm(
+"Tamatkan kuiz sekarang?"
+);
+
+if(!ok)return;
+
+try{
+
+await apiPost({
+
+action:"endQuiz",
+
+sessionId:
+localStorage.getItem(
+"qlp_session_id"
+),
+
+hostToken:
+localStorage.getItem(
+"qlp_host_token"
+)
+
+});
+
+location.reload();
+
+}
+catch(error){
+
+alert(
+"Gagal tamatkan kuiz"
+);
+
+}
+
+}
+);
+
+</script>
+
 </body>
 </html>
