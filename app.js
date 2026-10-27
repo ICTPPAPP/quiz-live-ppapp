@@ -597,11 +597,12 @@ function ensurePlayerPanel() {
   panel = document.createElement("section");
   panel.id = "liveQuestionPanel";
   panel.hidden = true;
-  panel.style.cssText = "position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;box-sizing:border-box;padding:20px;display:flex;flex-direction:column;justify-content:center;background:#f8fafc;color:#111827;overflow-y:auto;";
+  // Perhatikan perkataan display:none di bawah
+  panel.style.cssText = "position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;box-sizing:border-box;padding:20px;display:none;flex-direction:column;justify-content:center;background:#f8fafc;color:#111827;overflow-y:auto;";
   document.body.appendChild(panel);
   return panel;
 }
-
+  
 function renderPlayerQuestion(panel, question, sessionId, playerId, onAnswered) {
   try {
     panel.innerHTML = `
