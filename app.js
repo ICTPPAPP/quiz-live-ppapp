@@ -606,38 +606,23 @@ if (!$("startQuizBtn") && !$("hostLiveQuestionPanel")) return;
 
 function renderPlayerQuestion(panel, question, sessionId, playerId, onAnswered) {
   try {
-    // Ambil teks jawapan dari data soalan API (tambah fallback jika data kosong)
-    const optionsText = [
-      question.optionA || "Pilihan A", 
-      question.optionB || "Pilihan B", 
-      question.optionC || "Pilihan C", 
-      question.optionD || "Pilihan D"
-    ];
-
     panel.innerHTML = `
       <div style="text-align:center;margin-bottom:22px">
         <div style="font-size:13px;letter-spacing:2px;font-weight:900;color:#64748b">QUIZ LIVE PPAPP</div>
-        <h2 style="font-size:clamp(19px,5vw,24px);line-height:1.35;margin:12px 0">${escapeHtml(question.questionText || "Soalan tidak dijumpai")}</h2>
+        <h2 style="font-size:clamp(19px,5vw,26px);line-height:1.35;margin:12px 0">Lihat soalan pada skrin hos</h2>
+        <p style="color:#64748b;margin:0">Pilih petak warna yang sepadan dengan jawapan.</p>
       </div>
-      
-      <div id="playerColorGrid" style="display:flex;flex-direction:column;gap:12px;width:100%;flex:1;justify-content:center">
-        ${ANSWER_COLORS.map((item, index) => `
-          <button type="button" data-option="${item.option}" aria-label="Jawapan ${item.label}" style="min-height:75px;border:0;border-radius:16px;background:${item.color};color:${item.textColor};font-size:clamp(16px,4vw,20px);font-weight:700;box-shadow:0 5px 0 rgba(0,0,0,.15);cursor:pointer;display:flex;align-items:center;padding:12px 20px;text-align:left;gap:16px;line-height:1.3;">
-            <span aria-hidden="true" style="font-size:28px;">${item.shape}</span>
-            <span style="flex:1;overflow-wrap:anywhere;">${escapeHtml(optionsText[index])}</span>
-          </button>`).join("")}
+      <div id="playerColorGrid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%;flex:1;align-content:center">
+        ${ANSWER_COLORS.map((item) => `
+          <button type="button" data-option="${item.option}" aria-label="Jawapan warna ${item.label}" style="min-height:clamp(135px,28vh,230px);border:0;border-radius:22px;background:${item.color};color:${item.textColor};font-size:clamp(46px,12vw,76px);font-weight:900;box-shadow:0 7px 0 rgba(0,0,0,.12);cursor:pointer;touch-action:manipulation">${item.shape}</button>`).join("")}
       </div>
-      
-      <p id="playerAnswerStatus" aria-live="polite" style="text-align:center;font-weight:800;font-size:16px;margin:20px 0 0;color:#334155">Pilih satu jawapan.</p>`;
+      <p id="playerAnswerStatus" aria-live="polite" style="text-align:center;font-weight:800;font-size:16px;margin:20px 0 0;color:#334155">Pilih satu warna untuk menjawab.</p>`;
 
     const buttons = [...panel.querySelectorAll("[data-option]")];
     buttons.forEach((button) => {
       button.addEventListener("click", async () => {
         if (button.dataset.submitting === "true" || button.dataset.answered === "true") return;
-        buttons.forEach((item) => {
-          item.disabled = true;
-          item.style.opacity = "0.58";
-        });
+        buttons.forEach((item) => { item.disabled = true; item.style.opacity = "0.58"; });
         button.style.opacity = "1";
         button.style.transform = "scale(.97)";
         button.dataset.submitting = "true";
@@ -663,11 +648,7 @@ function renderPlayerQuestion(panel, question, sessionId, playerId, onAnswered) 
           onAnswered(question.questionId);
         } catch (error) {
           button.dataset.submitting = "false";
-          buttons.forEach((item) => {
-            item.disabled = false;
-            item.style.opacity = "1";
-            item.style.transform = "none";
-          });
+          buttons.forEach((item) => { item.disabled = false; item.style.opacity = "1"; item.style.transform = "none"; });
           if (status) {
             status.textContent = `Ralat: ${getErrorMessage(error)}`;
             status.style.color = "#b91c1c";
@@ -676,13 +657,8 @@ function renderPlayerQuestion(panel, question, sessionId, playerId, onAnswered) 
       });
     });
   } catch (err) {
-    // Jika berlaku sebarang ralat rendering, skrin tidak akan jadi kosong.
-    // Sebaliknya, ia akan menulis ralat tersebut di skrin supaya kita boleh selesaikannya.
-    panel.innerHTML = `
-      <div style="padding:20px; text-align:center; color:#b91c1c; font-weight:bold;">
-        <h3>Ralat Paparan Sistem</h3>
-        <p>${err.message}</p>
-      </div>`;
+    // Memaparkan punca sebenar jika berlaku ralat dan bukannya skrin kosong
+    panel.innerHTML = `<div style="padding:20px;text-align:center;color:#b91c1c;font-weight:bold;"><h3>Ralat Sistem</h3><p>${err.message}</p></div>`;
   }
 }
 
