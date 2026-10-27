@@ -591,18 +591,16 @@ if (!$("startQuizBtn") && !$("hostLiveQuestionPanel")) return;
 
   // ---------- Live participant display and answers ----------
 
-  function ensurePlayerPanel() {
-    let panel = $("liveQuestionPanel");
-    if (panel) return panel;
-    panel = document.createElement("section");
-    panel.id = "liveQuestionPanel";
-    panel.hidden = true;
-    panel.style.cssText = "width:100%;max-width:760px;min-height:100vh;box-sizing:border-box;margin:0 auto;padding:18px;display:flex;flex-direction:column;justify-content:center;background:#f8fafc;color:#111827;";
-    const waitingRoom = $("waitingRoom");
-    if (waitingRoom) waitingRoom.insertAdjacentElement("afterend", panel);
-    else document.body.appendChild(panel);
-    return panel;
-  }
+function ensurePlayerPanel() {
+  let panel = $("liveQuestionPanel");
+  if (panel) return panel;
+  panel = document.createElement("section");
+  panel.id = "liveQuestionPanel";
+  panel.hidden = true;
+  panel.style.cssText = "position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;box-sizing:border-box;padding:20px;display:flex;flex-direction:column;justify-content:center;background:#f8fafc;color:#111827;overflow-y:auto;";
+  document.body.appendChild(panel);
+  return panel;
+}
 
 function renderPlayerQuestion(panel, question, sessionId, playerId, onAnswered) {
   try {
