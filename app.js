@@ -597,13 +597,7 @@ if (!$("startQuizBtn") && !$("hostLiveQuestionPanel")) return;
     panel = document.createElement("section");
     panel.id = "liveQuestionPanel";
     panel.hidden = true;
-    panel.style.cssText =
-"width:100%;max-width:760px;min-height:100vh;
-box-sizing:border-box;margin:0 auto;
-padding:18px;
-display:block;
-background:#f8fafc;
-color:#111827;";
+    panel.style.cssText = "width:100%;max-width:760px;min-height:100vh;box-sizing:border-box;margin:0 auto;padding:18px;display:flex;flex-direction:column;justify-content:center;background:#f8fafc;color:#111827;";
     const waitingRoom = $("waitingRoom");
     if (waitingRoom) waitingRoom.insertAdjacentElement("afterend", panel);
     else document.body.appendChild(panel);
@@ -611,8 +605,6 @@ color:#111827;";
   }
 
   function renderPlayerQuestion(panel, question, sessionId, playerId, onAnswered) {
-    panel.hidden = false;
-    panel.style.display = "block";
     panel.innerHTML = `
       <div style="text-align:center;margin-bottom:22px">
         <div style="font-size:13px;letter-spacing:2px;font-weight:900;color:#64748b">QUIZ LIVE PPAPP</div>
