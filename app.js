@@ -82,11 +82,56 @@
     });
   }
 
-  // ---------- Admin Panel Logic ----------
+// ---------- Admin Panel Logic ----------
   function initAdminLogic() {
     if ($("apiUrl")) $("apiUrl").value = getApiUrl();
     if ($("saveApi")) $("saveApi").addEventListener("click", () => { storageSet("qlp_api_url", $("apiUrl").value.trim()); alert("URL Disimpan!"); });
     
+    // TARIK KUIZ TERUS DARI DATABASE GOOGLE SHEETS
+    async function loadQuizzesFromServer() {
+      const sel = $("questionQuiz"), sel2 = $("sessionQuiz");
+      if (!sel && !sel2) return;
+      try {
+        const res = await apiPost({ action: "getQuizzes" });
+        if (res.success && res.quizzes) {
+          const opts = res.quizzes.map(q => `<option value="${q.quizId}">${escapeHtml(q.title)}</option>`).join("");
+          if (sel) sel.innerHTML = opts || '<option value="">-- Tiada Kuiz --</option>';
+          if (sel2) sel2.innerHTML = opts || '<option value="">-- Tiada Kuiz --</option>';
+          storageSet("qlp_quizzes", JSON.stringify(res.quizzes));
+        }
+      } catch (e) {
+        console.log("Gagal tarik kuiz dari server.");
+      }
+    }
+    loadQuizzesFromServer();
+
+    if ($("quizForm")) {
+      $("quizForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const btn = $("quizForm").querySelector("button"); btn.disabled = true; btn.textContent = "Mencipta...";
+        try {
+          const res = await apiPost({ action: "createQuiz", title: $("quizTitle").value, description: $("quizDescription").value });
+          alert("Kuiz Berjaya Dicipta!"); location.reload();
+        } catch(err) { alert(err.message); } finally { btn.disabled = false; btn.textContent = "Cipta Kuiz"; }
+      });
+    }
+
+    if ($("questionForm")) {
+      $("questionForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const btn = $("questionForm").querySelector("button"); btn.disabled = true; btn.textContent = "Menyimpan...";
+        try {
+          await apiPost({
+            action: "addQuestion", quizId: $("questionQuiz").value, questionText: $("questionText").value,
+            optionA: $("optionA").value, optionB: $("optionB").value, optionC: $("optionC").value, optionD: $("optionD").value,
+            correctOption: $("correctOption").value, timeLimitSeconds: Number($("questionTime").value),
+            points: $("doublePoints").checked ? 2000 : 1000
+          });
+          alert("Soalan Disimpan!"); $("questionForm").reset();
+        } catch(err) { alert(err.message); } finally { btn.disabled = false; btn.textContent = "Simpan Soalan"; }
+      });
+    }
+
     if ($("createSessionBtn")) {
       $("createSessionBtn").addEventListener("click", async () => {
         const quizId = $("sessionQuiz").value; if (!quizId) return alert("Pilih Kuiz");
@@ -95,7 +140,7 @@
           const res = await apiPost({ action: "createSession", quizId });
           storageSet("qlp_session_id", res.sessionId); storageSet("qlp_host_token", res.hostToken); storageSet("qlp_player_pin", res.pin);
           window.location.href = "host.html"; 
-        } catch(err) { alert(err.message); $("createSessionBtn").disabled = false; }
+        } catch(err) { alert(err.message); $("createSessionBtn").disabled = false; $("createSessionBtn").textContent = "Jana PIN Permainan"; }
       });
     }
   }
