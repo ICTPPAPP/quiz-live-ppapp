@@ -1,9 +1,9 @@
-/* QUIZ LIVE PPAPP - FULL LOGIC WITH LOBBY & +POINTS */
+/* QUIZ LIVE PPAPP - FULL LOGIC + AUTO TIMER + LOBBY */
 (() => {
   "use strict";
 
   const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbxlHmVrFF84wSGQF3z0F_qEvVWZpirbgo0D06FclCDkhZTWXv_YgFTAHIAx381FERKT/exec";
-  const POLL_INTERVAL_MS = 1500; // Dicepatkan sikit supaya pemain pop-up lebih pantas
+  const POLL_INTERVAL_MS = 1500; 
   const $ = (id) => document.getElementById(id);
 
   const ANSWER_COLORS = [
@@ -22,8 +22,7 @@
   async function apiPost(payload) {
     const url = getApiUrl();
     const response = await fetch(url, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) });
-    const result = await response.json();
-    return result;
+    return await response.json();
   }
 
   // ---------- Join Form ----------
@@ -38,10 +37,8 @@
       try {
         const res = await apiPost({ action: "join", pin, displayName: name });
         if (!res.success) throw new Error(res.message);
-        storageSet("qlp_player_session_id", res.sessionId);
-        storageSet("qlp_player_id", res.playerId);
+        storageSet("qlp_player_session_id", res.sessionId); storageSet("qlp_player_id", res.playerId);
         
-        // Terus ke ruang menunggu
         if ($("waitingRoom")) { $("waitingRoom").hidden = false; $("waitingRoom").style.display = "block"; }
         if (document.querySelector(".hero-wrap")) document.querySelector(".hero-wrap").style.display = "none";
         document.body.classList.add("waiting-page");
@@ -90,7 +87,6 @@
       });
     }
 
-    // TERUS MELOMPAT KE LOBI HOS LEPAS JANA PIN
     if ($("createSessionBtn")) {
       $("createSessionBtn").addEventListener("click", async () => {
         const quizId = $("sessionQuiz").value; if (!quizId) return alert("Pilih Kuiz");
@@ -98,20 +94,20 @@
         try {
           const res = await apiPost({ action: "createSession", quizId });
           storageSet("qlp_session_id", res.sessionId); storageSet("qlp_host_token", res.hostToken); storageSet("qlp_player_pin", res.pin);
-          window.location.href = "host.html"; // TERUS KE LOBI
+          window.location.href = "host.html"; 
         } catch(err) { alert(err.message); $("createSessionBtn").disabled = false; }
       });
     }
   }
 
-  // ---------- Live Host (Lobby & Game) ----------
+  // ---------- Live Host (Lobby, Game & AUTO TIMER) ----------
   function initLiveHost() {
     if (!$("lobbyPanel") && !$("hostLiveQuestionPanel")) return;
     
     let polling = false;
-    let renderedPlayersCount = 0; // Elak refresh DOM jika bilangan pemain tak berubah
+    let currentRenderKey = ""; // Mengelakkan skrin terkelip-kelip (flicker)
+    let hostTimerInt = null;
     
-    // FUNGSI BUTANG MULA KUIZ DARI LOBI
     const startBtn = $("hostStartBtn");
     if (startBtn) {
       startBtn.addEventListener("click", async () => {
@@ -128,34 +124,30 @@
         const res = await apiPost({ action: "getSessionState", sessionId });
         window.hostPhase = res.status; 
         
-        const lobby = $("lobbyPanel");
-        const panel = $("hostLiveQuestionPanel");
-        const control = $("hostControlPanel");
+        const lobby = $("lobbyPanel"), panel = $("hostLiveQuestionPanel"), control = $("hostControlPanel");
 
-        // FASA LOBI MENUNGGU
+        // FASA LOBI
         if (res.status === "waiting") {
-          if (lobby) {
-            lobby.style.display = "flex";
-            if ($("lobbyPin")) $("lobbyPin").textContent = storageGet("qlp_player_pin");
-            const players = res.players || [];
-            if (players.length !== renderedPlayersCount) {
-              $("lobbyCount").textContent = players.length;
-              $("lobbyPlayers").innerHTML = players.map(p => `<div class="player-chip">${escapeHtml(p)}</div>`).join("");
-              renderedPlayersCount = players.length;
-            }
+          if (lobby) { lobby.style.display = "flex"; if ($("lobbyPin")) $("lobbyPin").textContent = storageGet("qlp_player_pin");
+            const players = res.players || []; $("lobbyCount").textContent = players.length;
+            $("lobbyPlayers").innerHTML = players.map(p => `<div class="player-chip">${escapeHtml(p)}</div>`).join("");
           }
-          if (panel) panel.style.display = "none";
-          if (control) control.style.display = "none";
+          if (panel) panel.style.display = "none"; if (control) control.style.display = "none";
           return;
         } 
         
-        // FASA KUIZ BERMULA
         if (lobby) lobby.style.display = "none";
         if (panel) panel.style.display = "block";
         if (control) control.style.display = "flex";
 
-        if (res.status === "completed") { panel.innerHTML = '<h2 style="font-align:center; font-size:50px;">KUIZ TAMAT!</h2>'; control.style.display="none"; return; }
+        if (res.status === "completed") { panel.innerHTML = '<h2 style="text-align:center; font-size:50px;">KUIZ TAMAT!</h2>'; control.style.display="none"; clearInterval(hostTimerInt); return; }
         
+        // PENGHADANG RENDER: Hanya ubah skrin jika soalan/fasa bertukar
+        const newKey = res.status + "_" + (res.question ? res.question.questionId : "0");
+        if (currentRenderKey === newKey) return; 
+        currentRenderKey = newKey;
+        clearInterval(hostTimerInt); // Hentikan timer lama
+
         if (res.status === "leaderboard") {
           const tops = (res.leaderboard || []).map((p, i) => `<div style="font-size:28px; margin:15px auto; max-width:600px; background:#1e293b; padding:20px 30px; border-radius:15px; display:flex; justify-content:space-between; align-items:center;"><span><b style="color:#3b82f6;">#${i+1}</b> ${escapeHtml(p.name)}</span><span style="font-weight:900;color:#fcd34d;font-size:35px;">${p.score} pt</span></div>`).join("");
           panel.innerHTML = `<div style="text-align:center"><h2 style="font-size:40px; margin-bottom:40px;">🏆 TOP 5 LEADERBOARD 🏆</h2>${tops}</div>`;
@@ -164,10 +156,12 @@
 
         const q = res.question; if (!q) return;
         const opts = [q.optionA, q.optionB, q.optionC, q.optionD];
+        
         panel.innerHTML = `
           <div style="text-align:center;margin-bottom:30px">
             <div style="font-size:16px;font-weight:900;letter-spacing:4px;color:#a5b4fc">SOALAN ${q.order} ${q.points > 1000 ? '🌟 MARKAH BERGANDA' : ''}</div>
-            <h1 style="font-size:clamp(30px,5vw,55px);margin:20px 0">${escapeHtml(q.questionText)}</h1>
+            <h1 style="font-size:clamp(30px,5vw,55px);margin:15px 0">${escapeHtml(q.questionText)}</h1>
+            ${res.status === "active" ? `<div style="font-size:45px; font-weight:900; color:#ef4444; margin:10px 0;">⏱ <span id="hostTimerDisplay">${q.timeLimitSeconds}</span></div>` : ''}
           </div>
           <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px">
             ${ANSWER_COLORS.map((item, i) => {
@@ -178,15 +172,36 @@
               </div>`
             }).join("")}
           </div>`;
+
+        // MULAKAN PEMASA AUTOMATIK (HANYA MASA SOALAN AKTIF)
+        if (res.status === "active") {
+          let hostTimeLeft = q.timeLimitSeconds;
+          hostTimerInt = setInterval(async () => {
+            hostTimeLeft--;
+            if ($("hostTimerDisplay")) $("hostTimerDisplay").textContent = hostTimeLeft;
+            
+            if (hostTimeLeft <= 0) {
+              clearInterval(hostTimerInt);
+              if ($("nextQuestionBtn")) { $("nextQuestionBtn").disabled = true; $("nextQuestionBtn").textContent = "Masa Tamat..."; }
+              try { 
+                // TAMATKAN MASA AUTOMATIK KE SERVER
+                await apiPost({ action: "revealAnswer", sessionId, hostToken: storageGet("qlp_host_token") }); 
+              } catch(e) {}
+            }
+          }, 1000);
+        }
+
       } catch (e) {} finally { polling = false; }
     }
     pollHost(); window.setInterval(pollHost, POLL_INTERVAL_MS);
   }
 
-  // ---------- Live Participant ----------
+  // ---------- Live Participant (AUTO TIMER) ----------
   function initLiveParticipant() {
     if (!$("waitingRoom") && !$("joinBtn")) return;
-    let polling = false, lastQuestionId = "";
+    let polling = false;
+    let currentRenderKey = "";
+    let playerTimerInt = null;
     
     async function pollParticipant() {
       if (polling) return;
@@ -197,27 +212,27 @@
         const panel = $("liveQuestionPanel") || document.body.appendChild(Object.assign(document.createElement("section"), { id: "liveQuestionPanel", style: "position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;box-sizing:border-box;padding:20px;display:none;flex-direction:column;justify-content:center;background:#0f172a;color:#fff;" }));
         const room = $("waitingRoom");
 
-        if (res.status === "waiting") {
-          panel.style.display = "none"; if (room) { room.hidden = false; room.style.display = "block"; } return;
-        }
+        if (res.status === "waiting") { panel.style.display = "none"; if (room) { room.hidden = false; room.style.display = "block"; } return; }
         if (room) { room.hidden = true; room.style.display = "none"; }
         panel.style.display = "flex";
-
-        if (res.status === "completed") { panel.innerHTML = '<div style="text-align:center;"><h2>Kuiz Tamat!</h2></div>'; return; }
+        if (res.status === "completed") { panel.innerHTML = '<div style="text-align:center;"><h2>Kuiz Tamat!</h2></div>'; clearInterval(playerTimerInt); return; }
         
-        // PAPARAN MARKAH XP BARU DITAMBAH 
+        // PENGHADANG RENDER PESERTA
+        const newKey = res.status + "_" + (res.question ? res.question.questionId : "0");
+        if (currentRenderKey === newKey) return; 
+        currentRenderKey = newKey;
+        clearInterval(playerTimerInt);
+
         if (res.status === "revealing_answer") {
           const isCorrect = localStorage.getItem("qlp_last_isCorrect") === "true";
           const earned = localStorage.getItem("qlp_last_earned") || "0";
-          const bgColor = isCorrect ? "#15803d" : "#b91c1c";
-          const ptsHtml = isCorrect ? `<div style="font-size:38px; font-weight:900; color:#fcd34d; margin-top:20px;">+${earned} XP</div>` : `<div style="font-size:38px; font-weight:900; color:#fca5a5; margin-top:20px;">+0 XP</div>`;
-          panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:${bgColor};color:white;border-radius:20px;">
+          panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:${isCorrect ? "#15803d" : "#b91c1c"};color:white;border-radius:20px;">
             <div style="font-size:120px;line-height:1;margin-bottom:10px;">${isCorrect ? "✅" : "❌"}</div>
             <div style="font-size:32px;font-weight:bold;">${isCorrect ? "Tepat!" : "Salah"}</div>
-            ${ptsHtml}
-          </div>`; 
-          return;
+            <div style="font-size:38px; font-weight:900; color:${isCorrect ? '#fcd34d' : '#fca5a5'}; margin-top:20px;">+${earned} XP</div>
+          </div>`; return;
         }
+        
         if (res.status === "leaderboard") {
           const score = localStorage.getItem("qlp_last_score") || "0";
           panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#2563eb;color:white;border-radius:20px;">
@@ -226,35 +241,48 @@
           </div>`; return;
         }
         
-        const q = res.question; if (!q || lastQuestionId === q.questionId) return;
-        lastQuestionId = q.questionId;
-        
-        // BINA BUTANG SOALAN
+        const q = res.question; if (!q) return;
         const startTime = Date.now();
+        
         panel.innerHTML = `
           <div style="text-align:center;margin-bottom:20px">
-            <h2 style="font-size:clamp(19px,5vw,26px);margin:12px 0">${q.points > 1000 ? '🌟 MARKAH BERGANDA' : 'Pilih Jawapan Pantas!'}</h2>
+            <h2 style="font-size:clamp(19px,5vw,26px);margin:0">${q.points > 1000 ? '🌟 MARKAH BERGANDA' : 'Pilih Jawapan'}</h2>
+            <div style="font-size:30px; font-weight:900; color:#ef4444; margin:10px 0;">⏱ <span id="playerTimerDisplay">${q.timeLimitSeconds}</span></div>
           </div>
           <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;flex:1;align-content:center">
-            ${ANSWER_COLORS.map(item => `<button type="button" data-option="${item.option}" style="min-height:clamp(135px,28vh,230px);border:0;border-radius:22px;background:${item.color};color:${item.textColor};font-size:clamp(46px,12vw,76px);font-weight:900;cursor:pointer;box-shadow:0 8px 0 rgba(0,0,0,0.15);">${item.shape}</button>`).join("")}
+            ${ANSWER_COLORS.map(item => `<button type="button" data-option="${item.option}" style="min-height:clamp(120px,25vh,200px);border:0;border-radius:22px;background:${item.color};color:${item.textColor};font-size:clamp(46px,12vw,76px);font-weight:900;cursor:pointer;box-shadow:0 8px 0 rgba(0,0,0,0.15);">${item.shape}</button>`).join("")}
           </div>
           <p id="playerAnswerStatus" style="text-align:center;font-weight:800;font-size:16px;margin:20px 0 0;color:#94a3b8">Menunggu jawapan anda...</p>`;
           
         const btns = [...panel.querySelectorAll("button")];
+        
+        // PEMASA AUTOMATIK PESERTA (KUNCI BUTANG BILA 0)
+        let playerTimeLeft = q.timeLimitSeconds;
+        playerTimerInt = setInterval(() => {
+          playerTimeLeft--;
+          if ($("playerTimerDisplay")) $("playerTimerDisplay").textContent = playerTimeLeft;
+          if (playerTimeLeft <= 0) {
+            clearInterval(playerTimerInt);
+            btns.forEach(b => { b.disabled = true; b.style.opacity = "0.4"; });
+            if ($("playerAnswerStatus") && !btns.some(b => b.dataset.answered)) {
+              $("playerAnswerStatus").textContent = "Masa Tamat!"; $("playerAnswerStatus").style.color = "#ef4444";
+            }
+          }
+        }, 1000);
+
         btns.forEach(btn => {
           btn.addEventListener("click", async () => {
-            if (btn.dataset.answered) return;
+            if (btn.dataset.answered || playerTimeLeft <= 0) return;
             btns.forEach(b => { b.disabled = true; b.style.opacity = "0.4"; });
             btn.style.opacity = "1"; btn.style.transform = "translateY(5px)"; btn.style.boxShadow = "none";
             btn.dataset.answered = "true";
+            clearInterval(playerTimerInt); // Hentikan timer peserta bila dah jawab
             if ($("playerAnswerStatus")) $("playerAnswerStatus").textContent = "Menghantar…";
             try {
               const res = await apiPost({ action: "submitAnswer", sessionId, playerId: storageGet("qlp_player_id"), questionId: q.questionId, selectedOption: btn.dataset.option, responseMs: Date.now() - startTime });
-              localStorage.setItem("qlp_last_isCorrect", res.isCorrect);
-              localStorage.setItem("qlp_last_score", res.totalScore);
-              localStorage.setItem("qlp_last_earned", res.earned || 0); // REKOD MARKAH XP BARU
+              localStorage.setItem("qlp_last_isCorrect", res.isCorrect); localStorage.setItem("qlp_last_score", res.totalScore); localStorage.setItem("qlp_last_earned", res.earned || 0);
               if ($("playerAnswerStatus")) { $("playerAnswerStatus").textContent = "Jawapan Diterima!"; $("playerAnswerStatus").style.color = "#34d399"; }
-            } catch (err) { }
+            } catch (err) {}
           });
         });
       } catch (e) {} finally { polling = false; }
@@ -273,9 +301,9 @@
         const sessionId = storageGet("qlp_session_id"), hostToken = storageGet("qlp_host_token");
         nextBtn.disabled = true; nextBtn.textContent = "...";
         let action = window.hostPhase === "revealing_answer" ? "showLeaderboard" : (window.hostPhase === "leaderboard" ? "nextQuestion" : "revealAnswer");
-        try {
-          await apiPost({ action, sessionId, hostToken });
-        } catch (e) { alert("Ralat."); } finally { nextBtn.disabled = false; nextBtn.textContent = "➡ SETERUSNYA"; }
+        try { await apiPost({ action, sessionId, hostToken }); } 
+        catch (e) { alert("Ralat."); } 
+        finally { nextBtn.disabled = false; nextBtn.textContent = "➡ SETERUSNYA"; }
       });
     }
   });
