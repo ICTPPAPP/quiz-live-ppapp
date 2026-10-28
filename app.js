@@ -1,4 +1,4 @@
-/* QUIZ LIVE PPAPP - FULL LOGIC + AUTO TIMER + AUDIO + NEXT BTN FIX */
+/* QUIZ LIVE PPAPP - FULL LOGIC + SMART AUTOPLAY AUDIO + FULL LEADERBOARD */
 (() => {
   "use strict";
 
@@ -24,9 +24,21 @@
   function playSound(key) {
     if (SOUNDS[key]) {
       if (key.startsWith('bgm_')) stopAllBGM(); 
-      SOUNDS[key].play().catch(e => console.log("Audio menunggu keizinan:", e));
+      const playPromise = SOUNDS[key].play();
+      if (playPromise !== undefined) {
+        playPromise.catch(e => console.log("Menunggu klik pengguna untuk mainkan audio..."));
+      }
     }
   }
+
+  // BUKA AUDIO AUTOMATIK BILA SKRIN DIKLIK/DISENTUH
+  document.body.addEventListener('click', () => {
+    if (!window.audioUnlocked) {
+      window.audioUnlocked = true;
+      if (window.hostPhase === "waiting") playSound('bgm_lobby');
+      else if (window.hostPhase === "active") playSound('bgm_quiz');
+    }
+  }, { capture: true });
 
   const ANSWER_COLORS = [
     { option: "A", color: "#e53232", shape: "▲", label: "Merah", textColor: "#ffffff" },
@@ -38,7 +50,6 @@
   function getApiUrl() { try { return (localStorage.getItem("qlp_api_url") || DEFAULT_API_URL).trim(); } catch (e) { return DEFAULT_API_URL; } }
   function storageGet(key, fallback = "") { try { return localStorage.getItem(key) ?? fallback; } catch (e) { return fallback; } }
   function storageSet(key, value) { try { localStorage.setItem(key, String(value ?? "")); } catch (e) {} }
-  function readStoredArray(key) { const raw = storageGet(key, "[]"); try { const val = JSON.parse(raw); return Array.isArray(val) ? val : []; } catch (e) { return []; } }
   function escapeHtml(value) { return String(value ?? "").replace(/[&<>"']/g, (c) => ({"&": "&amp;","<": "&lt;",">": "&gt;",'"': "&quot;","'": "&#39;"})[c]); }
 
   async function apiPost(payload) {
@@ -57,9 +68,6 @@
       if (!/^\d{6}$/.test(pin) || !name) return alert("Sila masukkan 6 digit PIN dan Nama.");
       joinButton.disabled = true; joinButton.textContent = "Menyemak...";
       
-      // Izin audio untuk peserta
-      SOUNDS.sfx_correct.play().then(()=>SOUNDS.sfx_correct.pause()).catch(()=>{}); 
-
       try {
         const res = await apiPost({ action: "join", pin, displayName: name });
         if (!res.success) throw new Error(res.message);
@@ -79,40 +87,6 @@
     if ($("apiUrl")) $("apiUrl").value = getApiUrl();
     if ($("saveApi")) $("saveApi").addEventListener("click", () => { storageSet("qlp_api_url", $("apiUrl").value.trim()); alert("URL Disimpan!"); });
     
-    if ($("quizForm")) {
-      $("quizForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const btn = $("quizForm").querySelector("button"); btn.disabled = true; btn.textContent = "Mencipta...";
-        try {
-          const res = await apiPost({ action: "createQuiz", title: $("quizTitle").value, description: $("quizDescription").value });
-          const items = readStoredArray("qlp_quizzes"); items.unshift({ title: $("quizTitle").value, quizId: res.quizId });
-          storageSet("qlp_quizzes", JSON.stringify(items));
-          alert("Kuiz Berjaya Dicipta!"); location.reload();
-        } catch(err) { alert(err.message); } finally { btn.disabled = false; btn.textContent = "Cipta Kuiz"; }
-      });
-    }
-
-    if ($("questionForm")) {
-      const items = readStoredArray("qlp_quizzes");
-      const sel = $("questionQuiz"), sel2 = $("sessionQuiz");
-      if (sel && items.length) sel.innerHTML = items.map(q => `<option value="${q.quizId}">${escapeHtml(q.title)}</option>`).join("");
-      if (sel2 && items.length) sel2.innerHTML = items.map(q => `<option value="${q.quizId}">${escapeHtml(q.title)}</option>`).join("");
-      
-      $("questionForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const btn = $("questionForm").querySelector("button"); btn.disabled = true; btn.textContent = "Menyimpan...";
-        try {
-          await apiPost({
-            action: "addQuestion", quizId: $("questionQuiz").value, questionText: $("questionText").value,
-            optionA: $("optionA").value, optionB: $("optionB").value, optionC: $("optionC").value, optionD: $("optionD").value,
-            correctOption: $("correctOption").value, timeLimitSeconds: Number($("questionTime").value),
-            points: $("doublePoints").checked ? 2000 : 1000
-          });
-          alert("Soalan Disimpan!"); $("questionForm").reset();
-        } catch(err) { alert(err.message); } finally { btn.disabled = false; btn.textContent = "Simpan Soalan"; }
-      });
-    }
-
     if ($("createSessionBtn")) {
       $("createSessionBtn").addEventListener("click", async () => {
         const quizId = $("sessionQuiz").value; if (!quizId) return alert("Pilih Kuiz");
@@ -126,7 +100,7 @@
     }
   }
 
-  // ---------- Live Host (Lobby, Game, AUTO TIMER, BGM, & NEXT BTN UNLOCK) ----------
+  // ---------- Live Host ----------
   function initLiveHost() {
     const lobby = $("lobbyPanel");
     const panel = $("hostLiveQuestionPanel");
@@ -137,28 +111,14 @@
     let currentRenderKey = ""; 
     let hostTimerInt = null;
     let currentPhase = "";
-    window.hostAudioUnlocked = false;
     
     const storedPin = storageGet("qlp_player_pin");
     if ($("lobbyPin") && storedPin) $("lobbyPin").textContent = storedPin;
-
-    const unmuteBtn = $("unmuteBtn");
-    if (unmuteBtn) {
-      unmuteBtn.addEventListener("click", () => {
-        window.hostAudioUnlocked = true;
-        unmuteBtn.style.background = "#10b981";
-        unmuteBtn.textContent = "🔊 Audio Aktif";
-        if (currentPhase === "waiting") playSound('bgm_lobby');
-        else if (currentPhase === "active") playSound('bgm_quiz');
-      });
-    }
 
     const startBtn = $("hostStartBtn");
     if (startBtn) {
       startBtn.addEventListener("click", async () => {
         startBtn.disabled = true; startBtn.textContent = "MEMULAKAN...";
-        window.hostAudioUnlocked = true; 
-        if (unmuteBtn) { unmuteBtn.style.background = "#10b981"; unmuteBtn.textContent = "🔊 Audio Aktif"; }
         try {
           await apiPost({ action: "startSession", sessionId: storageGet("qlp_session_id"), hostToken: storageGet("qlp_host_token") });
         } catch(e) {
@@ -179,9 +139,8 @@
 
         window.hostPhase = res.status;
 
-        // LOBI
         if (res.status === "waiting") {
-          if (currentPhase !== "waiting") { currentPhase = "waiting"; if (window.hostAudioUnlocked) playSound('bgm_lobby'); }
+          if (currentPhase !== "waiting") { currentPhase = "waiting"; playSound('bgm_lobby'); }
           if (lobby) { 
             lobby.style.display = "flex"; 
             if ($("lobbyPin")) $("lobbyPin").textContent = storageGet("qlp_player_pin") || "------";
@@ -198,13 +157,24 @@
           return;
         } 
 
-        // DALAM KUIZ
         if (lobby) lobby.style.display = "none";
         if (panel) panel.style.display = "block";
         if (control) control.style.display = "flex";
 
+        // FASA KUIZ TAMAT (FULL LEADERBOARD)
         if (res.status === "completed") {
-          panel.innerHTML = '<h2 style="text-align:center; font-size:48px; color:#f8fafc; margin:40px 0;">KUIZ TAMAT!</h2>';
+          const allPlayers = res.fullLeaderboard || [];
+          const listHtml = allPlayers.map((p, i) => `
+            <div style="font-size:20px; margin:8px auto; max-width:600px; background:${i<3?'#fbbf24':'#1e293b'}; color:${i<3?'#000':'#fff'}; padding:12px 20px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+              <span><b>#${i+1}</b> ${escapeHtml(p.name)}</span>
+              <span style="font-weight:bold;">${p.score} pt</span>
+            </div>`).join("");
+          
+          panel.innerHTML = `<div style="text-align:center">
+            <h2 style="font-size:40px; margin-bottom:20px; color:#10b981;">🎉 KUIZ TAMAT! 🎉</h2>
+            <h3 style="color:#94a3b8; margin-bottom:20px;">KEDUDUKAN KESELURUHAN</h3>
+            <div style="max-height:60vh; overflow-y:auto; padding:10px;">${listHtml}</div>
+          </div>`;
           if (control) control.style.display = "none";
           clearInterval(hostTimerInt); stopAllBGM(); return;
         }
@@ -215,7 +185,7 @@
         clearInterval(hostTimerInt);
         currentPhase = res.status;
 
-        if (res.status === "active") { if (window.hostAudioUnlocked) playSound('bgm_quiz'); }
+        if (res.status === "active") { playSound('bgm_quiz'); }
         else stopAllBGM(); 
 
         if (res.status === "leaderboard") {
@@ -256,7 +226,6 @@
             }).join("")}
           </div>`;
 
-        // KIRAAN MASA & UNLOCK BUTANG NEXT
         if (res.status === "active") {
           let hostTimeLeft = q.timeLimitSeconds;
           const nextBtn = $("nextQuestionBtn");
@@ -267,10 +236,7 @@
             if (hostTimeLeft <= 0) {
               clearInterval(hostTimerInt);
               if (nextBtn) { nextBtn.disabled = true; nextBtn.textContent = "Masa Tamat..."; }
-              try {
-                await apiPost({ action: "revealAnswer", sessionId, hostToken: storageGet("qlp_host_token") });
-              } catch(e) {}
-              // UNLOCK BUTANG NEXT SELEPAS MASA TAMAT
+              try { await apiPost({ action: "revealAnswer", sessionId, hostToken: storageGet("qlp_host_token") }); } catch(e) {}
               if (nextBtn) { nextBtn.disabled = false; nextBtn.textContent = "➡ SETERUSNYA"; }
             }
           }, 1000);
@@ -282,7 +248,7 @@
     pollHost(); window.setInterval(pollHost, POLL_INTERVAL_MS);
   }
 
-  // ---------- Live Participant (AUTO TIMER & SFX) ----------
+  // ---------- Live Participant ----------
   function initLiveParticipant() {
     if (!$("waitingRoom") && !$("joinBtn")) return;
     let polling = false;
@@ -302,7 +268,15 @@
         if (res.status === "waiting") { panel.style.display = "none"; if (room) { room.hidden = false; room.style.display = "block"; } return; }
         if (room) { room.hidden = true; room.style.display = "none"; }
         panel.style.display = "flex";
-        if (res.status === "completed") { panel.innerHTML = '<div style="text-align:center;"><h2>Kuiz Tamat!</h2></div>'; clearInterval(playerTimerInt); return; }
+        
+        if (res.status === "completed") { 
+          panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#10b981;color:white;border-radius:20px;">
+            <div style="font-size:80px;line-height:1;margin-bottom:10px;">🎉</div>
+            <div style="font-size:32px;font-weight:bold;">Kuiz Tamat!</div>
+            <div style="font-size:20px;margin-top:20px;">Sila lihat skrin utama untuk kedudukan anda.</div>
+          </div>`; 
+          clearInterval(playerTimerInt); return; 
+        }
         
         const newKey = res.status + "_" + (res.question ? res.question.questionId : "0");
         if (currentRenderKey === newKey) return; 
@@ -381,7 +355,6 @@
     pollParticipant(); window.setInterval(pollParticipant, POLL_INTERVAL_MS);
   }
 
-  // ---------- FUNGSI KLIK BUTANG NEXT (HOST) ----------
   document.addEventListener("DOMContentLoaded", () => {
     if ($("pin")) { localStorage.removeItem("qlp_player_session_id"); localStorage.removeItem("qlp_player_id"); }
     initJoinForm(); initAdminLogic(); initLiveHost(); initLiveParticipant();
