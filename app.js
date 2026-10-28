@@ -124,7 +124,7 @@
     }
   }
 
-  // ---------- Live Host (Lobby, Game, AUTO TIMER & BGM) ----------
+// ---------- Live Host (Lobby, Game, AUTO TIMER & BGM) ----------
   function initLiveHost() {
     const lobby = $("lobbyPanel");
     const panel = $("hostLiveQuestionPanel");
@@ -136,14 +136,30 @@
     let currentRenderKey = ""; 
     let hostTimerInt = null;
     let currentPhase = "";
+    window.hostAudioUnlocked = false;
     
     const storedPin = storageGet("qlp_player_pin");
     if ($("lobbyPin") && storedPin) $("lobbyPin").textContent = storedPin;
+
+    // FUNGSI UNMUTE AUDIO HOS
+    const unmuteBtn = $("unmuteBtn");
+    if (unmuteBtn) {
+      unmuteBtn.addEventListener("click", () => {
+        window.hostAudioUnlocked = true;
+        unmuteBtn.style.background = "#10b981";
+        unmuteBtn.textContent = "🔊 Audio Aktif";
+        if (currentPhase === "waiting") playSound('bgm_lobby');
+        else if (currentPhase === "active") playSound('bgm_quiz');
+      });
+    }
 
     const startBtn = $("hostStartBtn");
     if (startBtn) {
       startBtn.addEventListener("click", async () => {
         startBtn.disabled = true; startBtn.textContent = "MEMULAKAN...";
+        // Jika hos tak tekan butang unmute, tindakan klik "Mula Kuiz" ini akan automatik benarkan audio
+        window.hostAudioUnlocked = true; 
+        if (unmuteBtn) { unmuteBtn.style.background = "#10b981"; unmuteBtn.textContent = "🔊 Audio Aktif"; }
         try {
           await apiPost({ action: "startSession", sessionId: storageGet("qlp_session_id"), hostToken: storageGet("qlp_host_token") });
         } catch(e) {
@@ -164,9 +180,11 @@
 
         window.hostPhase = res.status;
 
-        // FASA LOBI
         if (res.status === "waiting") {
-          if (currentPhase !== "waiting") { playSound('bgm_lobby'); currentPhase = "waiting"; }
+          if (currentPhase !== "waiting") { 
+            currentPhase = "waiting"; 
+            if (window.hostAudioUnlocked) playSound('bgm_lobby'); 
+          }
           if (lobby) { 
             lobby.style.display = "flex"; 
             if ($("lobbyPin")) $("lobbyPin").textContent = storageGet("qlp_player_pin") || "------";
@@ -183,7 +201,6 @@
           return;
         } 
 
-        // FASA KUIZ BERJALAN
         if (lobby) lobby.style.display = "none";
         if (panel) panel.style.display = "block";
         if (control) control.style.display = "flex";
@@ -202,7 +219,7 @@
         clearInterval(hostTimerInt);
         currentPhase = res.status;
 
-        if (res.status === "active") playSound('bgm_quiz');
+        if (res.status === "active") { if (window.hostAudioUnlocked) playSound('bgm_quiz'); }
         else stopAllBGM(); 
 
         if (res.status === "leaderboard") {
@@ -260,7 +277,6 @@
               try {
                 await apiPost({ action: "revealAnswer", sessionId, hostToken: storageGet("qlp_host_token") });
               } catch(e) {}
-              // UNLOCK BUTANG SELEPAS JAWAPAN DIPAPARKAN
               if (nextBtn) {
                 nextBtn.disabled = false;
                 nextBtn.textContent = "➡ SETERUSNYA";
@@ -275,15 +291,10 @@
       }
     }
 
-    document.body.addEventListener("click", () => {
-      if(window.hostAudioUnlocked) return;
-      SOUNDS.bgm_lobby.play().then(()=> { SOUNDS.bgm_lobby.pause(); window.hostAudioUnlocked = true; }).catch(()=>{});
-    }, {once:true});
-
     pollHost();
     window.setInterval(pollHost, POLL_INTERVAL_MS);
   }
-
+  
   // ---------- Live Participant (AUTO TIMER & SFX) ----------
   function initLiveParticipant() {
     if (!$("waitingRoom") && !$("joinBtn")) return;
