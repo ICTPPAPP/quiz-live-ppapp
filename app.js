@@ -1,4 +1,4 @@
-/* QUIZ LIVE PPAPP - ONE BGM (LOOP) + SFX + FULL LEADERBOARD */
+/* QUIZ LIVE PPAPP - FULL LOGIC + AUDIO + LEADERBOARD + BUG FIX (UNANSWERED) */
 (() => {
   "use strict";
 
@@ -8,7 +8,7 @@
 
   // --- SISTEM AUDIO (1 BGM + 2 SFX) ---
   const SOUNDS = {
-    bgm_main: new Audio("bgm-lobby.mp3"), // Loop untuk lobi & soalan
+    bgm_main: new Audio("bgm-lobby.mp3"), 
     sfx_correct: new Audio("sfx-correct.mp3"),
     sfx_wrong: new Audio("sfx-wrong.mp3")
   };
@@ -17,7 +17,7 @@
   function playBGM() {
     if (SOUNDS.bgm_main.paused) {
       const p = SOUNDS.bgm_main.play();
-      if (p !== undefined) p.catch(() => console.log("Menunggu klik pengguna..."));
+      if (p !== undefined) p.catch(() => {});
     }
   }
 
@@ -33,7 +33,6 @@
     }
   }
 
-  // AUTO PLAY APABILA SKRIN DIKLIK
   document.body.addEventListener('click', () => {
     if (!window.audioUnlocked) {
       window.audioUnlocked = true;
@@ -199,7 +198,6 @@
         if (panel) panel.style.display = "block";
         if (control) control.style.display = "flex";
 
-        // --- FULL LEADERBOARD BILA TAMAT ---
         if (res.status === "completed") {
           const allPlayers = res.fullLeaderboard || [];
           const listHtml = allPlayers.map((p, i) => `
@@ -223,7 +221,6 @@
         clearInterval(hostTimerInt);
         currentPhase = res.status;
 
-        // Muzik main berterusan masa soalan aktif
         if (res.status === "active") { playBGM(); }
         else { stopBGM(); }
 
@@ -321,18 +318,29 @@
         currentRenderKey = newKey;
         clearInterval(playerTimerInt);
 
+        // PADAM MEMORI JAWAPAN LAMA BILA SOALAN BAHARU BERMULA
+        if (res.status === "active") {
+          localStorage.removeItem("qlp_last_isCorrect");
+          localStorage.setItem("qlp_last_earned", "0");
+        }
+
         if (res.status === "revealing_answer") {
-          const isCorrect = localStorage.getItem("qlp_last_isCorrect") === "true";
+          const answeredState = localStorage.getItem("qlp_last_isCorrect"); 
           const earned = localStorage.getItem("qlp_last_earned") || "0";
+          
+          let isCorrect = (answeredState === "true");
+          let message = (answeredState === null) ? "Tidak Menjawab" : (isCorrect ? "Tepat!" : "Salah");
+          let icon = (answeredState === null) ? "⏱️" : (isCorrect ? "✅" : "❌");
+          let bgColor = (answeredState === null || !isCorrect) ? "#b91c1c" : "#15803d";
           
           if (sfxPlayedForQ !== (res.question ? res.question.questionId : "0")) {
             playSFX(isCorrect ? 'sfx_correct' : 'sfx_wrong');
             sfxPlayedForQ = (res.question ? res.question.questionId : "0");
           }
 
-          panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:${isCorrect ? "#15803d" : "#b91c1c"};color:white;border-radius:20px;">
-            <div style="font-size:120px;line-height:1;margin-bottom:10px;">${isCorrect ? "✅" : "❌"}</div>
-            <div style="font-size:32px;font-weight:bold;">${isCorrect ? "Tepat!" : "Salah"}</div>
+          panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:${bgColor};color:white;border-radius:20px;">
+            <div style="font-size:120px;line-height:1;margin-bottom:10px;">${icon}</div>
+            <div style="font-size:32px;font-weight:bold;">${message}</div>
             <div style="font-size:38px; font-weight:900; color:${isCorrect ? '#fcd34d' : '#fca5a5'}; margin-top:20px;">+${earned} XP</div>
           </div>`; return;
         }
