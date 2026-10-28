@@ -34,4 +34,74 @@
   @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
   /* PAPARAN SOALAN */
-  #hostLiveQuestionPanel { max-width: 1200px; margin: 40px auto; padding: 40px; background: #111827; border-radius: 24
+  #hostLiveQuestionPanel { max-width: 1200px; margin: 40px auto; padding: 40px; background: #111827; border-radius: 24px; box-shadow: 0 16px 40px rgba(0,0,0,0.4); border: 1px solid #1e293b; width: 90%; }
+  #hostControlPanel { display: flex; justify-content: center; gap: 15px; padding: 20px; background: #0b1120; border-top: 1px solid #1e293b; margin-top: auto; }
+  .btn { border: none; padding: 16px 32px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 16px; transition: 0.2s; }
+  .btn-next { background: #3b82f6; color: white; }
+  .btn-next:hover { background: #2563eb; }
+  .btn-end { background: transparent; color: #ef4444; border: 2px solid #ef4444; }
+  .btn-end:hover { background: #ef4444; color: white; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">QUIZ LIVE <span>PPAPP</span></div>
+  <a href="admin.html" class="btn-back">← Kembali Admin</a>
+</header>
+
+<!-- LOBI MENUNGGU HOS (DIPAPARKAN SEMASA STATUS WAITING) -->
+<div id="lobbyPanel" style="display:none;">
+  <div class="lobby-card">
+    <div class="qr-box">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://ictppapp.github.io/quiz-live-ppapp/" alt="QR Code">
+    </div>
+    <div class="pin-box">
+      <p>SERTAI SEKARANG DI</p>
+      <div class="url-text">ictppapp.github.io/quiz-live-ppapp/</div>
+      <p>PIN PERMAINAN</p>
+      <h1 id="lobbyPin">------</h1>
+      <button id="hostStartBtn" class="btn-start-large">▶ MULA KUIZ SEKARANG</button>
+    </div>
+  </div>
+  
+  <div class="players-section">
+    <div class="players-header">
+      <h2>Senarai Peserta</h2>
+      <div class="player-count">👤 <span id="lobbyCount">0</span> Masuk</div>
+    </div>
+    <div id="lobbyPlayers">
+      <!-- Nama pemain keluar di sini -->
+    </div>
+  </div>
+</div>
+
+<!-- PAPARAN SOALAN (TERSEMBUNYI MASA LOBI) -->
+<section id="hostLiveQuestionPanel" style="display:none;"></section>
+
+<!-- PANEL KAWALAN SOALAN -->
+<div id="hostControlPanel" style="display:none;">
+  <button id="nextQuestionBtn" class="btn btn-next">➡ SETERUSNYA</button>
+  <button id="endQuizBtn" class="btn btn-end">Tamatkan Kuiz</button>
+</div>
+
+<script src="app.js?v=26"></script>
+<script>
+  document.getElementById("endQuizBtn").addEventListener("click", async () => {
+    if(!confirm("Tamatkan kuiz sekarang?")) return;
+    try {
+      const url = localStorage.getItem("qlp_api_url");
+      await fetch(url, { 
+        method: "POST", 
+        body: JSON.stringify({ 
+          action: "endQuiz", 
+          sessionId: localStorage.getItem("qlp_session_id"), 
+          hostToken: localStorage.getItem("qlp_host_token") 
+        }) 
+      });
+      window.location.href = "admin.html";
+    } catch(e) { alert("Gagal menamatkan kuiz"); }
+  });
+</script>
+</body>
+</html>
