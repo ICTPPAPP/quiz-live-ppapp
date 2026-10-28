@@ -1,10 +1,33 @@
-/* QUIZ LIVE PPAPP - FULL LOGIC + AUTO TIMER + LOBBY */
+/* QUIZ LIVE PPAPP - FULL LOGIC + AUTO TIMER + LOBBY + AUDIO SYSTEM */
 (() => {
   "use strict";
 
   const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbxlHmVrFF84wSGQF3z0F_qEvVWZpirbgo0D06FclCDkhZTWXv_YgFTAHIAx381FERKT/exec";
   const POLL_INTERVAL_MS = 1500; 
   const $ = (id) => document.getElementById(id);
+
+  // --- SISTEM AUDIO (Pautan MP3 Percuma dari Pixabay) ---
+  const SOUNDS = {
+    bgm_lobby: new Audio("https://cdn.pixabay.com/download/audio/2022/05/16/audio_b2875150c2.mp3?filename=fun-life-112188.mp3"), // Muzik ceria lobi
+    bgm_quiz: new Audio("https://cdn.pixabay.com/download/audio/2022/10/25/audio_24e5264b38.mp3?filename=suspense-113264.mp3"), // Muzik suspen soalan
+    sfx_correct: new Audio("https://cdn.pixabay.com/download/audio/2021/08/04/audio_0625c1539c.mp3?filename=success-1-6297.mp3"), // Bunyi Betul
+    sfx_wrong: new Audio("https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c8a73467.mp3?filename=negative_beeps-6008.mp3") // Bunyi Salah
+  };
+  SOUNDS.bgm_lobby.loop = true; // Ulang muzik lobi
+  SOUNDS.bgm_quiz.loop = true;  // Ulang muzik soalan
+
+  function stopAllBGM() {
+    SOUNDS.bgm_lobby.pause(); SOUNDS.bgm_lobby.currentTime = 0;
+    SOUNDS.bgm_quiz.pause(); SOUNDS.bgm_quiz.currentTime = 0;
+  }
+  
+  function playSound(key) {
+    if (SOUNDS[key]) {
+      if (key.startsWith('bgm_')) stopAllBGM(); // Hentikan BGM lama sebelum main BGM baru
+      SOUNDS[key].play().catch(e => console.log("Pelayar menyekat audio automatik:", e));
+    }
+  }
+  // --------------------------------------------------------
 
   const ANSWER_COLORS = [
     { option: "A", color: "#e53232", shape: "▲", label: "Merah", textColor: "#ffffff" },
@@ -34,6 +57,10 @@
       const pin = pinInput.value.trim(), name = ($("playerName") ? $("playerName").value.trim() : "");
       if (!/^\d{6}$/.test(pin) || !name) return alert("Sila masukkan 6 digit PIN dan Nama.");
       joinButton.disabled = true; joinButton.textContent = "Menyemak...";
+      
+      // 'Unlock' audio untuk peserta
+      SOUNDS.sfx_correct.play().then(()=>SOUNDS.sfx_correct.pause()).catch(()=>{}); 
+
       try {
         const res = await apiPost({ action: "join", pin, displayName: name });
         if (!res.success) throw new Error(res.message);
@@ -100,13 +127,14 @@
     }
   }
 
-  // ---------- Live Host (Lobby, Game & AUTO TIMER) ----------
+  // ---------- Live Host (Lobby, Game & AUTO TIMER & BGM) ----------
   function initLiveHost() {
     if (!$("lobbyPanel") && !$("hostLiveQuestionPanel")) return;
     
     let polling = false;
-    let currentRenderKey = ""; // Mengelakkan skrin terkelip-kelip (flicker)
+    let currentRenderKey = ""; 
     let hostTimerInt = null;
+    let currentPhase = "";
     
     const startBtn = $("hostStartBtn");
     if (startBtn) {
@@ -128,6 +156,7 @@
 
         // FASA LOBI
         if (res.status === "waiting") {
+          if (currentPhase !== "waiting") { playSound('bgm_lobby'); currentPhase = "waiting"; } // Main Muzik Lobi
           if (lobby) { lobby.style.display = "flex"; if ($("lobbyPin")) $("lobbyPin").textContent = storageGet("qlp_player_pin");
             const players = res.players || []; $("lobbyCount").textContent = players.length;
             $("lobbyPlayers").innerHTML = players.map(p => `<div class="player-chip">${escapeHtml(p)}</div>`).join("");
@@ -140,13 +169,17 @@
         if (panel) panel.style.display = "block";
         if (control) control.style.display = "flex";
 
-        if (res.status === "completed") { panel.innerHTML = '<h2 style="text-align:center; font-size:50px;">KUIZ TAMAT!</h2>'; control.style.display="none"; clearInterval(hostTimerInt); return; }
+        if (res.status === "completed") { panel.innerHTML = '<h2 style="text-align:center; font-size:50px;">KUIZ TAMAT!</h2>'; control.style.display="none"; clearInterval(hostTimerInt); stopAllBGM(); return; }
         
-        // PENGHADANG RENDER: Hanya ubah skrin jika soalan/fasa bertukar
         const newKey = res.status + "_" + (res.question ? res.question.questionId : "0");
         if (currentRenderKey === newKey) return; 
         currentRenderKey = newKey;
-        clearInterval(hostTimerInt); // Hentikan timer lama
+        clearInterval(hostTimerInt); 
+        currentPhase = res.status;
+
+        // KAWALAN AUDIO HOS
+        if (res.status === "active") playSound('bgm_quiz'); // Main Muzik Suspen Soalan
+        else stopAllBGM(); // Hentikan muzik masa Leaderboard/Jawapan
 
         if (res.status === "leaderboard") {
           const tops = (res.leaderboard || []).map((p, i) => `<div style="font-size:28px; margin:15px auto; max-width:600px; background:#1e293b; padding:20px 30px; border-radius:15px; display:flex; justify-content:space-between; align-items:center;"><span><b style="color:#3b82f6;">#${i+1}</b> ${escapeHtml(p.name)}</span><span style="font-weight:900;color:#fcd34d;font-size:35px;">${p.score} pt</span></div>`).join("");
@@ -173,7 +206,6 @@
             }).join("")}
           </div>`;
 
-        // MULAKAN PEMASA AUTOMATIK (HANYA MASA SOALAN AKTIF)
         if (res.status === "active") {
           let hostTimeLeft = q.timeLimitSeconds;
           hostTimerInt = setInterval(async () => {
@@ -183,25 +215,30 @@
             if (hostTimeLeft <= 0) {
               clearInterval(hostTimerInt);
               if ($("nextQuestionBtn")) { $("nextQuestionBtn").disabled = true; $("nextQuestionBtn").textContent = "Masa Tamat..."; }
-              try { 
-                // TAMATKAN MASA AUTOMATIK KE SERVER
-                await apiPost({ action: "revealAnswer", sessionId, hostToken: storageGet("qlp_host_token") }); 
-              } catch(e) {}
+              try { await apiPost({ action: "revealAnswer", sessionId, hostToken: storageGet("qlp_host_token") }); } catch(e) {}
             }
           }, 1000);
         }
 
       } catch (e) {} finally { polling = false; }
     }
+    
+    // 'Unlock' audio untuk Hos klik pertama
+    document.body.addEventListener("click", () => {
+      if(window.hostAudioUnlocked) return;
+      SOUNDS.bgm_lobby.play().then(()=> { SOUNDS.bgm_lobby.pause(); window.hostAudioUnlocked = true; }).catch(()=>{});
+    }, {once:true});
+
     pollHost(); window.setInterval(pollHost, POLL_INTERVAL_MS);
   }
 
-  // ---------- Live Participant (AUTO TIMER) ----------
+  // ---------- Live Participant (AUTO TIMER & SFX) ----------
   function initLiveParticipant() {
     if (!$("waitingRoom") && !$("joinBtn")) return;
     let polling = false;
     let currentRenderKey = "";
     let playerTimerInt = null;
+    let sfxPlayedForQ = ""; // Elak bunyi betul/salah dimainkan berulang kali
     
     async function pollParticipant() {
       if (polling) return;
@@ -217,7 +254,6 @@
         panel.style.display = "flex";
         if (res.status === "completed") { panel.innerHTML = '<div style="text-align:center;"><h2>Kuiz Tamat!</h2></div>'; clearInterval(playerTimerInt); return; }
         
-        // PENGHADANG RENDER PESERTA
         const newKey = res.status + "_" + (res.question ? res.question.questionId : "0");
         if (currentRenderKey === newKey) return; 
         currentRenderKey = newKey;
@@ -226,6 +262,13 @@
         if (res.status === "revealing_answer") {
           const isCorrect = localStorage.getItem("qlp_last_isCorrect") === "true";
           const earned = localStorage.getItem("qlp_last_earned") || "0";
+          
+          // MAIN BUNYI BETUL/SALAH DI TELEFON PESERTA
+          if (sfxPlayedForQ !== (res.question ? res.question.questionId : "0")) {
+            playSound(isCorrect ? 'sfx_correct' : 'sfx_wrong');
+            sfxPlayedForQ = (res.question ? res.question.questionId : "0");
+          }
+
           panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:${isCorrect ? "#15803d" : "#b91c1c"};color:white;border-radius:20px;">
             <div style="font-size:120px;line-height:1;margin-bottom:10px;">${isCorrect ? "✅" : "❌"}</div>
             <div style="font-size:32px;font-weight:bold;">${isCorrect ? "Tepat!" : "Salah"}</div>
@@ -256,7 +299,6 @@
           
         const btns = [...panel.querySelectorAll("button")];
         
-        // PEMASA AUTOMATIK PESERTA (KUNCI BUTANG BILA 0)
         let playerTimeLeft = q.timeLimitSeconds;
         playerTimerInt = setInterval(() => {
           playerTimeLeft--;
@@ -276,7 +318,7 @@
             btns.forEach(b => { b.disabled = true; b.style.opacity = "0.4"; });
             btn.style.opacity = "1"; btn.style.transform = "translateY(5px)"; btn.style.boxShadow = "none";
             btn.dataset.answered = "true";
-            clearInterval(playerTimerInt); // Hentikan timer peserta bila dah jawab
+            clearInterval(playerTimerInt); 
             if ($("playerAnswerStatus")) $("playerAnswerStatus").textContent = "Menghantar…";
             try {
               const res = await apiPost({ action: "submitAnswer", sessionId, playerId: storageGet("qlp_player_id"), questionId: q.questionId, selectedOption: btn.dataset.option, responseMs: Date.now() - startTime });
