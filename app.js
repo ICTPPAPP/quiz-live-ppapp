@@ -8,10 +8,10 @@
 
   // --- SISTEM AUDIO ---
   const SOUNDS = {
-    bgm_lobby: new Audio("https://cdn.pixabay.com/download/audio/2022/05/16/audio_b2875150c2.mp3?filename=fun-life-112188.mp3"),
-    bgm_quiz: new Audio("https://cdn.pixabay.com/download/audio/2022/10/25/audio_24e5264b38.mp3?filename=suspense-113264.mp3"),
-    sfx_correct: new Audio("https://cdn.pixabay.com/download/audio/2021/08/04/audio_0625c1539c.mp3?filename=success-1-6297.mp3"),
-    sfx_wrong: new Audio("https://cdn.pixabay.com/download/audio/2022/03/10/audio_c8c8a73467.mp3?filename=negative_beeps-6008.mp3")
+    bgm_lobby: new Audio("bgm-lobby.mp3"),
+    bgm_quiz: new Audio("bgm-quiz.mp3"),
+    sfx_correct: new Audio("sfx-correct.mp3"),
+    sfx_wrong: new Audio("sfx-wrong.mp3")
   };
   SOUNDS.bgm_lobby.loop = true; 
   SOUNDS.bgm_quiz.loop = true;  
