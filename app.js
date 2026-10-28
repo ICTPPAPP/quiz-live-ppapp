@@ -1,4 +1,4 @@
-/* QUIZ LIVE PPAPP - FULL LOGIC + SMART AUTOPLAY AUDIO + FULL LEADERBOARD */
+/* QUIZ LIVE PPAPP - ONE BGM (LOOP) + SFX + FULL LEADERBOARD */
 (() => {
   "use strict";
 
@@ -6,37 +6,38 @@
   const POLL_INTERVAL_MS = 1500; 
   const $ = (id) => document.getElementById(id);
 
-  // --- SISTEM AUDIO ---
+  // --- SISTEM AUDIO (1 BGM + 2 SFX) ---
   const SOUNDS = {
-    bgm_lobby: new Audio("bgm-lobby.mp3"),
-    bgm_quiz: new Audio("bgm-quiz.mp3"),
+    bgm_main: new Audio("bgm-lobby.mp3"), // Loop untuk lobi & soalan
     sfx_correct: new Audio("sfx-correct.mp3"),
     sfx_wrong: new Audio("sfx-wrong.mp3")
   };
-  SOUNDS.bgm_lobby.loop = true; 
-  SOUNDS.bgm_quiz.loop = true;  
+  SOUNDS.bgm_main.loop = true; 
 
-  function stopAllBGM() {
-    SOUNDS.bgm_lobby.pause(); SOUNDS.bgm_lobby.currentTime = 0;
-    SOUNDS.bgm_quiz.pause(); SOUNDS.bgm_quiz.currentTime = 0;
-  }
-  
-  function playSound(key) {
-    if (SOUNDS[key]) {
-      if (key.startsWith('bgm_')) stopAllBGM(); 
-      const playPromise = SOUNDS[key].play();
-      if (playPromise !== undefined) {
-        playPromise.catch(e => console.log("Menunggu klik pengguna untuk mainkan audio..."));
-      }
+  function playBGM() {
+    if (SOUNDS.bgm_main.paused) {
+      const p = SOUNDS.bgm_main.play();
+      if (p !== undefined) p.catch(() => console.log("Menunggu klik pengguna..."));
     }
   }
 
-  // BUKA AUDIO AUTOMATIK BILA SKRIN DIKLIK/DISENTUH
+  function stopBGM() {
+    SOUNDS.bgm_main.pause();
+    SOUNDS.bgm_main.currentTime = 0;
+  }
+  
+  function playSFX(key) {
+    if (SOUNDS[key]) {
+      SOUNDS[key].currentTime = 0;
+      SOUNDS[key].play().catch(() => {});
+    }
+  }
+
+  // AUTO PLAY APABILA SKRIN DIKLIK
   document.body.addEventListener('click', () => {
     if (!window.audioUnlocked) {
       window.audioUnlocked = true;
-      if (window.hostPhase === "waiting") playSound('bgm_lobby');
-      else if (window.hostPhase === "active") playSound('bgm_quiz');
+      if (window.hostPhase === "waiting" || window.hostPhase === "active") playBGM();
     }
   }, { capture: true });
 
@@ -58,7 +59,6 @@
     return await response.json();
   }
 
-  // ---------- Join Form ----------
   function initJoinForm() {
     const pinInput = $("pin"), joinButton = $("joinBtn");
     if (!pinInput || !joinButton) return;
@@ -82,12 +82,10 @@
     });
   }
 
-// ---------- Admin Panel Logic ----------
   function initAdminLogic() {
     if ($("apiUrl")) $("apiUrl").value = getApiUrl();
     if ($("saveApi")) $("saveApi").addEventListener("click", () => { storageSet("qlp_api_url", $("apiUrl").value.trim()); alert("URL Disimpan!"); });
     
-    // TARIK KUIZ TERUS DARI DATABASE GOOGLE SHEETS
     async function loadQuizzesFromServer() {
       const sel = $("questionQuiz"), sel2 = $("sessionQuiz");
       if (!sel && !sel2) return;
@@ -99,9 +97,7 @@
           if (sel2) sel2.innerHTML = opts || '<option value="">-- Tiada Kuiz --</option>';
           storageSet("qlp_quizzes", JSON.stringify(res.quizzes));
         }
-      } catch (e) {
-        console.log("Gagal tarik kuiz dari server.");
-      }
+      } catch (e) { console.log("Gagal tarik kuiz dari server."); }
     }
     loadQuizzesFromServer();
 
@@ -110,7 +106,7 @@
         e.preventDefault();
         const btn = $("quizForm").querySelector("button"); btn.disabled = true; btn.textContent = "Mencipta...";
         try {
-          const res = await apiPost({ action: "createQuiz", title: $("quizTitle").value, description: $("quizDescription").value });
+          await apiPost({ action: "createQuiz", title: $("quizTitle").value, description: $("quizDescription").value });
           alert("Kuiz Berjaya Dicipta!"); location.reload();
         } catch(err) { alert(err.message); } finally { btn.disabled = false; btn.textContent = "Cipta Kuiz"; }
       });
@@ -145,11 +141,8 @@
     }
   }
 
-  // ---------- Live Host ----------
   function initLiveHost() {
-    const lobby = $("lobbyPanel");
-    const panel = $("hostLiveQuestionPanel");
-    const control = $("hostControlPanel");
+    const lobby = $("lobbyPanel"), panel = $("hostLiveQuestionPanel"), control = $("hostControlPanel");
     if (!lobby && !panel) return;
 
     let polling = false;
@@ -185,7 +178,7 @@
         window.hostPhase = res.status;
 
         if (res.status === "waiting") {
-          if (currentPhase !== "waiting") { currentPhase = "waiting"; playSound('bgm_lobby'); }
+          if (currentPhase !== "waiting") { currentPhase = "waiting"; playBGM(); }
           if (lobby) { 
             lobby.style.display = "flex"; 
             if ($("lobbyPin")) $("lobbyPin").textContent = storageGet("qlp_player_pin") || "------";
@@ -206,7 +199,7 @@
         if (panel) panel.style.display = "block";
         if (control) control.style.display = "flex";
 
-        // FASA KUIZ TAMAT (FULL LEADERBOARD)
+        // --- FULL LEADERBOARD BILA TAMAT ---
         if (res.status === "completed") {
           const allPlayers = res.fullLeaderboard || [];
           const listHtml = allPlayers.map((p, i) => `
@@ -221,7 +214,7 @@
             <div style="max-height:60vh; overflow-y:auto; padding:10px;">${listHtml}</div>
           </div>`;
           if (control) control.style.display = "none";
-          clearInterval(hostTimerInt); stopAllBGM(); return;
+          clearInterval(hostTimerInt); stopBGM(); return;
         }
 
         const newKey = res.status + "_" + (res.question ? res.question.questionId : "0");
@@ -230,8 +223,9 @@
         clearInterval(hostTimerInt);
         currentPhase = res.status;
 
-        if (res.status === "active") { playSound('bgm_quiz'); }
-        else stopAllBGM(); 
+        // Muzik main berterusan masa soalan aktif
+        if (res.status === "active") { playBGM(); }
+        else { stopBGM(); }
 
         if (res.status === "leaderboard") {
           const tops = (res.leaderboard || []).map((p, i) => `
@@ -293,7 +287,6 @@
     pollHost(); window.setInterval(pollHost, POLL_INTERVAL_MS);
   }
 
-  // ---------- Live Participant ----------
   function initLiveParticipant() {
     if (!$("waitingRoom") && !$("joinBtn")) return;
     let polling = false;
@@ -333,7 +326,7 @@
           const earned = localStorage.getItem("qlp_last_earned") || "0";
           
           if (sfxPlayedForQ !== (res.question ? res.question.questionId : "0")) {
-            playSound(isCorrect ? 'sfx_correct' : 'sfx_wrong');
+            playSFX(isCorrect ? 'sfx_correct' : 'sfx_wrong');
             sfxPlayedForQ = (res.question ? res.question.questionId : "0");
           }
 
