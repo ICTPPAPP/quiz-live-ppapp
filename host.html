@@ -23,7 +23,6 @@
   .url-text { font-size: 16px; font-weight: 700; color: #3b82f6; margin-bottom: 20px; }
   .btn-start-large { background: #10b981; color: white; border: none; padding: 18px 40px; font-size: 20px; font-weight: 900; border-radius: 14px; cursor: pointer; transition: 0.2s; width: 100%; box-shadow: 0 8px 0 #047857; }
   .btn-start-large:hover { transform: translateY(4px); box-shadow: 0 4px 0 #047857; }
-  .btn-start-large:active { transform: translateY(8px); box-shadow: 0 0 0 #047857; }
   
   .players-section { width: 100%; max-width: 1100px; }
   .players-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #1e293b; padding-bottom: 10px; }
@@ -38,19 +37,22 @@
   #hostControlPanel { display: flex; justify-content: center; gap: 15px; padding: 20px; background: #0b1120; border-top: 1px solid #1e293b; margin-top: auto; }
   .btn { border: none; padding: 16px 32px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 16px; transition: 0.2s; }
   .btn-next { background: #3b82f6; color: white; }
-  .btn-next:hover { background: #2563eb; }
   .btn-end { background: transparent; color: #ef4444; border: 2px solid #ef4444; }
-  .btn-end:hover { background: #ef4444; color: white; }
+  
+  /* BUTANG AUDIO (BARU) */
+  #unmuteBtn { background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-right: 15px; }
 </style>
 </head>
 <body>
 
 <header>
   <div class="brand">QUIZ LIVE <span>PPAPP</span></div>
-  <a href="admin.html" class="btn-back">← Kembali Admin</a>
+  <div>
+    <button id="unmuteBtn">🔇 Buka Audio</button>
+    <a href="admin.html" class="btn-back">← Kembali Admin</a>
+  </div>
 </header>
 
-<!-- LOBI MENUNGGU HOS (DIPAPARKAN SEMASA STATUS WAITING) -->
 <div id="lobbyPanel" style="display:none;">
   <div class="lobby-card">
     <div class="qr-box">
@@ -70,35 +72,24 @@
       <h2>Senarai Peserta</h2>
       <div class="player-count">👤 <span id="lobbyCount">0</span> Masuk</div>
     </div>
-    <div id="lobbyPlayers">
-      <!-- Nama pemain keluar di sini -->
-    </div>
+    <div id="lobbyPlayers"></div>
   </div>
 </div>
 
-<!-- PAPARAN SOALAN (TERSEMBUNYI MASA LOBI) -->
 <section id="hostLiveQuestionPanel" style="display:none;"></section>
 
-<!-- PANEL KAWALAN SOALAN -->
 <div id="hostControlPanel" style="display:none;">
   <button id="nextQuestionBtn" class="btn btn-next">➡ SETERUSNYA</button>
   <button id="endQuizBtn" class="btn btn-end">Tamatkan Kuiz</button>
 </div>
 
-<script src="app.js?v=26"></script>
+<script src="app.js?v=31"></script>
 <script>
   document.getElementById("endQuizBtn").addEventListener("click", async () => {
     if(!confirm("Tamatkan kuiz sekarang?")) return;
     try {
       const url = localStorage.getItem("qlp_api_url");
-      await fetch(url, { 
-        method: "POST", 
-        body: JSON.stringify({ 
-          action: "endQuiz", 
-          sessionId: localStorage.getItem("qlp_session_id"), 
-          hostToken: localStorage.getItem("qlp_host_token") 
-        }) 
-      });
+      await fetch(url, { method: "POST", body: JSON.stringify({ action: "endQuiz", sessionId: localStorage.getItem("qlp_session_id"), hostToken: localStorage.getItem("qlp_host_token") }) });
       window.location.href = "admin.html";
     } catch(e) { alert("Gagal menamatkan kuiz"); }
   });
