@@ -1,127 +1,150 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ms">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin • QUIZ LIVE PPAPP</title><link rel="stylesheet" href="style.css"></head>
-<body class="admin-body">
-<header class="topbar"><a class="brand" href="index.html"><span class="brand-mark">Q</span><span>QUIZ LIVE <b>PPAPP</b><small>ADMIN CONSOLE</small></span></a><a class="back-link" href="index.html">← Halaman utama</a></header>
-<main class="admin-wrap">
-  <div class="admin-heading"><div><div class="eyebrow"><span class="spark">✦</span> PUSAT KAWALAN</div><h1>Selamat datang, <span>Admin.</span></h1><p>Urus kandungan kuiz dan persediaan permainan anda.</p></div><div class="admin-status"><i></i> MODE PROTOTAIP</div></div>
-  <div class="notice"><b>ℹ️ Sambungan backend</b><p>Masukkan URL Web App Google Apps Script anda di bahagian tetapan. Paparan ini ialah prototaip awal; uji integrasi sebelum digunakan dengan peserta sebenar.</p></div>
-  <div class="admin-grid">
-    <section class="panel">
-      <div class="panel-head"><span class="panel-icon">✚</span><div><h2>Cipta kuiz baharu</h2><p>Mulakan dengan tajuk dan penerangan ringkas.</p></div></div>
-      <form id="quizForm">
-        <label for="quizTitle">TAJUK KUIZ</label><input id="quizTitle" required maxlength="100" placeholder="Contoh: ICT Quick Quiz PPAPP">
-        <label for="quizDescription">PENERANGAN</label><textarea id="quizDescription" rows="3" placeholder="Penerangan ringkas tentang kuiz ini"></textarea>
-        <button class="btn btn-primary full" type="submit">Cipta kuiz <span>→</span></button>
-      </form>
-      <div id="quizMsg" class="message" role="status"></div>
-    </section>
-    <section class="panel">
-      <div class="panel-head"><span class="panel-icon blue">⚙</span><div><h2>Tetapan API</h2><p>Simpan URL deployment Apps Script dalam pelayar ini.</p></div></div>
-      <label for="apiUrl">GOOGLE APPS SCRIPT WEB APP URL</label><input id="apiUrl" placeholder="https://script.google.com/macros/s/.../exec">
-      <button id="saveApi" class="btn btn-secondary full" type="button">Simpan URL</button>
-      <button id="testApi" class="btn btn-ghost full" type="button">Uji sambungan</button>
-      <div id="apiMsg" class="message" role="status">URL disimpan pada pelayar ini sahaja.</div>
-      <div class="small-note">Jangan masukkan kata laluan, token peribadi atau maklumat sulit dalam fail frontend.</div>
-    </section>
-  </div>
-  
-<section class="panel wide-panel">
-  <div class="panel-head">
-    <span class="panel-icon gold">🎮</span>
-    <div>
-      <h2>Jana PIN sesi</h2>
-      <p>Pilih kuiz yang telah mempunyai soalan untuk memulakan sesi.</p>
-    </div>
-  </div>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin Dashboard • QUIZ LIVE PPAPP</title>
+  <style>
+    :root { --bg: #0f172a; --panel: #1e293b; --text: #f8fafc; --primary: #3b82f6; }
+    body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+    .sidebar { width: 260px; background: #0b1120; padding: 25px 20px; display: flex; flex-direction: column; gap: 8px; border-right: 1px solid #1e293b; box-sizing: border-box; }
+    .sidebar h2 { color: #fff; font-size: 18px; margin: 0 0 20px 0; letter-spacing: 1px; font-weight: 800; text-transform: uppercase; }
+    .tab-btn { background: transparent; border: none; color: #94a3b8; text-align: left; padding: 14px 16px; font-size: 15px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+    .tab-btn:hover { background: #1e293b; color: #fff; }
+    .tab-btn.active { background: var(--primary); color: #fff; }
+    .content { flex: 1; padding: 40px; overflow-y: auto; box-sizing: border-box; }
+    .tab-content { display: none; max-width: 850px; margin: 0 auto; animation: fadeIn 0.3s; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .panel { background: var(--panel); padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); margin-bottom: 25px; border: 1px solid #334155; }
+    .panel h2 { margin-top: 0; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 20px; color: #e2e8f0; font-size: 20px; }
+    label { display: block; font-size: 12px; font-weight: 700; color: #94a3b8; margin-bottom: 8px; letter-spacing: 0.5px; text-transform: uppercase; }
+    input[type="text"], input[type="number"], select, textarea { width: 100%; padding: 14px; margin-bottom: 22px; background: #0f172a; border: 1px solid #334155; color: #fff; border-radius: 10px; font-size: 15px; box-sizing: border-box; outline: none; }
+    input:focus, select:focus, textarea:focus { border-color: var(--primary); }
+    .btn-primary { background: var(--primary); color: #fff; border: none; padding: 16px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; transition: 0.2s; }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-2px); }
+    .checkbox-group { display: flex; align-items: center; gap: 12px; margin-bottom: 25px; background: rgba(245, 158, 11, 0.1); padding: 16px; border-radius: 10px; border: 1px solid rgba(245, 158, 11, 0.3); cursor: pointer; }
+    .checkbox-group input { width: 22px; height: 22px; margin: 0; cursor: pointer; accent-color: #f59e0b; }
+    .checkbox-group span { font-weight: 700; color: #fcd34d; font-size: 15px; }
+    .message { padding: 15px; border-radius: 8px; font-weight: 600; margin-top: 15px; display: none; }
+    .message.success { display: block; background: #064e3b; color: #34d399; }
+    .message.error { display: block; background: #7f1d1d; color: #fca5a5; }
+    .quiz-row { background: #0f172a; padding: 15px 20px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #334155; }
+    .quiz-row b { color: #fff; font-size: 16px; display: block; margin-bottom: 4px; }
+    .quiz-row small { color: #94a3b8; font-size: 13px; }
+    .pill { background: #3b82f6; font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 800; color: white; }
+  </style>
+</head>
+<body>
 
-  <label for="sessionQuiz">PILIH KUIZ</label>
-  <select id="sessionQuiz" required>
-    <option value="">Pilih kuiz dahulu</option>
-  </select>
-
-  <button id="createSessionBtn" class="btn btn-primary full" type="button">
-    Jana PIN sesi →
-  </button>
-
-  <div id="sessionMsg" class="message" role="status"></div>
-
-<div id="sessionResult" hidden>
-  <p>PIN untuk peserta:</p>
-  <h2 id="sessionPin"></h2>
-  <p id="sessionStatus">Status: Menunggu peserta</p>
-
-  <button
-    id="startQuizBtn"
-    class="btn btn-primary full"
-    type="button"
-  >
-    ▶ MULA KUIZ
-  </button>
-
-  <div id="startQuizMsg" class="message" role="status"></div>
+<div class="sidebar">
+  <h2>Pusat Kawalan</h2>
+  <button class="tab-btn active" onclick="switchTab('tab-cipta', this)">📝 1. Cipta Kuiz</button>
+  <button class="tab-btn" onclick="switchTab('tab-soalan', this)">➕ 2. Tambah Soalan</button>
+  <button class="tab-btn" onclick="switchTab('tab-live', this)">🎮 3. Bilik Live</button>
+  <button class="tab-btn" onclick="switchTab('tab-tetapan', this)">⚙️ API & Sistem</button>
+  <a href="index.html" style="margin-top: auto; color: #64748b; text-decoration: none; padding: 14px 16px; font-size: 14px; font-weight: 600; transition: 0.2s;">← Kembali Utama</a>
 </div>
-</section>
+
+<div class="content">
   
-  <section class="panel wide-panel">
-    <div class="panel-head"><span class="panel-icon gold">▤</span><div><h2>Senarai kuiz</h2><p>Kuiz yang anda cipta dalam sesi pelayar ini.</p></div></div>
-    <div id="quizList" class="quiz-list"><div class="empty-state">Belum ada kuiz dicipta melalui panel ini.</div></div>
-  </section>
-  
-<section class="panel">
-  <div class="panel-head">
-    <span class="panel-icon gold">✎</span>
-    <div>
-      <h2>Tambah soalan</h2>
-      <p>Pilih kuiz dan masukkan soalan berserta jawapan.</p>
+  <div id="tab-cipta" class="tab-content active">
+    <div class="panel">
+      <h2>Cipta Kuiz Baharu</h2>
+      <form id="quizForm">
+        <label>Tajuk Kuiz</label>
+        <input id="quizTitle" required placeholder="Contoh: Kuiz Sejarah Kemerdekaan">
+        <label>Penerangan (Pilihan)</label>
+        <textarea id="quizDescription" rows="2" placeholder="Penerangan ringkas"></textarea>
+        <button class="btn-primary" type="submit">Cipta Kuiz</button>
+      </form>
+      <div id="quizMsg" class="message"></div>
+    </div>
+    <div class="panel">
+      <h2>Senarai Kuiz Sedia Ada</h2>
+      <div id="quizList"><div style="color:#94a3b8;text-align:center;">Belum ada kuiz.</div></div>
     </div>
   </div>
 
-  <form id="questionForm">
-    <label for="questionQuiz">PILIH KUIZ</label>
-    <select id="questionQuiz" required>
-      <option value="">Pilih kuiz dahulu</option>
-    </select>
+  <div id="tab-soalan" class="tab-content">
+    <div class="panel">
+      <h2>Tambah Bank Soalan</h2>
+      <form id="questionForm">
+        <label>Pilih Kuiz</label>
+        <select id="questionQuiz" required><option value="">Pilih kuiz dahulu</option></select>
+        
+        <label>Soalan</label>
+        <textarea id="questionText" rows="3" required placeholder="Tulis soalan di sini..."></textarea>
+        
+        <label>Pilihan A (Merah)</label><input id="optionA" required>
+        <label>Pilihan B (Biru)</label><input id="optionB" required>
+        <label>Pilihan C (Hijau)</label><input id="optionC" required>
+        <label>Pilihan D (Kuning)</label><input id="optionD" required>
+        
+        <label>Jawapan Tepat</label>
+        <select id="correctOption" required>
+          <option value="">Pilih jawapan...</option>
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+          <option value="D">D</option>
+        </select>
+        
+        <label>Masa Menjawab (Saat)</label>
+        <input id="questionTime" type="number" min="5" max="120" value="20" required>
+        
+        <label class="checkbox-group">
+          <input type="checkbox" id="doublePoints">
+          <span>🌟 Soalan Markah Berganda (Double Points - 2000 pt)</span>
+        </label>
 
-    <label for="questionText">SOALAN</label>
-    <textarea id="questionText" rows="3" required
-      placeholder="Contoh: Apakah fungsi utama RAM?"></textarea>
+        <button class="btn-primary" type="submit">Simpan Soalan</button>
+      </form>
+      <div id="questionMsg" class="message"></div>
+    </div>
+  </div>
 
-    <label for="optionA">PILIHAN A</label>
-    <input id="optionA" required placeholder="Jawapan A">
+  <div id="tab-live" class="tab-content">
+    <div class="panel">
+      <h2>Jana Sesi Permainan (Live)</h2>
+      <label>Pilih Kuiz untuk Dimainkan</label>
+      <select id="sessionQuiz" required><option value="">Pilih kuiz dahulu</option></select>
+      <button id="createSessionBtn" class="btn-primary" type="button" style="margin-bottom: 20px;">Jana PIN Permainan</button>
+      <div id="sessionMsg" class="message" style="margin-bottom: 20px;"></div>
+      
+      <div id="sessionResult" hidden style="background: #0f172a; padding: 25px; border-radius: 12px; text-align: center; border: 1px dashed #3b82f6;">
+        <p style="color: #94a3b8; font-weight: bold; margin: 0 0 10px 0;">ARAHKAN PESERTA MASUKKAN PIN INI:</p>
+        <h1 id="sessionPin" style="font-size: 48px; color: #fff; margin: 0 0 15px 0; letter-spacing: 5px;"></h1>
+        <p id="sessionStatus" style="color: #34d399; font-weight: bold; margin-bottom: 25px;">Status: Menunggu peserta masuk...</p>
+        <button id="startQuizBtn" class="btn-primary" type="button" style="background: #10b981;">▶ MULA KUIZ SEKARANG</button>
+        <div id="startQuizMsg" class="message"></div>
+      </div>
+    </div>
+  </div>
 
-    <label for="optionB">PILIHAN B</label>
-    <input id="optionB" required placeholder="Jawapan B">
+  <div id="tab-tetapan" class="tab-content">
+    <div class="panel">
+      <h2>Sambungan Pangkalan Data (API)</h2>
+      <label>Google Apps Script Web App URL</label>
+      <input id="apiUrl" placeholder="https://script.google.com/macros/s/.../exec">
+      <div style="display: flex; gap: 15px;">
+        <button id="saveApi" class="btn-primary" type="button" style="background: #475569;">Simpan URL</button>
+        <button id="testApi" class="btn-primary" type="button" style="background: #3b82f6;">Uji Sambungan</button>
+      </div>
+      <div id="apiMsg" class="message"></div>
+    </div>
+  </div>
 
-    <label for="optionC">PILIHAN C</label>
-    <input id="optionC" required placeholder="Jawapan C">
+</div>
 
-    <label for="optionD">PILIHAN D</label>
-    <input id="optionD" required placeholder="Jawapan D">
-
-    <label for="correctOption">JAWAPAN BETUL</label>
-    <select id="correctOption" required>
-      <option value="">Pilih jawapan betul</option>
-      <option value="A">A</option>
-      <option value="B">B</option>
-      <option value="C">C</option>
-      <option value="D">D</option>
-    </select>
-
-    <label for="questionTime">MASA MENJAWAB (SAAT)</label>
-    <input id="questionTime" type="number" min="5" max="120"
-      value="20" required>
-
-    <button class="btn btn-primary full" type="submit">
-      Simpan soalan →
-    </button>
-  </form>
-
-  <div id="questionMsg" class="message" role="status"></div>
-</section>
-
-  <div class="next-steps"><b>Langkah selepas ini</b><span>Tambah soalan → Jana PIN sesi → Paparkan bilik menunggu → Main secara langsung → Leaderboard.</span></div>
-</main>
-<footer><span>QUIZ LIVE PPAPP</span><span>Panel pentadbir · prototaip</span><a href="index.html">Halaman peserta ↗</a></footer>
-<script src="app.js"></script>
-</body></html>
+<script>
+  function switchTab(tabId, element) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    element.classList.add('active');
+  }
+</script>
+<script src="app.js?v=11"></script>
+</body>
+</html>
