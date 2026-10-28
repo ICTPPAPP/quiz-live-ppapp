@@ -1,4 +1,4 @@
-/* QUIZ LIVE PPAPP - FULL LOGIC + AUTO TIMER + LOBBY + AUDIO SYSTEM (FIXED BUTTON) */
+/* QUIZ LIVE PPAPP - FULL LOGIC + AUTO TIMER + AUDIO + NEXT BTN FIX */
 (() => {
   "use strict";
 
@@ -6,6 +6,7 @@
   const POLL_INTERVAL_MS = 1500; 
   const $ = (id) => document.getElementById(id);
 
+  // --- SISTEM AUDIO ---
   const SOUNDS = {
     bgm_lobby: new Audio("https://cdn.pixabay.com/download/audio/2022/05/16/audio_b2875150c2.mp3?filename=fun-life-112188.mp3"),
     bgm_quiz: new Audio("https://cdn.pixabay.com/download/audio/2022/10/25/audio_24e5264b38.mp3?filename=suspense-113264.mp3"),
@@ -23,7 +24,7 @@
   function playSound(key) {
     if (SOUNDS[key]) {
       if (key.startsWith('bgm_')) stopAllBGM(); 
-      SOUNDS[key].play().catch(e => console.log("Audio tersekat:", e));
+      SOUNDS[key].play().catch(e => console.log("Audio menunggu keizinan:", e));
     }
   }
 
@@ -56,6 +57,7 @@
       if (!/^\d{6}$/.test(pin) || !name) return alert("Sila masukkan 6 digit PIN dan Nama.");
       joinButton.disabled = true; joinButton.textContent = "Menyemak...";
       
+      // Izin audio untuk peserta
       SOUNDS.sfx_correct.play().then(()=>SOUNDS.sfx_correct.pause()).catch(()=>{}); 
 
       try {
@@ -124,12 +126,11 @@
     }
   }
 
-// ---------- Live Host (Lobby, Game, AUTO TIMER & BGM) ----------
+  // ---------- Live Host (Lobby, Game, AUTO TIMER, BGM, & NEXT BTN UNLOCK) ----------
   function initLiveHost() {
     const lobby = $("lobbyPanel");
     const panel = $("hostLiveQuestionPanel");
     const control = $("hostControlPanel");
-
     if (!lobby && !panel) return;
 
     let polling = false;
@@ -141,7 +142,6 @@
     const storedPin = storageGet("qlp_player_pin");
     if ($("lobbyPin") && storedPin) $("lobbyPin").textContent = storedPin;
 
-    // FUNGSI UNMUTE AUDIO HOS
     const unmuteBtn = $("unmuteBtn");
     if (unmuteBtn) {
       unmuteBtn.addEventListener("click", () => {
@@ -157,7 +157,6 @@
     if (startBtn) {
       startBtn.addEventListener("click", async () => {
         startBtn.disabled = true; startBtn.textContent = "MEMULAKAN...";
-        // Jika hos tak tekan butang unmute, tindakan klik "Mula Kuiz" ini akan automatik benarkan audio
         window.hostAudioUnlocked = true; 
         if (unmuteBtn) { unmuteBtn.style.background = "#10b981"; unmuteBtn.textContent = "🔊 Audio Aktif"; }
         try {
@@ -180,11 +179,9 @@
 
         window.hostPhase = res.status;
 
+        // LOBI
         if (res.status === "waiting") {
-          if (currentPhase !== "waiting") { 
-            currentPhase = "waiting"; 
-            if (window.hostAudioUnlocked) playSound('bgm_lobby'); 
-          }
+          if (currentPhase !== "waiting") { currentPhase = "waiting"; if (window.hostAudioUnlocked) playSound('bgm_lobby'); }
           if (lobby) { 
             lobby.style.display = "flex"; 
             if ($("lobbyPin")) $("lobbyPin").textContent = storageGet("qlp_player_pin") || "------";
@@ -201,6 +198,7 @@
           return;
         } 
 
+        // DALAM KUIZ
         if (lobby) lobby.style.display = "none";
         if (panel) panel.style.display = "block";
         if (control) control.style.display = "flex";
@@ -208,9 +206,7 @@
         if (res.status === "completed") {
           panel.innerHTML = '<h2 style="text-align:center; font-size:48px; color:#f8fafc; margin:40px 0;">KUIZ TAMAT!</h2>';
           if (control) control.style.display = "none";
-          clearInterval(hostTimerInt);
-          stopAllBGM();
-          return;
+          clearInterval(hostTimerInt); stopAllBGM(); return;
         }
 
         const newKey = res.status + "_" + (res.question ? res.question.questionId : "0");
@@ -232,8 +228,7 @@
           return;
         }
 
-        const q = res.question;
-        if (!q) return;
+        const q = res.question; if (!q) return;
         const opts = [q.optionA, q.optionB, q.optionC, q.optionD];
 
         panel.innerHTML = `
@@ -261,40 +256,32 @@
             }).join("")}
           </div>`;
 
+        // KIRAAN MASA & UNLOCK BUTANG NEXT
         if (res.status === "active") {
           let hostTimeLeft = q.timeLimitSeconds;
+          const nextBtn = $("nextQuestionBtn");
           hostTimerInt = setInterval(async () => {
             hostTimeLeft--;
             if ($("hostTimerDisplay")) $("hostTimerDisplay").textContent = hostTimeLeft;
 
             if (hostTimeLeft <= 0) {
               clearInterval(hostTimerInt);
-              const nextBtn = $("nextQuestionBtn");
-              if (nextBtn) {
-                nextBtn.disabled = true;
-                nextBtn.textContent = "Masa Tamat...";
-              }
+              if (nextBtn) { nextBtn.disabled = true; nextBtn.textContent = "Masa Tamat..."; }
               try {
                 await apiPost({ action: "revealAnswer", sessionId, hostToken: storageGet("qlp_host_token") });
               } catch(e) {}
-              if (nextBtn) {
-                nextBtn.disabled = false;
-                nextBtn.textContent = "➡ SETERUSNYA";
-              }
+              // UNLOCK BUTANG NEXT SELEPAS MASA TAMAT
+              if (nextBtn) { nextBtn.disabled = false; nextBtn.textContent = "➡ SETERUSNYA"; }
             }
           }, 1000);
         }
 
       } catch (err) {
-      } finally {
-        polling = false;
-      }
+      } finally { polling = false; }
     }
-
-    pollHost();
-    window.setInterval(pollHost, POLL_INTERVAL_MS);
+    pollHost(); window.setInterval(pollHost, POLL_INTERVAL_MS);
   }
-  
+
   // ---------- Live Participant (AUTO TIMER & SFX) ----------
   function initLiveParticipant() {
     if (!$("waitingRoom") && !$("joinBtn")) return;
@@ -394,7 +381,7 @@
     pollParticipant(); window.setInterval(pollParticipant, POLL_INTERVAL_MS);
   }
 
-  // ---------- Init ----------
+  // ---------- FUNGSI KLIK BUTANG NEXT (HOST) ----------
   document.addEventListener("DOMContentLoaded", () => {
     if ($("pin")) { localStorage.removeItem("qlp_player_session_id"); localStorage.removeItem("qlp_player_id"); }
     initJoinForm(); initAdminLogic(); initLiveHost(); initLiveParticipant();
@@ -404,10 +391,16 @@
       nextBtn.addEventListener("click", async () => {
         const sessionId = storageGet("qlp_session_id"), hostToken = storageGet("qlp_host_token");
         nextBtn.disabled = true; nextBtn.textContent = "...";
+        
         let action = window.hostPhase === "revealing_answer" ? "showLeaderboard" : (window.hostPhase === "leaderboard" ? "nextQuestion" : "revealAnswer");
-        try { await apiPost({ action, sessionId, hostToken }); } 
-        catch (e) { alert("Ralat."); } 
-        finally { nextBtn.disabled = false; nextBtn.textContent = "➡ SETERUSNYA"; }
+        try { 
+          await apiPost({ action, sessionId, hostToken }); 
+        } catch (e) { 
+          alert("Ralat menyambung ke server."); 
+        } finally { 
+          nextBtn.disabled = false; 
+          nextBtn.textContent = "➡ SETERUSNYA"; 
+        }
       });
     }
   });
