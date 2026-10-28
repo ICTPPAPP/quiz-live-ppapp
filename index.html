@@ -1,80 +1,78 @@
 <!doctype html>
 <html lang="ms">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>QUIZ LIVE PPAPP</title><link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>QUIZ LIVE PPAPP</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="ambient a1"></div><div class="ambient a2"></div>
-<header class="topbar">
-  <a class="brand" href="index.html"><span class="brand-mark">Q</span><span>QUIZ LIVE <b>PPAPP</b><small>LIVE LEARNING PLATFORM</small></span></a>
-  <span class="top-tag"><i></i> PLATFORM KUIZ INTERAKTIF</span>
-</header>
-<main class="hero-wrap">
-  <section class="hero">
-    <div class="eyebrow"><span class="spark">✦</span> BELAJAR • BERMAIN • MENANG</div>
-    <h1>Uji minda.<br><span>Raih tempat teratas.</span></h1>
-    <p class="lead">Platform kuiz langsung untuk warga PPAPP. Sertai permainan dengan PIN atau urus kuiz melalui panel pentadbir.</p>
-    <div class="join-card">
-      <div class="card-kicker">SERTAI PERMAINAN</div>
-      <label for="pin">PIN PERMAINAN</label>
-      <input id="pin" inputmode="numeric" maxlength="6" placeholder="Contoh: 482 915" autocomplete="off">
-      <label for="playerName">NAMA PAPARAN</label>
-      <input id="playerName" maxlength="30" placeholder="Masukkan nama anda" autocomplete="name">
-      <button id="joinBtn" class="btn btn-primary full">Sertai kuiz <span>→</span></button>
-      <p id="joinMsg" class="message" role="status">Masukkan PIN yang diberikan oleh hos.</p>
-<div id="waitingRoom" class="panel wide-panel" hidden>
-  <div class="panel-head">
-    <span class="panel-icon gold">🎮</span>
-    <div>
-      <h2>Anda sudah menyertai kuiz!</h2>
-      <p>Berjaya masuk ke bilik menunggu.</p>
+  <div class="ambient a1"></div>
+  <div class="ambient a2"></div>
+  
+  <header class="topbar">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">Q</span>
+      <span>QUIZ LIVE <b>PPAPP</b><small>LIVE LEARNING PLATFORM</small></span>
+    </a>
+    <span class="top-tag"><i></i> PLATFORM KUIZ INTERAKTIF</span>
+  </header>
+
+  <!-- BAHAGIAN UTAMA: BORANG LOG MASUK -->
+  <main class="hero-wrap">
+    <section class="hero">
+      <div class="eyebrow"><span class="spark">✦</span> BELAJAR • BERMAIN • MENANG</div>
+      <h1>Uji minda.<br><span>Raih tempat teratas.</span></h1>
+      <p class="lead">Platform kuiz langsung untuk warga PPAPP. Sertai permainan dengan PIN atau urus kuiz melalui panel pentadbir.</p>
+      
+      <div class="join-card">
+        <div class="card-kicker">SERTAI PERMAINAN</div>
+        <label for="pin">PIN PERMAINAN</label>
+        <input id="pin" inputmode="numeric" maxlength="6" placeholder="Contoh: 482 915" autocomplete="off">
+        
+        <label for="playerName">NAMA PAPARAN</label>
+        <input id="playerName" maxlength="30" placeholder="Masukkan nama anda" autocomplete="name">
+        
+        <button id="joinBtn" class="btn btn-primary full">Sertai kuiz <span>→</span></button>
+        <p id="joinMsg" class="message" role="status">Masukkan PIN yang diberikan oleh hos.</p>
+      </div>
+      
+      <div class="hero-foot"><span>✦</span> Dibina untuk pembelajaran yang lebih menyeronokkan</div>
+    </section>
+    
+    <section class="visual">
+      <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+      <div class="float-card card-score"><span class="mini-icon purple">✦</span><div><b>+1,200 XP</b><small>Markah terkumpul</small></div></div>
+      <div class="quiz-tile"><div class="tile-top"><span>SOALAN 04 / 10</span><span class="live-dot">● LIVE</span></div><div class="tile-question">Berapa warna dalam logo PPAPP?</div><div class="tile-options"><div class="opt opt-red"><b>▲</b> Dua</div><div class="opt opt-blue"><b>◆</b> Tiga</div><div class="opt opt-yellow"><b>●</b> Empat</div><div class="opt opt-green"><b>■</b> Lima</div></div><div class="tile-bottom"><span>⏱ 00:18</span><span>⚡ 248 pemain</span></div></div>
+      <div class="float-card card-rank"><span class="trophy">♛</span><div><b>TOP 3</b><small>Leaderboard</small></div></div>
+      <div class="bubble bubble-one">✦</div><div class="bubble bubble-two">＋</div>
+    </section>
+  </main>
+
+  <!-- RUANG MENUNGGU: DIASINGKAN DARIPADA BORANG LOG MASUK -->
+  <div id="waitingRoom" hidden style="text-align:center; background:#1e293b; padding:40px 20px; border-radius:16px; margin:40px auto; max-width:500px; box-shadow:0 10px 30px rgba(0,0,0,0.3); border: 1px solid #334155; position: relative; z-index: 10;">
+    <div style="font-size:40px; margin-bottom:10px;">🎮</div>
+    <h2 style="color:#34d399; font-size:28px; margin-top:0; margin-bottom:15px;">Anda Berjaya Masuk!</h2>
+    
+    <p style="color:#94a3b8; font-size:14px; letter-spacing:2px; text-transform:uppercase; margin-bottom:5px;">PIN Permainan</p>
+    <h1 id="waitingPin" style="font-size:46px; color:#fff; margin:0 0 15px 0; letter-spacing:6px;">------</h1>
+    
+    <p id="waitingName" style="font-size:20px; font-weight:bold; color:#fcd34d; margin-bottom:25px;"></p>
+    
+    <div style="display:inline-block; padding:12px 24px; background:#0f172a; border-radius:30px; border:1px solid #3b82f6;">
+      <p id="waitingStatus" style="color:#60a5fa; font-weight:bold; margin:0;"></p>
     </div>
+    
+    <p style="color:#94a3b8; font-size:13px; margin-top:25px;">Sila kekal di halaman ini. Jangan muat semula (refresh) atau tutup pelayar web anda.</p>
   </div>
-  <p>PIN permainan:</p>
-  <h1 id="waitingPin">------</h1>
 
-  <p id="waitingName">Peserta: —</p>
+  <footer>
+    <span>QUIZ LIVE PPAPP</span>
+    <span>Versi prototaip · 2026</span>
+    <a href="admin.html">Panel Admin ↗</a>
+  </footer>
 
-<div class="waiting-info">
-  <div class="waiting-icon">🎮</div>
-
-  <h2>Anda berjaya masuk!</h2>
-
-  <p class="waiting-description">
-    Anda kini berada di bilik menunggu QUIZ LIVE PPAPP.
-    Sila kekal di halaman ini sementara hos membuat persediaan.
-  </p>
-
-  <div class="waiting-progress">
-    <span class="waiting-spinner"></span>
-    <div>
-      <strong>Menunggu hos memulakan kuiz</strong>
-      <p>Jangan tutup atau muat semula halaman ini.</p>
-    </div>
-  </div>
-
-  <p class="waiting-tip">
-    💡 <strong>Tip:</strong> Bersedia untuk menjawab soalan
-    sebaik sahaja permainan bermula!
-  </p>
-
-  <p id="waitingStatus" class="message">
-    Sambungan berjaya. Menunggu arahan daripada hos...
-  </p>
-</div>
-
-    </div>
-    <div class="hero-foot"><span>✦</span> Dibina untuk pembelajaran yang lebih menyeronokkan</div>
-  </section>
-  <section class="visual">
-    <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
-    <div class="float-card card-score"><span class="mini-icon purple">✦</span><div><b>+1,200 XP</b><small>Markah terkumpul</small></div></div>
-    <div class="quiz-tile"><div class="tile-top"><span>SOALAN 04 / 10</span><span class="live-dot">● LIVE</span></div><div class="tile-question">Berapa warna dalam logo PPAPP?</div><div class="tile-options"><div class="opt opt-red"><b>▲</b> Dua</div><div class="opt opt-blue"><b>◆</b> Tiga</div><div class="opt opt-yellow"><b>●</b> Empat</div><div class="opt opt-green"><b>■</b> Lima</div></div><div class="tile-bottom"><span>⏱ 00:18</span><span>⚡ 248 pemain</span></div></div>
-    <div class="float-card card-rank"><span class="trophy">♛</span><div><b>TOP 3</b><small>Leaderboard</small></div></div>
-    <div class="bubble bubble-one">✦</div><div class="bubble bubble-two">＋</div>
-  </section>
-</main>
-<footer><span>QUIZ LIVE PPAPP</span><span>Versi prototaip · 2026</span><a href="admin.html">Panel Admin ↗</a></footer>
-<script src="app.js?v=3"></script>
-</body></html>
+  <!-- VERSI APP.JS DIKEMAS KINI -->
+  <script src="app.js?v=12"></script>
+</body>
+</html>
