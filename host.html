@@ -3,249 +3,98 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>QUIZ LIVE PPAPP — Paparan Hos</title>
-
+<title>Live Host • QUIZ LIVE PPAPP</title>
 <style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: #0f172a; color: white; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column; }
+  header { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; background: #0b1120; }
+  .brand { font-size: 24px; font-weight: 900; letter-spacing: 1px; }
+  .brand span { color: #3b82f6; }
+  a.btn-back { text-decoration: none; color: #94a3b8; font-weight: 600; padding: 10px 15px; border-radius: 8px; transition: 0.2s; border: 1px solid #334155; }
+  a.btn-back:hover { background: #1e293b; color: white; }
+  
+  /* REKAAN LOBI HOS (WAITING ROOM) */
+  #lobbyPanel { flex: 1; display: none; flex-direction: column; align-items: center; padding: 40px 20px; background: radial-gradient(circle at top, #1e3a8a 0%, #0f172a 60%); }
+  .lobby-card { background: white; color: #0f172a; padding: 30px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); text-align: center; margin-bottom: 40px; display: flex; gap: 40px; align-items: center; }
+  .qr-box img { border-radius: 12px; border: 4px solid #f1f5f9; width: 220px; height: 220px; }
+  .pin-box { text-align: left; }
+  .pin-box p { margin: 0; font-size: 16px; font-weight: 700; color: #64748b; letter-spacing: 2px; }
+  .pin-box h1 { margin: 0 0 10px 0; font-size: 85px; font-weight: 900; letter-spacing: 8px; color: #0f172a; line-height: 1; }
+  .url-text { font-size: 18px; font-weight: 700; color: #3b82f6; margin-bottom: 20px; }
+  .btn-start-large { background: #10b981; color: white; border: none; padding: 18px 40px; font-size: 22px; font-weight: 900; border-radius: 14px; cursor: pointer; transition: 0.2s; width: 100%; box-shadow: 0 8px 0 #047857; }
+  .btn-start-large:hover { transform: translateY(4px); box-shadow: 0 4px 0 #047857; }
+  .btn-start-large:active { transform: translateY(8px); box-shadow: 0 0 0 #047857; }
+  
+  .players-section { width: 100%; max-width: 1200px; }
+  .players-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #1e293b; padding-bottom: 10px; }
+  .players-header h2 { margin: 0; font-size: 24px; color: #f8fafc; }
+  .player-count { background: #3b82f6; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 18px; }
+  #lobbyPlayers { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+  .player-chip { background: #1e293b; border: 1px solid #334155; color: white; padding: 12px 24px; border-radius: 12px; font-weight: 700; font-size: 18px; animation: popIn 0.3s ease-out; }
+  @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-*{
-box-sizing:border-box;
-}
-
-body{
-margin:0;
-min-height:100vh;
-padding:24px;
-background:#080d1c;
-color:white;
-font-family:Arial,sans-serif;
-}
-
-header{
-max-width:1200px;
-margin:auto;
-display:flex;
-justify-content:space-between;
-align-items:center;
-gap:15px;
-flex-wrap:wrap;
-}
-
-.brand{
-font-size:24px;
-font-weight:900;
-}
-
-.sub{
-color:#a5b4fc;
-margin-top:6px;
-font-size:13px;
-}
-
-a{
-text-decoration:none;
-color:white;
-background:#29334d;
-padding:12px 18px;
-border-radius:10px;
-}
-
-.host-bar{
-max-width:1200px;
-margin:25px auto;
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-gap:15px;
-}
-
-.card{
-background:#111827;
-padding:20px;
-border-radius:18px;
-box-shadow:0 10px 30px rgba(0,0,0,.25);
-}
-
-.card-title{
-font-size:12px;
-color:#94a3b8;
-margin-bottom:8px;
-letter-spacing:1px;
-}
-
-.card-value{
-font-size:28px;
-font-weight:800;
-}
-
-#hostLiveQuestionPanel{
-max-width:1200px;
-margin:auto;
-padding:30px;
-background:#111827;
-border-radius:24px;
-box-shadow:0 16px 40px rgba(0,0,0,.25);
-}
-
-#hostControlPanel{
-max-width:1200px;
-margin:25px auto;
-display:flex;
-justify-content:center;
-flex-wrap:wrap;
-gap:12px;
-}
-
-.btn{
-border:none;
-padding:14px 22px;
-border-radius:12px;
-font-weight:700;
-cursor:pointer;
-font-size:15px;
-}
-
-.btn-next{
-background:#4f46e5;
-color:white;
-}
-
-.btn-end{
-background:#dc2626;
-color:white;
-}
-
-.btn:hover{
-opacity:.9;
-}
-
-#hostPageMsg{
-text-align:center;
-margin:20px auto;
-color:#cbd5e1;
-max-width:1200px;
-}
-
+  /* REKAAN SOALAN & KAWALAN */
+  #hostLiveQuestionPanel { max-width: 1200px; margin: 40px auto; padding: 40px; background: #111827; border-radius: 24px; box-shadow: 0 16px 40px rgba(0,0,0,0.4); border: 1px solid #1e293b; width: 90%; }
+  #hostControlPanel { display: flex; justify-content: center; gap: 15px; padding: 20px; background: #0b1120; border-top: 1px solid #1e293b; margin-top: auto; }
+  .btn { border: none; padding: 16px 32px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 16px; transition: 0.2s; }
+  .btn-next { background: #3b82f6; color: white; }
+  .btn-next:hover { background: #2563eb; }
+  .btn-end { background: transparent; color: #ef4444; border: 2px solid #ef4444; }
+  .btn-end:hover { background: #ef4444; color: white; }
 </style>
-
 </head>
-
 <body>
 
 <header>
-
-<div>
-<div class="brand">
-QUIZ LIVE PPAPP
-</div>
-
-<div class="sub">
-PAPARAN HOS · KUIZ LANGSUNG
-</div>
-</div>
-
-<a href="admin.html">
-← Kembali ke Panel Admin
-</a>
-
+  <div class="brand">QUIZ LIVE <span>PPAPP</span></div>
+  <a href="admin.html" class="btn-back">← Kembali Admin</a>
 </header>
 
-<div class="host-bar">
-
-<div class="card">
-
-<div class="card-title">
-PIN PERMAINAN
+<!-- LOBI MENUNGGU HOS (BARU) -->
+<div id="lobbyPanel">
+  <div class="lobby-card">
+    <div class="qr-box">
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://ictppapp.github.io/quiz-live-ppapp/" alt="QR Code">
+    </div>
+    <div class="pin-box">
+      <p>SERTAI SEKARANG DI</p>
+      <div class="url-text">ictppapp.github.io/quiz-live-ppapp/</div>
+      <p>PIN PERMAINAN</p>
+      <h1 id="lobbyPin">------</h1>
+      <button id="hostStartBtn" class="btn-start-large">MULA KUIZ SEKARANG</button>
+    </div>
+  </div>
+  
+  <div class="players-section">
+    <div class="players-header">
+      <h2>Senarai Peserta</h2>
+      <div class="player-count">👤 <span id="lobbyCount">0</span> Masuk</div>
+    </div>
+    <div id="lobbyPlayers">
+      <!-- Nama pemain muncul di sini -->
+    </div>
+  </div>
 </div>
 
-<div
-id="gamePin"
-class="card-value">
-------
+<!-- PAPARAN SOALAN (TERSEMBUNYI MASA LOBI) -->
+<section id="hostLiveQuestionPanel" style="display:none;"></section>
+
+<!-- PANEL KAWALAN HOS -->
+<div id="hostControlPanel" style="display:none;">
+  <button id="nextQuestionBtn" class="btn btn-next">➡ SETERUSNYA</button>
+  <button id="endQuizBtn" class="btn btn-end">Tamatkan Kuiz</button>
 </div>
 
-</div>
-
-<div class="card">
-
-<div class="card-title">
-STATUS
-</div>
-
-<div
-id="gameStatus"
-class="card-value">
-LIVE
-</div>
-
-</div>
-
-</div>
-
-<p id="hostPageMsg">
-Menyambungkan paparan hos...
-</p>
-
-<section
-id="hostLiveQuestionPanel">
-</section>
-
-<div id="hostControlPanel">
-
-<button
-id="nextQuestionBtn"
-class="btn btn-next">
-
-➡ SOALAN SETERUSNYA
-
-</button>
-
-<button
-id="endQuizBtn"
-class="btn btn-end">
-
-⛔ TAMATKAN KUIZ
-
-</button>
-
-</div>
-
-<script src="app.js?v=8"></script>
-
+<script src="app.js?v=13"></script>
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  // 1. Paparan PIN permainan
-  const pinBox = document.getElementById("gamePin");
-  const sessionPin = localStorage.getItem("qlp_player_pin") || "LIVE";
-  if(pinBox) pinBox.textContent = sessionPin;
-
-  // 2. Butang End Quiz (Butang Next diuruskan sepenuhnya oleh app.js)
-  const endBtn = document.getElementById("endQuizBtn");
-  if (endBtn) {
-    endBtn.addEventListener("click", async () => {
-      if(!confirm("Tamatkan kuiz sekarang?")) return;
-      try {
-        const url = localStorage.getItem("qlp_api_url");
-        await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({
-            action: "endQuiz",
-            sessionId: localStorage.getItem("qlp_session_id"),
-            hostToken: localStorage.getItem("qlp_host_token")
-          })
-        });
-        window.location.href = "admin.html";
-      } catch(e) {
-        alert("Gagal menamatkan kuiz");
-      }
-    });
-  }
-});
+  document.getElementById("endQuizBtn").addEventListener("click", async () => {
+    if(!confirm("Tamatkan kuiz sekarang?")) return;
+    try {
+      const url = localStorage.getItem("qlp_api_url");
+      await fetch(url, { method: "POST", body: JSON.stringify({ action: "endQuiz", sessionId: localStorage.getItem("qlp_session_id"), hostToken: localStorage.getItem("qlp_host_token") }) });
+      window.location.href = "admin.html";
+    } catch(e) { alert("Gagal menamatkan kuiz"); }
+  });
 </script>
-
-</body>
-</html>
-</script>
-
 </body>
 </html>
