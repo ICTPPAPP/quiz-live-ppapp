@@ -127,82 +127,132 @@
     }
   }
 
-  // ---------- Live Host (Lobby, Game & AUTO TIMER & BGM) ----------
+// ---------- Live Host (Lobby, Game & AUTO TIMER & BGM) ----------
   function initLiveHost() {
-    if (!$("lobbyPanel") && !$("hostLiveQuestionPanel")) return;
-    
+    const lobby = $("lobbyPanel");
+    const panel = $("hostLiveQuestionPanel");
+    const control = $("hostControlPanel");
+
+    // Jika bukan berada di host.html, abaikan
+    if (!lobby && !panel) return;
+
     let polling = false;
     let currentRenderKey = ""; 
     let hostTimerInt = null;
     let currentPhase = "";
     
+    // Paparkan PIN segera daripada localStorage jika ada
+    const storedPin = storageGet("qlp_player_pin");
+    if ($("lobbyPin") && storedPin) {
+      $("lobbyPin").textContent = storedPin;
+    }
+
     const startBtn = $("hostStartBtn");
     if (startBtn) {
       startBtn.addEventListener("click", async () => {
-        startBtn.disabled = true; startBtn.textContent = "MEMULAKAN...";
-        await apiPost({ action: "startSession", sessionId: storageGet("qlp_session_id"), hostToken: storageGet("qlp_host_token") });
+        startBtn.disabled = true; 
+        startBtn.textContent = "MEMULAKAN...";
+        try {
+          await apiPost({ 
+            action: "startSession", 
+            sessionId: storageGet("qlp_session_id"), 
+            hostToken: storageGet("qlp_host_token") 
+          });
+        } catch(e) {
+          alert("Gagal memulakan: " + e.message);
+          startBtn.disabled = false;
+          startBtn.textContent = "MULA KUIZ SEKARANG";
+        }
       });
     }
 
     async function pollHost() {
       if (polling) return;
-      const sessionId = storageGet("qlp_session_id"); if (!sessionId) return;
+      const sessionId = storageGet("qlp_session_id");
+      if (!sessionId) return;
       polling = true;
+
       try {
         const res = await apiPost({ action: "getSessionState", sessionId });
-        window.hostPhase = res.status; 
-        
-        const lobby = $("lobbyPanel"), panel = $("hostLiveQuestionPanel"), control = $("hostControlPanel");
+        if (!res || !res.success) throw new Error(res ? res.message : "Ralat respons");
 
-        // FASA LOBI
+        window.hostPhase = res.status;
+
+        // 1. FASA LOBI MENUNGGU
         if (res.status === "waiting") {
-          if (currentPhase !== "waiting") { playSound('bgm_lobby'); currentPhase = "waiting"; } // Main Muzik Lobi
-          if (lobby) { lobby.style.display = "flex"; if ($("lobbyPin")) $("lobbyPin").textContent = storageGet("qlp_player_pin");
-            const players = res.players || []; $("lobbyCount").textContent = players.length;
-            $("lobbyPlayers").innerHTML = players.map(p => `<div class="player-chip">${escapeHtml(p)}</div>`).join("");
+          if (lobby) {
+            lobby.style.display = "flex";
+            if ($("lobbyPin")) $("lobbyPin").textContent = storageGet("qlp_player_pin") || "------";
+            
+            const players = Array.isArray(res.players) ? res.players : [];
+            if ($("lobbyCount")) $("lobbyCount").textContent = players.length;
+            if ($("lobbyPlayers")) {
+              $("lobbyPlayers").innerHTML = players.length > 0 
+                ? players.map(p => `<div class="player-chip">${escapeHtml(p)}</div>`).join("")
+                : `<p style="color:#94a3b8;font-size:16px;">Menunggu pemain mengimbas QR / memasukkan PIN...</p>`;
+            }
           }
-          if (panel) panel.style.display = "none"; if (control) control.style.display = "none";
+          if (panel) panel.style.display = "none";
+          if (control) control.style.display = "none";
           return;
         } 
-        
+
+        // 2. FASA SOALAN / KUIZ BERJALAN
         if (lobby) lobby.style.display = "none";
         if (panel) panel.style.display = "block";
         if (control) control.style.display = "flex";
 
-        if (res.status === "completed") { panel.innerHTML = '<h2 style="text-align:center; font-size:50px;">KUIZ TAMAT!</h2>'; control.style.display="none"; clearInterval(hostTimerInt); stopAllBGM(); return; }
-        
-        const newKey = res.status + "_" + (res.question ? res.question.questionId : "0");
-        if (currentRenderKey === newKey) return; 
-        currentRenderKey = newKey;
-        clearInterval(hostTimerInt); 
-        currentPhase = res.status;
-
-        // KAWALAN AUDIO HOS
-        if (res.status === "active") playSound('bgm_quiz'); // Main Muzik Suspen Soalan
-        else stopAllBGM(); // Hentikan muzik masa Leaderboard/Jawapan
-
-        if (res.status === "leaderboard") {
-          const tops = (res.leaderboard || []).map((p, i) => `<div style="font-size:28px; margin:15px auto; max-width:600px; background:#1e293b; padding:20px 30px; border-radius:15px; display:flex; justify-content:space-between; align-items:center;"><span><b style="color:#3b82f6;">#${i+1}</b> ${escapeHtml(p.name)}</span><span style="font-weight:900;color:#fcd34d;font-size:35px;">${p.score} pt</span></div>`).join("");
-          panel.innerHTML = `<div style="text-align:center"><h2 style="font-size:40px; margin-bottom:40px;">🏆 TOP 5 LEADERBOARD 🏆</h2>${tops}</div>`;
+        if (res.status === "completed") {
+          panel.innerHTML = '<h2 style="text-align:center; font-size:48px; color:#f8fafc; margin:40px 0;">KUIZ TAMAT!</h2>';
+          if (control) control.style.display = "none";
+          clearInterval(hostTimerInt);
           return;
         }
 
-        const q = res.question; if (!q) return;
+        const newKey = res.status + "_" + (res.question ? res.question.questionId : "0");
+        if (currentRenderKey === newKey) return; 
+        currentRenderKey = newKey;
+        clearInterval(hostTimerInt);
+
+        // 3. FASA LEADERBOARD
+        if (res.status === "leaderboard") {
+          const tops = (res.leaderboard || []).map((p, i) => `
+            <div style="font-size:24px; margin:12px auto; max-width:600px; background:#1e293b; padding:16px 26px; border-radius:14px; display:flex; justify-content:space-between; align-items:center; border:1px solid #334155;">
+              <span><b style="color:#3b82f6;">#${i+1}</b> ${escapeHtml(p.name)}</span>
+              <span style="font-weight:900;color:#fcd34d;font-size:30px;">${p.score} pt</span>
+            </div>`).join("");
+          
+          panel.innerHTML = `<div style="text-align:center"><h2 style="font-size:36px; margin-bottom:30px;">🏆 TOP 5 LEADERBOARD 🏆</h2>${tops}</div>`;
+          return;
+        }
+
+        // 4. FASA PAPARAN SOALAN
+        const q = res.question;
+        if (!q) return;
         const opts = [q.optionA, q.optionB, q.optionC, q.optionD];
-        
+
         panel.innerHTML = `
-          <div style="text-align:center;margin-bottom:30px">
-            <div style="font-size:16px;font-weight:900;letter-spacing:4px;color:#a5b4fc">SOALAN ${q.order} ${q.points > 1000 ? '🌟 MARKAH BERGANDA' : ''}</div>
-            <h1 style="font-size:clamp(30px,5vw,55px);margin:15px 0">${escapeHtml(q.questionText)}</h1>
-            ${res.status === "active" ? `<div style="font-size:45px; font-weight:900; color:#ef4444; margin:10px 0;">⏱ <span id="hostTimerDisplay">${q.timeLimitSeconds}</span></div>` : ''}
+          <div style="text-align:center;margin-bottom:25px">
+            <div style="font-size:14px;font-weight:900;letter-spacing:3px;color:#a5b4fc;text-transform:uppercase">
+              SOALAN ${q.order} ${q.points > 1000 ? '🌟 MARKAH BERGANDA' : ''}
+            </div>
+            <h1 style="font-size:clamp(22px,3.5vw,40px);margin:14px 0;line-height:1.3;color:#ffffff">
+              ${escapeHtml(q.questionText)}
+            </h1>
+            ${res.status === "active" ? `
+              <div style="display:inline-block;padding:6px 20px;background:#1e293b;border-radius:30px;font-size:28px;font-weight:900;color:#ef4444;border:1px solid #334155;margin-top:6px">
+                ⏱ <span id="hostTimerDisplay">${q.timeLimitSeconds}</span>s
+              </div>` : ''}
           </div>
-          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px">
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
             ${ANSWER_COLORS.map((item, i) => {
               const isDim = (res.status === "revealing_answer" && item.option !== q.correctOption);
-              return `<div style="opacity:${isDim ? '0.3' : '1'};min-height:130px;display:flex;align-items:center;gap:20px;padding:25px;border-radius:20px;background:${item.color};color:${item.textColor};font-size:26px;font-weight:800;">
-                <span style="font-size:40px;">${item.shape}</span><span>${escapeHtml(opts[i])}</span>
-                ${res.status === "revealing_answer" && !isDim ? '<span style="margin-left:auto;font-size:45px">✅</span>' : ''}
-              </div>`
+              return `
+                <div style="opacity:${isDim ? '0.25' : '1'};min-height:120px;display:flex;align-items:center;gap:16px;padding:20px;border-radius:18px;background:${item.color};color:${item.textColor};font-size:clamp(18px,2vw,24px);font-weight:800;box-sizing:border-box">
+                  <span style="font-size:32px;line-height:1">${item.shape}</span>
+                  <span style="flex:1">${escapeHtml(opts[i])}</span>
+                  ${res.status === "revealing_answer" && !isDim ? '<span style="font-size:32px">✅</span>' : ''}
+                </div>`;
             }).join("")}
           </div>`;
 
@@ -211,27 +261,31 @@
           hostTimerInt = setInterval(async () => {
             hostTimeLeft--;
             if ($("hostTimerDisplay")) $("hostTimerDisplay").textContent = hostTimeLeft;
-            
+
             if (hostTimeLeft <= 0) {
               clearInterval(hostTimerInt);
-              if ($("nextQuestionBtn")) { $("nextQuestionBtn").disabled = true; $("nextQuestionBtn").textContent = "Masa Tamat..."; }
-              try { await apiPost({ action: "revealAnswer", sessionId, hostToken: storageGet("qlp_host_token") }); } catch(e) {}
+              if ($("nextQuestionBtn")) {
+                $("nextQuestionBtn").disabled = true;
+                $("nextQuestionBtn").textContent = "Masa Tamat...";
+              }
+              try {
+                await apiPost({ action: "revealAnswer", sessionId, hostToken: storageGet("qlp_host_token") });
+              } catch(e) {}
             }
           }, 1000);
         }
 
-      } catch (e) {} finally { polling = false; }
+      } catch (err) {
+        console.error("Ralat host polling:", err);
+      } finally {
+        polling = false;
+      }
     }
-    
-    // 'Unlock' audio untuk Hos klik pertama
-    document.body.addEventListener("click", () => {
-      if(window.hostAudioUnlocked) return;
-      SOUNDS.bgm_lobby.play().then(()=> { SOUNDS.bgm_lobby.pause(); window.hostAudioUnlocked = true; }).catch(()=>{});
-    }, {once:true});
 
-    pollHost(); window.setInterval(pollHost, POLL_INTERVAL_MS);
+    pollHost();
+    window.setInterval(pollHost, POLL_INTERVAL_MS);
   }
-
+  
   // ---------- Live Participant (AUTO TIMER & SFX) ----------
   function initLiveParticipant() {
     if (!$("waitingRoom") && !$("joinBtn")) return;
