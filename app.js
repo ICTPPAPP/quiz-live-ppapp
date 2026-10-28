@@ -744,16 +744,60 @@ function initLiveParticipant() {
     window.setInterval(pollParticipant, POLL_INTERVAL_MS);
   }
 
-  // ---------- Start the app ----------
+// ---------- Start the app ----------
 
   document.addEventListener("DOMContentLoaded", () => {
     try {
+      // --- KOD TAMBAHAN UNTUK PADAM MEMORI LAMA ---
+      const pinInput = document.getElementById("pin");
+      if (pinInput) {
+        localStorage.removeItem("qlp_player_session_id");
+        localStorage.removeItem("qlp_player_id");
+      }
+      // --------------------------------------------
+
       initJoinForm();
       initApiAndQuizForm();
       initQuestionForm();
       initSessionControls();
       initLiveHost();
       initLiveParticipant();
+
+      // --- KOD BUTANG NEXT (ADMIN) ---
+      const nextBtn = document.getElementById("nextQuestionBtn");
+      if (nextBtn) {
+        nextBtn.addEventListener("click", async () => {
+          const sessionId = localStorage.getItem("qlp_session_id");
+          const hostToken = localStorage.getItem("qlp_host_token");
+          
+          if (!sessionId || !hostToken) {
+            alert("Sesi tidak sah.");
+            return;
+          }
+
+          nextBtn.disabled = true;
+          nextBtn.textContent = "Loading...";
+
+          try {
+            const response = await apiPost({
+              action: "nextQuestion",
+              sessionId: sessionId,
+              hostToken: hostToken
+            });
+
+            if (!response.success) throw new Error(response.message);
+            if (response.completed) alert("Kuiz telah tamat!");
+            
+          } catch (error) {
+            alert(`Ralat: ${error.message}`);
+          } finally {
+            nextBtn.disabled = false;
+            nextBtn.textContent = "Seterusnya";
+          }
+        });
+      }
+      // -------------------------------
+
     } catch (error) {
       console.error("Ralat semasa memulakan QUIZ LIVE PPAPP:", error);
       const globalError = document.createElement("div");
