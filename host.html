@@ -209,133 +209,42 @@ class="btn btn-end">
 
 </div>
 
-<script src="app.js"></script>
+<script src="app.js?v=8"></script>
 
 <script>
+document.addEventListener("DOMContentLoaded", () => {
+  // 1. Paparan PIN permainan
+  const pinBox = document.getElementById("gamePin");
+  const sessionPin = localStorage.getItem("qlp_player_pin") || "LIVE";
+  if(pinBox) pinBox.textContent = sessionPin;
 
-const pinBox =
-document.getElementById("gamePin");
-
-const sessionPin =
-localStorage.getItem(
-"qlp_player_pin"
-);
-
-if(sessionPin){
-
-pinBox.textContent =
-sessionPin;
-
-}
-
-const nextBtn =
-document.getElementById(
-"nextQuestionBtn"
-);
-
-const endBtn =
-document.getElementById(
-"endQuizBtn"
-);
-
-async function apiPost(payload){
-
-const url =
-localStorage.getItem(
-"qlp_api_url"
-);
-
-const response =
-await fetch(url,{
-method:"POST",
-headers:{
-"Content-Type":
-"text/plain;charset=utf-8"
-},
-body:JSON.stringify(payload)
+  // 2. Butang End Quiz (Butang Next diuruskan sepenuhnya oleh app.js)
+  const endBtn = document.getElementById("endQuizBtn");
+  if (endBtn) {
+    endBtn.addEventListener("click", async () => {
+      if(!confirm("Tamatkan kuiz sekarang?")) return;
+      try {
+        const url = localStorage.getItem("qlp_api_url");
+        await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "endQuiz",
+            sessionId: localStorage.getItem("qlp_session_id"),
+            hostToken: localStorage.getItem("qlp_host_token")
+          })
+        });
+        window.location.href = "admin.html";
+      } catch(e) {
+        alert("Gagal menamatkan kuiz");
+      }
+    });
+  }
 });
+</script>
 
-return await response.json();
-}
-
-nextBtn.addEventListener(
-"click",
-async()=>{
-
-try{
-
-await apiPost({
-
-action:
-"nextQuestion",
-
-sessionId:
-localStorage.getItem(
-"qlp_session_id"
-),
-
-hostToken:
-localStorage.getItem(
-"qlp_host_token"
-)
-
-});
-
-}
-catch(error){
-
-alert(
-"Next question gagal"
-);
-
-}
-
-}
-);
-
-endBtn.addEventListener(
-"click",
-async()=>{
-
-const ok =
-confirm(
-"Tamatkan kuiz sekarang?"
-);
-
-if(!ok)return;
-
-try{
-
-await apiPost({
-
-action:"endQuiz",
-
-sessionId:
-localStorage.getItem(
-"qlp_session_id"
-),
-
-hostToken:
-localStorage.getItem(
-"qlp_host_token"
-)
-
-});
-
-location.reload();
-
-}
-catch(error){
-
-alert(
-"Gagal tamatkan kuiz"
-);
-
-}
-
-}
-);
-
+</body>
+</html>
 </script>
 
 </body>
