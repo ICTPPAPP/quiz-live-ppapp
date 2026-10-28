@@ -323,7 +323,7 @@
         optionD: $("optionD").value.trim(),
         correctOption: $("correctOption").value.trim(),
         timeLimitSeconds: Number($("questionTime").value || 20),
-        points: 1000
+        points: $("doublePoints") && $("doublePoints").checked ? 2000 : 1000
       };
 
       const submitButton = form.querySelector('[type="submit"]');
@@ -482,6 +482,7 @@
   }
   
   function renderPlayerQuestion(panel, question, sessionId, playerId, onAnswered) {
+    const startTime = Date.now();
     try {
       panel.innerHTML = `
         <div style="text-align:center;margin-bottom:22px">
@@ -513,7 +514,7 @@
               playerId,
               questionId: question.questionId,
               selectedOption: button.dataset.option,
-              responseMs: 1000
+              responseMs: Date.now() - startTime
             });
             if (!response.success) throw new Error(response.message || "Gagal dihantar.");
             
