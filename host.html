@@ -3,96 +3,74 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Live Host • QUIZ LIVE PPAPP</title>
+<title>Paparan Hos • QUIZ LIVE PPAPP</title>
 <style>
-  * { box-sizing: border-box; }
-  body { margin: 0; min-height: 100vh; background: #0f172a; color: white; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: white; min-height: 100vh; display: flex; flex-direction: column; }
+  
   header { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; background: #0b1120; }
-  .brand { font-size: 24px; font-weight: 900; letter-spacing: 1px; }
-  .brand span { color: #3b82f6; }
-  a.btn-back { text-decoration: none; color: #94a3b8; font-weight: 600; padding: 10px 15px; border-radius: 8px; transition: 0.2s; border: 1px solid #334155; }
-  a.btn-back:hover { background: #1e293b; color: white; }
-  
-  /* LOBI MENUNGGU HOS */
-  #lobbyPanel { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; background: radial-gradient(circle at top, #1e3a8a 0%, #0f172a 60%); }
-  .lobby-card { background: white; color: #0f172a; padding: 30px; border-radius: 24px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); text-align: center; margin-bottom: 40px; display: flex; gap: 40px; align-items: center; flex-wrap: wrap; justify-content: center; }
-  .qr-box img { border-radius: 12px; border: 4px solid #f1f5f9; width: 220px; height: 220px; }
-  .pin-box { text-align: left; }
-  .pin-box p { margin: 0; font-size: 14px; font-weight: 700; color: #64748b; letter-spacing: 2px; }
-  .pin-box h1 { margin: 0 0 10px 0; font-size: 75px; font-weight: 900; letter-spacing: 8px; color: #0f172a; line-height: 1; }
-  .url-text { font-size: 16px; font-weight: 700; color: #3b82f6; margin-bottom: 20px; }
-  .btn-start-large { background: #10b981; color: white; border: none; padding: 18px 40px; font-size: 20px; font-weight: 900; border-radius: 14px; cursor: pointer; transition: 0.2s; width: 100%; box-shadow: 0 8px 0 #047857; }
-  .btn-start-large:hover { transform: translateY(4px); box-shadow: 0 4px 0 #047857; }
-  
-  .players-section { width: 100%; max-width: 1100px; }
-  .players-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #1e293b; padding-bottom: 10px; }
-  .players-header h2 { margin: 0; font-size: 24px; color: #f8fafc; }
-  .player-count { background: #3b82f6; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 18px; }
-  #lobbyPlayers { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; min-height: 100px; }
-  .player-chip { background: #1e293b; border: 1px solid #334155; color: white; padding: 12px 24px; border-radius: 12px; font-weight: 700; font-size: 18px; animation: popIn 0.3s ease-out; }
-  @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .brand { font-size: 24px; font-weight: 900; letter-spacing: 1px; } .brand span { color: #3b82f6; }
+  .btn-outline { border: 1px solid #334155; color: #94a3b8; padding: 8px 20px; border-radius: 30px; text-decoration: none; font-size: 14px; font-weight: 600; transition: 0.3s; }
+  .btn-outline:hover { background: #1e293b; color: white; border-color: #64748b; }
 
-  /* PAPARAN SOALAN */
-  #hostLiveQuestionPanel { max-width: 1200px; margin: 40px auto; padding: 40px; background: #111827; border-radius: 24px; box-shadow: 0 16px 40px rgba(0,0,0,0.4); border: 1px solid #1e293b; width: 90%; }
-  #hostControlPanel { display: flex; justify-content: center; gap: 15px; padding: 20px; background: #0b1120; border-top: 1px solid #1e293b; margin-top: auto; }
-  .btn { border: none; padding: 16px 32px; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 16px; transition: 0.2s; }
-  .btn-next { background: #3b82f6; color: white; }
-  .btn-end { background: transparent; color: #ef4444; border: 2px solid #ef4444; }
+  #lobbyPanel { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
+  .pin-display { background: #1e293b; padding: 20px 50px; border-radius: 20px; border: 2px solid #3b82f6; box-shadow: 0 0 30px rgba(59,130,246,0.3); margin-bottom: 30px; }
+  .pin-display h2 { font-size: 18px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
+  .pin-display h1 { font-size: 80px; font-weight: 900; color: #ffffff; letter-spacing: 5px; }
   
-  /* BUTANG AUDIO (BARU) */
-  #unmuteBtn { background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-right: 15px; }
+  .players-container { width: 100%; max-width: 800px; background: #0b1120; padding: 30px; border-radius: 20px; border: 1px solid #1e293b; min-height: 200px; }
+  .players-container h3 { margin-bottom: 20px; color: #cbd5e1; font-size: 20px; }
+  #lobbyPlayers { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+  .player-chip { background: #3b82f6; color: white; padding: 8px 16px; border-radius: 30px; font-weight: bold; font-size: 16px; }
+
+  #hostLiveQuestionPanel { flex: 1; padding: 40px; display: none; max-width: 1200px; margin: 0 auto; width: 100%; }
+  
+  #hostControlPanel { padding: 20px 40px; background: #0b1120; border-top: 1px solid #1e293b; display: flex; justify-content: space-between; align-items: center; }
+  .btn-primary { background: #3b82f6; color: white; border: none; padding: 15px 40px; font-size: 18px; font-weight: 900; border-radius: 12px; cursor: pointer; transition: 0.3s; }
+  .btn-primary:hover { background: #2563eb; transform: translateY(-2px); }
+  .btn-primary:disabled { background: #334155; color: #94a3b8; cursor: not-allowed; transform: none; }
+  .btn-danger { background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 12px 25px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; }
 </style>
 </head>
 <body>
 
 <header>
   <div class="brand">QUIZ LIVE <span>PPAPP</span></div>
-  <div>
-    <button id="unmuteBtn">🔇 Buka Audio</button>
-    <a href="admin.html" class="btn-back">← Kembali Admin</a>
+  <div class="header-right">
+    <a href="admin.html" class="btn-outline">← Kembali Admin</a>
   </div>
 </header>
 
-<div id="lobbyPanel" style="display:none;">
-  <div class="lobby-card">
-    <div class="qr-box">
-      <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=https://ictppapp.github.io/quiz-live-ppapp/" alt="QR Code">
-    </div>
-    <div class="pin-box">
-      <p>SERTAI SEKARANG DI</p>
-      <div class="url-text">ictppapp.github.io/quiz-live-ppapp/</div>
-      <p>PIN PERMAINAN</p>
+<main style="flex: 1; display: flex; flex-direction: column;">
+  <div id="lobbyPanel">
+    <div class="pin-display">
+      <h2>Sertai di peranti anda dengan PIN</h2>
       <h1 id="lobbyPin">------</h1>
-      <button id="hostStartBtn" class="btn-start-large">▶ MULA KUIZ SEKARANG</button>
+    </div>
+    <div class="players-container">
+      <h3>Pemain Bersedia: <span id="lobbyCount" style="color:#10b981; font-size:26px; font-weight:900;">0</span></h3>
+      <div id="lobbyPlayers"></div>
     </div>
   </div>
-  
-  <div class="players-section">
-    <div class="players-header">
-      <h2>Senarai Peserta</h2>
-      <div class="player-count">👤 <span id="lobbyCount">0</span> Masuk</div>
-    </div>
-    <div id="lobbyPlayers"></div>
+  <div id="hostLiveQuestionPanel"></div>
+</main>
+
+<div id="hostControlPanel">
+  <button id="hostStartBtn" class="btn-primary" style="margin: 0 auto; display: block; background: #10b981;">▶ MULA KUIZ SEKARANG</button>
+  <div style="display:none; width: 100%; justify-content: space-between; align-items: center;" id="inGameControls">
+    <button id="nextQuestionBtn" class="btn-primary">➡ SETERUSNYA</button>
+    <button onclick="if(confirm('Tamatkan kuiz sekarang?')) { apiPost({action:'endQuiz', sessionId: storageGet('qlp_session_id'), hostToken: storageGet('qlp_host_token')}) }" class="btn-danger">Tamatkan Kuiz</button>
   </div>
 </div>
 
-<section id="hostLiveQuestionPanel" style="display:none;"></section>
-
-<div id="hostControlPanel" style="display:none;">
-  <button id="nextQuestionBtn" class="btn btn-next">➡ SETERUSNYA</button>
-  <button id="endQuizBtn" class="btn btn-end">Tamatkan Kuiz</button>
-</div>
-
-<script src="app.js?v=40"></script>
+<script src="app.js?v=99"></script>
 <script>
-  document.getElementById("endQuizBtn").addEventListener("click", async () => {
-    if(!confirm("Tamatkan kuiz sekarang?")) return;
-    try {
-      const url = localStorage.getItem("qlp_api_url");
-      await fetch(url, { method: "POST", body: JSON.stringify({ action: "endQuiz", sessionId: localStorage.getItem("qlp_session_id"), hostToken: localStorage.getItem("qlp_host_token") }) });
-      window.location.href = "admin.html";
-    } catch(e) { alert("Gagal menamatkan kuiz"); }
-  });
+  setInterval(() => {
+    if (window.hostPhase && window.hostPhase !== 'waiting') {
+      if(document.getElementById('hostStartBtn')) document.getElementById('hostStartBtn').style.display = 'none';
+      if(document.getElementById('inGameControls')) document.getElementById('inGameControls').style.display = 'flex';
+    }
+  }, 1000);
 </script>
 </body>
 </html>
