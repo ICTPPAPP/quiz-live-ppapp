@@ -8,151 +8,140 @@
   * { box-sizing: border-box; }
   body { margin: 0; min-height: 100vh; background: #0f172a; color: white; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column; }
   
-  /* HEADER & PROFIL */
+  /* HEADER & NAV */
   header { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; background: #0b1120; }
-  .brand { font-size: 24px; font-weight: 900; letter-spacing: 1px; }
-  .brand span { color: #3b82f6; }
-  .admin-profile { display: none; align-items: center; gap: 12px; background: #1e293b; padding: 6px 16px 6px 6px; border-radius: 30px; border: 1px solid #334155; cursor: pointer; }
+  .brand { font-size: 24px; font-weight: 900; letter-spacing: 1px; } .brand span { color: #3b82f6; }
+  .admin-profile { display: none; align-items: center; gap: 12px; background: #1e293b; padding: 6px 16px 6px 6px; border-radius: 30px; border: 1px solid #334155; }
   .admin-profile .avatar { width: 36px; height: 36px; background: #3b82f6; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; }
-  .admin-profile span { font-weight: 600; font-size: 14px; color: #f8fafc; }
-  .logout-btn { color: #ef4444; font-size: 12px; text-decoration: none; margin-left: 10px; font-weight: bold; }
+  .logout-btn { color: #ef4444; font-size: 12px; text-decoration: none; margin-left: 10px; font-weight: bold; cursor: pointer; }
+  
+  .admin-nav { display: none; background: #1e293b; padding: 0 40px; border-bottom: 1px solid #334155; }
+  .nav-btn { background: transparent; color: #94a3b8; border: none; padding: 15px 20px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; font-size: 15px; }
+  .nav-btn:hover { color: white; }
+  .nav-btn.active { color: #3b82f6; border-bottom-color: #3b82f6; }
 
-  /* PANEL AUTHENTICATION (LOG MASUK) */
-  #authSection { display: flex; justify-content: center; align-items: center; flex: 1; padding: 20px; }
-  .auth-card { background: #1e293b; padding: 40px; border-radius: 20px; width: 100%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); border: 1px solid #334155; }
-  .auth-card h2 { margin: 0 0 20px; text-align: center; color: #f8fafc; font-size: 28px; }
-  .form-group { margin-bottom: 15px; }
-  .form-group label { display: block; margin-bottom: 5px; color: #94a3b8; font-size: 13px; font-weight: 600; }
-  .form-group input { width: 100%; padding: 12px 15px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 16px; outline: none; transition: 0.3s; }
-  .form-group input:focus { border-color: #3b82f6; }
-  .password-hint { font-size: 11px; color: #64748b; margin-top: 5px; display: block; }
-  .btn-primary { width: 100%; background: #3b82f6; color: white; border: none; padding: 14px; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; margin-top: 10px; }
-  .btn-primary:hover { background: #2563eb; }
-  .auth-links { text-align: center; margin-top: 20px; font-size: 13px; }
-  .auth-links a { color: #3b82f6; text-decoration: none; font-weight: 600; cursor: pointer; }
-  .auth-links a:hover { text-decoration: underline; }
-
-  /* PAPAN PEMUKA ADMIN (DIBUKA SELEPAS LOGIN) */
-  #dashboardSection { display: none; padding: 40px; max-width: 1200px; margin: 0 auto; width: 100%; }
+  /* COMPONENTS */
+  .auth-card { background: #1e293b; padding: 40px; border-radius: 20px; width: 100%; max-width: 400px; margin: 50px auto; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+  .form-group { margin-bottom: 15px; } .form-group label { display: block; margin-bottom: 5px; color: #94a3b8; font-size: 13px; font-weight: 600; }
+  .form-group input, .form-group select { width: 100%; padding: 12px 15px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; outline: none; }
+  .btn-primary { width: 100%; background: #3b82f6; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+  .btn-primary:hover { background: #2563eb; } .btn-danger { background: #ef4444; } .btn-danger:hover { background: #dc2626; }
+  .auth-links { text-align: center; margin-top: 20px; font-size: 13px; } .auth-links a { color: #3b82f6; cursor: pointer; font-weight: 600; }
+  
+  .dashboard-view { display: none; padding: 40px; max-width: 1200px; margin: 0 auto; width: 100%; }
   .grid-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
-  .card { background: #1e293b; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid #334155; }
-  .card h3 { margin-top: 0; border-bottom: 2px solid #334155; padding-bottom: 15px; color: #3b82f6; }
+  .card { background: #1e293b; padding: 30px; border-radius: 20px; border: 1px solid #334155; }
+  
+  /* TABLE CSS */
+  table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+  th, td { text-align: left; padding: 12px; border-bottom: 1px solid #334155; font-size: 14px; }
+  th { color: #94a3b8; text-transform: uppercase; font-size: 12px; }
+  .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; background: #3b82f6; color: white; }
+  .badge.master { background: #f59e0b; color: #000; }
 </style>
 </head>
 <body>
 
 <header>
   <div class="brand">QUIZ LIVE <span>PPAPP</span></div>
-  <!-- Profil Bulatan -->
   <div class="admin-profile" id="adminProfile">
     <div class="avatar" id="adminAvatar">A</div>
-    <div>
-      <span id="adminNameDisplay">Admin</span>
-      <a href="#" class="logout-btn" id="logoutBtn">Keluar</a>
-    </div>
+    <div><span id="adminNameDisplay">Admin</span> <a class="logout-btn" id="logoutBtn">Keluar</a></div>
   </div>
 </header>
 
-<!-- SECTION LOG MASUK / DAFTAR -->
+<!-- NAVIGASI (Sembunyi by default) -->
+<div class="admin-nav" id="adminNav">
+  <button class="nav-btn active" onclick="switchTab('papanPemuka')">Papan Pemuka</button>
+  <button class="nav-btn" onclick="switchTab('history')">Sejarah Kuiz</button>
+  <button class="nav-btn" onclick="switchTab('settings')">Tetapan Akaun</button>
+  <button class="nav-btn" id="masterNavBtn" onclick="switchTab('master')" style="display:none; color:#f59e0b;">Pengurusan Admin 👑</button>
+</div>
+
+<!-- SECTION AUTHENTICATION -->
 <div id="authSection">
-  <!-- LOG MASUK -->
   <div class="auth-card" id="loginCard">
-    <h2>Log Masuk</h2>
-    <form id="loginForm">
-      <div class="form-group"><label>Emel</label><input type="email" id="loginEmail" required></div>
-      <div class="form-group"><label>Kata Laluan</label><input type="password" id="loginPassword" required></div>
-      <button type="submit" class="btn-primary">Log Masuk</button>
-    </form>
-    <div class="auth-links">
-      <a onclick="switchAuth('register')">Belum ada akaun? Daftar</a><br><br>
-      <a onclick="switchAuth('forgot')">Lupa Kata Laluan?</a>
-    </div>
+    <h2 style="text-align:center;margin-top:0;">Log Masuk</h2>
+    <form id="loginForm"><div class="form-group"><label>Emel</label><input type="email" id="loginEmail" required></div><div class="form-group"><label>Kata Laluan</label><input type="password" id="loginPassword" required></div><button type="submit" class="btn-primary">Masuk</button></form>
+    <div class="auth-links"><a onclick="switchAuth('register')">Daftar Baru</a> | <a onclick="switchAuth('forgot')">Lupa Kata Laluan</a></div>
   </div>
 
-  <!-- DAFTAR -->
   <div class="auth-card" id="registerCard" style="display:none;">
-    <h2>Daftar Admin</h2>
+    <h2 style="text-align:center;margin-top:0;">Daftar Admin</h2>
     <form id="registerForm">
-      <div class="form-group"><label>Nama Penuh</label><input type="text" id="regName" required></div>
-      <div class="form-group"><label>Emel</label><input type="email" id="regEmail" required></div>
-      <div class="form-group">
-        <label>Kata Laluan</label>
-        <input type="password" id="regPassword" required>
-        <span class="password-hint">Mesti ada huruf besar, huruf kecil, nombor & simbol (@$!%*?&)</span>
-      </div>
-      <div class="form-group"><label>Sahkan Kata Laluan</label><input type="password" id="regConfirmPassword" required></div>
-      <button type="submit" class="btn-primary">Daftar Sekarang</button>
+      <div class="form-group"><label>Nama</label><input type="text" id="regName" required></div><div class="form-group"><label>Emel</label><input type="email" id="regEmail" required></div>
+      <div class="form-group"><label>Kata Laluan (Huruf Besar, Kecil, Nombor, Simbol)</label><input type="password" id="regPassword" required></div>
+      <div class="form-group"><label>Sahkan</label><input type="password" id="regConfirmPassword" required></div>
+      <button type="submit" class="btn-primary">Daftar</button>
     </form>
-    <div class="auth-links"><a onclick="switchAuth('login')">Sudah ada akaun? Log Masuk</a></div>
+    <div class="auth-links"><a onclick="switchAuth('login')">← Ke Log Masuk</a></div>
   </div>
 
-  <!-- LUPA KATA LALUAN -->
   <div class="auth-card" id="forgotCard" style="display:none;">
-    <h2>Lupa Kata Laluan</h2>
-    <form id="forgotForm">
-      <div class="form-group"><label>Emel Anda</label><input type="email" id="forgotEmail" required></div>
-      <button type="submit" class="btn-primary">Hantar Kata Laluan Sementara</button>
-    </form>
-    <div class="auth-links"><a onclick="switchAuth('login')">← Kembali ke Log Masuk</a></div>
+    <h2 style="text-align:center;margin-top:0;">Lupa Kata Laluan</h2>
+    <form id="forgotForm"><div class="form-group"><label>Emel Anda</label><input type="email" id="forgotEmail" required></div><button type="submit" class="btn-primary">Hantar</button></form>
+    <div class="auth-links"><a onclick="switchAuth('login')">← Ke Log Masuk</a></div>
   </div>
 </div>
 
-<!-- SECTION PAPAN PEMUKA (Sembunyi by default) -->
-<div id="dashboardSection">
+<!-- VIEWS -->
+<div id="view-papanPemuka" class="dashboard-view">
   <div class="grid-layout">
-    <!-- Cipta Sesi -->
-    <div class="card">
-      <h3>1. Cipta Sesi Live (PIN)</h3>
-      <div class="form-group">
-        <label>Pilih Kuiz sedia ada</label>
-        <select id="sessionQuiz" class="form-group input" style="width:100%; padding:10px; border-radius:8px;"></select>
-      </div>
-      <button id="createSessionBtn" class="btn-primary" style="background:#10b981;">Jana PIN Permainan</button>
-    </div>
+    <div class="card"><h3>1. Cipta Sesi Live (PIN)</h3><div class="form-group"><label>Pilih Kuiz</label><select id="sessionQuiz"></select></div><button id="createSessionBtn" class="btn-primary" style="background:#10b981;">Jana PIN Permainan</button></div>
+    <div class="card"><h3>2. Cipta Kuiz Baharu</h3><form id="quizForm"><div class="form-group"><label>Tajuk Kuiz</label><input type="text" id="quizTitle" required></div><button type="submit" class="btn-primary">Cipta</button></form></div>
+    <div class="card"><h3>3. Tambah Soalan</h3><form id="questionForm">
+      <div class="form-group"><label>Pilih Kuiz</label><select id="questionQuiz" required></select></div><div class="form-group"><label>Soalan</label><input type="text" id="questionText" required></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><div class="form-group"><label>A</label><input type="text" id="optionA" required></div><div class="form-group"><label>B</label><input type="text" id="optionB" required></div><div class="form-group"><label>C</label><input type="text" id="optionC" required></div><div class="form-group"><label>D</label><input type="text" id="optionD" required></div></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><div class="form-group"><label>Jawapan</label><select id="correctOption"><option>A</option><option>B</option><option>C</option><option>D</option></select></div><div class="form-group"><label>Masa (s)</label><input type="number" id="questionTime" value="20" required></div></div>
+      <div class="form-group"><input type="checkbox" id="doublePoints"> Markah Berganda</div><button type="submit" class="btn-primary">Simpan</button>
+    </form></div>
+  </div>
+</div>
 
-    <!-- Tambah Kuiz -->
-    <div class="card">
-      <h3>2. Cipta Kuiz Baharu</h3>
-      <form id="quizForm">
-        <div class="form-group"><label>Tajuk Kuiz</label><input type="text" id="quizTitle" required></div>
-        <div class="form-group"><label>Penerangan (Pilihan)</label><input type="text" id="quizDescription"></div>
-        <button type="submit" class="btn-primary">Cipta Kuiz</button>
-      </form>
-    </div>
+<div id="view-history" class="dashboard-view">
+  <div class="card" style="max-width:900px; margin:auto;">
+    <h3 style="display:flex; justify-content:space-between;">Sejarah Kuiz <button onclick="loadHistory()" style="background:none;border:none;color:#3b82f6;cursor:pointer;">🔄 Refresh</button></h3>
+    <div id="historyContainer" style="color:#94a3b8; font-size:14px;">Memuatkan rekod...</div>
+  </div>
+</div>
 
-    <!-- Tambah Soalan -->
+<div id="view-settings" class="dashboard-view">
+  <div class="card" style="max-width:500px; margin:auto;">
+    <h3>Tetapan Akaun Saya</h3>
+    <form id="settingsForm">
+      <div class="form-group"><label>Nama Penuh</label><input type="text" id="setMyName" required></div>
+      <div class="form-group"><label>Emel Baharu (Biarkan jika tak mahu tukar)</label><input type="email" id="setMyEmail"></div>
+      <div class="form-group"><label>Kata Laluan Baharu (Biarkan jika tak mahu tukar)</label><input type="password" id="setMyPassword"></div>
+      <button type="submit" class="btn-primary">Kemas Kini Profil</button>
+    </form>
+  </div>
+</div>
+
+<div id="view-master" class="dashboard-view">
+  <div class="grid-layout">
+    <div class="card" style="grid-column: span 2;">
+      <h3>Senarai Pengguna & Admin</h3>
+      <div style="overflow-x:auto;"><table id="adminTable"><thead><tr><th>ID/Emel</th><th>Nama</th><th>Peranan</th><th>Tindakan</th></tr></thead><tbody id="adminTableBody"></tbody></table></div>
+    </div>
     <div class="card">
-      <h3>3. Tambah Soalan</h3>
-      <form id="questionForm">
-        <div class="form-group"><label>Pilih Kuiz</label><select id="questionQuiz" class="form-group input" style="width:100%; padding:10px; border-radius:8px;" required></select></div>
-        <div class="form-group"><label>Teks Soalan</label><input type="text" id="questionText" required></div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <div class="form-group"><label>A (Merah)</label><input type="text" id="optionA" required></div>
-          <div class="form-group"><label>B (Biru)</label><input type="text" id="optionB" required></div>
-          <div class="form-group"><label>C (Hijau)</label><input type="text" id="optionC" required></div>
-          <div class="form-group"><label>D (Kuning)</label><input type="text" id="optionD" required></div>
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <div class="form-group"><label>Jawapan Betul</label><select id="correctOption" style="width:100%; padding:10px; border-radius:8px;"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
-          <div class="form-group"><label>Masa (Saat)</label><input type="number" id="questionTime" value="20" required></div>
-        </div>
-        <div class="form-group" style="display:flex; align-items:center; gap:10px;">
-          <input type="checkbox" id="doublePoints" style="width:auto;"><label style="margin:0;">Markah Berganda (2000pt)</label>
-        </div>
-        <button type="submit" class="btn-primary">Simpan Soalan</button>
+      <h3>Daftar Akaun / Kemas Kini</h3>
+      <form id="masterManageForm">
+        <input type="hidden" id="targetAdminId">
+        <div class="form-group"><label>Nama</label><input type="text" id="mName" required></div>
+        <div class="form-group"><label>Emel</label><input type="email" id="mEmail" required></div>
+        <div class="form-group"><label>Kata Laluan</label><input type="text" id="mPassword" required></div>
+        <div class="form-group"><label>Peranan</label><select id="mRole"><option value="admin">Admin</option><option value="master">Master</option></select></div>
+        <button type="submit" class="btn-primary" id="mSubmitBtn">Daftar Admin Baru</button>
+        <button type="button" class="btn-primary" style="background:#64748b; margin-top:10px; display:none;" id="mCancelBtn">Batal Kemas Kini</button>
       </form>
     </div>
   </div>
 </div>
 
 <script>
-  function switchAuth(type) {
-    document.getElementById('loginCard').style.display = 'none';
-    document.getElementById('registerCard').style.display = 'none';
-    document.getElementById('forgotCard').style.display = 'none';
-    document.getElementById(type + 'Card').style.display = 'block';
-  }
+  function switchAuth(type) { ['login','register','forgot'].forEach(t => document.getElementById(t+'Card').style.display='none'); document.getElementById(type+'Card').style.display='block'; }
+  function switchTab(viewId) { document.querySelectorAll('.dashboard-view').forEach(v => v.style.display='none'); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('view-'+viewId).style.display='block'; event.currentTarget.classList.add('active'); if(viewId==='history') loadHistory(); if(viewId==='master') loadAdmins(); }
 </script>
-<script src="app.js?v=45"></script>
+<script src="app.js?v=60"></script>
 </body>
 </html>
