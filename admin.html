@@ -1,150 +1,158 @@
 <!DOCTYPE html>
 <html lang="ms">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Admin Dashboard • QUIZ LIVE PPAPP</title>
-  <style>
-    :root { --bg: #0f172a; --panel: #1e293b; --text: #f8fafc; --primary: #3b82f6; }
-    body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
-    .sidebar { width: 260px; background: #0b1120; padding: 25px 20px; display: flex; flex-direction: column; gap: 8px; border-right: 1px solid #1e293b; box-sizing: border-box; }
-    .sidebar h2 { color: #fff; font-size: 18px; margin: 0 0 20px 0; letter-spacing: 1px; font-weight: 800; text-transform: uppercase; }
-    .tab-btn { background: transparent; border: none; color: #94a3b8; text-align: left; padding: 14px 16px; font-size: 15px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: 600; display: flex; align-items: center; gap: 10px; }
-    .tab-btn:hover { background: #1e293b; color: #fff; }
-    .tab-btn.active { background: var(--primary); color: #fff; }
-    .content { flex: 1; padding: 40px; overflow-y: auto; box-sizing: border-box; }
-    .tab-content { display: none; max-width: 850px; margin: 0 auto; animation: fadeIn 0.3s; }
-    .tab-content.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .panel { background: var(--panel); padding: 30px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); margin-bottom: 25px; border: 1px solid #334155; }
-    .panel h2 { margin-top: 0; border-bottom: 1px solid #334155; padding-bottom: 15px; margin-bottom: 20px; color: #e2e8f0; font-size: 20px; }
-    label { display: block; font-size: 12px; font-weight: 700; color: #94a3b8; margin-bottom: 8px; letter-spacing: 0.5px; text-transform: uppercase; }
-    input[type="text"], input[type="number"], select, textarea { width: 100%; padding: 14px; margin-bottom: 22px; background: #0f172a; border: 1px solid #334155; color: #fff; border-radius: 10px; font-size: 15px; box-sizing: border-box; outline: none; }
-    input:focus, select:focus, textarea:focus { border-color: var(--primary); }
-    .btn-primary { background: var(--primary); color: #fff; border: none; padding: 16px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; width: 100%; transition: 0.2s; }
-    .btn-primary:hover { opacity: 0.9; transform: translateY(-2px); }
-    .checkbox-group { display: flex; align-items: center; gap: 12px; margin-bottom: 25px; background: rgba(245, 158, 11, 0.1); padding: 16px; border-radius: 10px; border: 1px solid rgba(245, 158, 11, 0.3); cursor: pointer; }
-    .checkbox-group input { width: 22px; height: 22px; margin: 0; cursor: pointer; accent-color: #f59e0b; }
-    .checkbox-group span { font-weight: 700; color: #fcd34d; font-size: 15px; }
-    .message { padding: 15px; border-radius: 8px; font-weight: 600; margin-top: 15px; display: none; }
-    .message.success { display: block; background: #064e3b; color: #34d399; }
-    .message.error { display: block; background: #7f1d1d; color: #fca5a5; }
-    .quiz-row { background: #0f172a; padding: 15px 20px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #334155; }
-    .quiz-row b { color: #fff; font-size: 16px; display: block; margin-bottom: 4px; }
-    .quiz-row small { color: #94a3b8; font-size: 13px; }
-    .pill { background: #3b82f6; font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 800; color: white; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Panel • QUIZ LIVE PPAPP</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: #0f172a; color: white; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column; }
+  
+  /* HEADER & PROFIL */
+  header { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; background: #0b1120; }
+  .brand { font-size: 24px; font-weight: 900; letter-spacing: 1px; }
+  .brand span { color: #3b82f6; }
+  .admin-profile { display: none; align-items: center; gap: 12px; background: #1e293b; padding: 6px 16px 6px 6px; border-radius: 30px; border: 1px solid #334155; cursor: pointer; }
+  .admin-profile .avatar { width: 36px; height: 36px; background: #3b82f6; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; }
+  .admin-profile span { font-weight: 600; font-size: 14px; color: #f8fafc; }
+  .logout-btn { color: #ef4444; font-size: 12px; text-decoration: none; margin-left: 10px; font-weight: bold; }
+
+  /* PANEL AUTHENTICATION (LOG MASUK) */
+  #authSection { display: flex; justify-content: center; align-items: center; flex: 1; padding: 20px; }
+  .auth-card { background: #1e293b; padding: 40px; border-radius: 20px; width: 100%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); border: 1px solid #334155; }
+  .auth-card h2 { margin: 0 0 20px; text-align: center; color: #f8fafc; font-size: 28px; }
+  .form-group { margin-bottom: 15px; }
+  .form-group label { display: block; margin-bottom: 5px; color: #94a3b8; font-size: 13px; font-weight: 600; }
+  .form-group input { width: 100%; padding: 12px 15px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; font-size: 16px; outline: none; transition: 0.3s; }
+  .form-group input:focus { border-color: #3b82f6; }
+  .password-hint { font-size: 11px; color: #64748b; margin-top: 5px; display: block; }
+  .btn-primary { width: 100%; background: #3b82f6; color: white; border: none; padding: 14px; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+  .btn-primary:hover { background: #2563eb; }
+  .auth-links { text-align: center; margin-top: 20px; font-size: 13px; }
+  .auth-links a { color: #3b82f6; text-decoration: none; font-weight: 600; cursor: pointer; }
+  .auth-links a:hover { text-decoration: underline; }
+
+  /* PAPAN PEMUKA ADMIN (DIBUKA SELEPAS LOGIN) */
+  #dashboardSection { display: none; padding: 40px; max-width: 1200px; margin: 0 auto; width: 100%; }
+  .grid-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+  .card { background: #1e293b; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid #334155; }
+  .card h3 { margin-top: 0; border-bottom: 2px solid #334155; padding-bottom: 15px; color: #3b82f6; }
+</style>
 </head>
 <body>
 
-<div class="sidebar">
-  <h2>Pusat Kawalan</h2>
-  <button class="tab-btn active" onclick="switchTab('tab-cipta', this)">📝 1. Cipta Kuiz</button>
-  <button class="tab-btn" onclick="switchTab('tab-soalan', this)">➕ 2. Tambah Soalan</button>
-  <button class="tab-btn" onclick="switchTab('tab-live', this)">🎮 3. Bilik Live</button>
-  <button class="tab-btn" onclick="switchTab('tab-tetapan', this)">⚙️ API & Sistem</button>
-  <a href="index.html" style="margin-top: auto; color: #64748b; text-decoration: none; padding: 14px 16px; font-size: 14px; font-weight: 600; transition: 0.2s;">← Kembali Utama</a>
+<header>
+  <div class="brand">QUIZ LIVE <span>PPAPP</span></div>
+  <!-- Profil Bulatan -->
+  <div class="admin-profile" id="adminProfile">
+    <div class="avatar" id="adminAvatar">A</div>
+    <div>
+      <span id="adminNameDisplay">Admin</span>
+      <a href="#" class="logout-btn" id="logoutBtn">Keluar</a>
+    </div>
+  </div>
+</header>
+
+<!-- SECTION LOG MASUK / DAFTAR -->
+<div id="authSection">
+  <!-- LOG MASUK -->
+  <div class="auth-card" id="loginCard">
+    <h2>Log Masuk</h2>
+    <form id="loginForm">
+      <div class="form-group"><label>Emel</label><input type="email" id="loginEmail" required></div>
+      <div class="form-group"><label>Kata Laluan</label><input type="password" id="loginPassword" required></div>
+      <button type="submit" class="btn-primary">Log Masuk</button>
+    </form>
+    <div class="auth-links">
+      <a onclick="switchAuth('register')">Belum ada akaun? Daftar</a><br><br>
+      <a onclick="switchAuth('forgot')">Lupa Kata Laluan?</a>
+    </div>
+  </div>
+
+  <!-- DAFTAR -->
+  <div class="auth-card" id="registerCard" style="display:none;">
+    <h2>Daftar Admin</h2>
+    <form id="registerForm">
+      <div class="form-group"><label>Nama Penuh</label><input type="text" id="regName" required></div>
+      <div class="form-group"><label>Emel</label><input type="email" id="regEmail" required></div>
+      <div class="form-group">
+        <label>Kata Laluan</label>
+        <input type="password" id="regPassword" required>
+        <span class="password-hint">Mesti ada huruf besar, huruf kecil, nombor & simbol (@$!%*?&)</span>
+      </div>
+      <div class="form-group"><label>Sahkan Kata Laluan</label><input type="password" id="regConfirmPassword" required></div>
+      <button type="submit" class="btn-primary">Daftar Sekarang</button>
+    </form>
+    <div class="auth-links"><a onclick="switchAuth('login')">Sudah ada akaun? Log Masuk</a></div>
+  </div>
+
+  <!-- LUPA KATA LALUAN -->
+  <div class="auth-card" id="forgotCard" style="display:none;">
+    <h2>Lupa Kata Laluan</h2>
+    <form id="forgotForm">
+      <div class="form-group"><label>Emel Anda</label><input type="email" id="forgotEmail" required></div>
+      <button type="submit" class="btn-primary">Hantar Kata Laluan Sementara</button>
+    </form>
+    <div class="auth-links"><a onclick="switchAuth('login')">← Kembali ke Log Masuk</a></div>
+  </div>
 </div>
 
-<div class="content">
-  
-  <div id="tab-cipta" class="tab-content active">
-    <div class="panel">
-      <h2>Cipta Kuiz Baharu</h2>
+<!-- SECTION PAPAN PEMUKA (Sembunyi by default) -->
+<div id="dashboardSection">
+  <div class="grid-layout">
+    <!-- Cipta Sesi -->
+    <div class="card">
+      <h3>1. Cipta Sesi Live (PIN)</h3>
+      <div class="form-group">
+        <label>Pilih Kuiz sedia ada</label>
+        <select id="sessionQuiz" class="form-group input" style="width:100%; padding:10px; border-radius:8px;"></select>
+      </div>
+      <button id="createSessionBtn" class="btn-primary" style="background:#10b981;">Jana PIN Permainan</button>
+    </div>
+
+    <!-- Tambah Kuiz -->
+    <div class="card">
+      <h3>2. Cipta Kuiz Baharu</h3>
       <form id="quizForm">
-        <label>Tajuk Kuiz</label>
-        <input id="quizTitle" required placeholder="Contoh: Kuiz Sejarah Kemerdekaan">
-        <label>Penerangan (Pilihan)</label>
-        <textarea id="quizDescription" rows="2" placeholder="Penerangan ringkas"></textarea>
-        <button class="btn-primary" type="submit">Cipta Kuiz</button>
+        <div class="form-group"><label>Tajuk Kuiz</label><input type="text" id="quizTitle" required></div>
+        <div class="form-group"><label>Penerangan (Pilihan)</label><input type="text" id="quizDescription"></div>
+        <button type="submit" class="btn-primary">Cipta Kuiz</button>
       </form>
-      <div id="quizMsg" class="message"></div>
     </div>
-    <div class="panel">
-      <h2>Senarai Kuiz Sedia Ada</h2>
-      <div id="quizList"><div style="color:#94a3b8;text-align:center;">Belum ada kuiz.</div></div>
-    </div>
-  </div>
 
-  <div id="tab-soalan" class="tab-content">
-    <div class="panel">
-      <h2>Tambah Bank Soalan</h2>
+    <!-- Tambah Soalan -->
+    <div class="card">
+      <h3>3. Tambah Soalan</h3>
       <form id="questionForm">
-        <label>Pilih Kuiz</label>
-        <select id="questionQuiz" required><option value="">Pilih kuiz dahulu</option></select>
-        
-        <label>Soalan</label>
-        <textarea id="questionText" rows="3" required placeholder="Tulis soalan di sini..."></textarea>
-        
-        <label>Pilihan A (Merah)</label><input id="optionA" required>
-        <label>Pilihan B (Biru)</label><input id="optionB" required>
-        <label>Pilihan C (Hijau)</label><input id="optionC" required>
-        <label>Pilihan D (Kuning)</label><input id="optionD" required>
-        
-        <label>Jawapan Tepat</label>
-        <select id="correctOption" required>
-          <option value="">Pilih jawapan...</option>
-          <option value="A">A</option>
-          <option value="B">B</option>
-          <option value="C">C</option>
-          <option value="D">D</option>
-        </select>
-        
-        <label>Masa Menjawab (Saat)</label>
-        <input id="questionTime" type="number" min="5" max="120" value="20" required>
-        
-        <label class="checkbox-group">
-          <input type="checkbox" id="doublePoints">
-          <span>🌟 Soalan Markah Berganda (Double Points - 2000 pt)</span>
-        </label>
-
-        <button class="btn-primary" type="submit">Simpan Soalan</button>
+        <div class="form-group"><label>Pilih Kuiz</label><select id="questionQuiz" class="form-group input" style="width:100%; padding:10px; border-radius:8px;" required></select></div>
+        <div class="form-group"><label>Teks Soalan</label><input type="text" id="questionText" required></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group"><label>A (Merah)</label><input type="text" id="optionA" required></div>
+          <div class="form-group"><label>B (Biru)</label><input type="text" id="optionB" required></div>
+          <div class="form-group"><label>C (Hijau)</label><input type="text" id="optionC" required></div>
+          <div class="form-group"><label>D (Kuning)</label><input type="text" id="optionD" required></div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group"><label>Jawapan Betul</label><select id="correctOption" style="width:100%; padding:10px; border-radius:8px;"><option value="A">A</option><option value="B">B</option><option value="C">C</option><option value="D">D</option></select></div>
+          <div class="form-group"><label>Masa (Saat)</label><input type="number" id="questionTime" value="20" required></div>
+        </div>
+        <div class="form-group" style="display:flex; align-items:center; gap:10px;">
+          <input type="checkbox" id="doublePoints" style="width:auto;"><label style="margin:0;">Markah Berganda (2000pt)</label>
+        </div>
+        <button type="submit" class="btn-primary">Simpan Soalan</button>
       </form>
-      <div id="questionMsg" class="message"></div>
     </div>
   </div>
-
-  <div id="tab-live" class="tab-content">
-    <div class="panel">
-      <h2>Jana Sesi Permainan (Live)</h2>
-      <label>Pilih Kuiz untuk Dimainkan</label>
-      <select id="sessionQuiz" required><option value="">Pilih kuiz dahulu</option></select>
-      <button id="createSessionBtn" class="btn-primary" type="button" style="margin-bottom: 20px;">Jana PIN Permainan</button>
-      <div id="sessionMsg" class="message" style="margin-bottom: 20px;"></div>
-      
-      <div id="sessionResult" hidden style="background: #0f172a; padding: 25px; border-radius: 12px; text-align: center; border: 1px dashed #3b82f6;">
-        <p style="color: #94a3b8; font-weight: bold; margin: 0 0 10px 0;">ARAHKAN PESERTA MASUKKAN PIN INI:</p>
-        <h1 id="sessionPin" style="font-size: 48px; color: #fff; margin: 0 0 15px 0; letter-spacing: 5px;"></h1>
-        <p id="sessionStatus" style="color: #34d399; font-weight: bold; margin-bottom: 25px;">Status: Menunggu peserta masuk...</p>
-        <button id="startQuizBtn" class="btn-primary" type="button" style="background: #10b981;">▶ MULA KUIZ SEKARANG</button>
-        <div id="startQuizMsg" class="message"></div>
-      </div>
-    </div>
-  </div>
-
-  <div id="tab-tetapan" class="tab-content">
-    <div class="panel">
-      <h2>Sambungan Pangkalan Data (API)</h2>
-      <label>Google Apps Script Web App URL</label>
-      <input id="apiUrl" placeholder="https://script.google.com/macros/s/.../exec">
-      <div style="display: flex; gap: 15px;">
-        <button id="saveApi" class="btn-primary" type="button" style="background: #475569;">Simpan URL</button>
-        <button id="testApi" class="btn-primary" type="button" style="background: #3b82f6;">Uji Sambungan</button>
-      </div>
-      <div id="apiMsg" class="message"></div>
-    </div>
-  </div>
-
 </div>
 
 <script>
-  function switchTab(tabId, element) {
-    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById(tabId).classList.add('active');
-    element.classList.add('active');
+  function switchAuth(type) {
+    document.getElementById('loginCard').style.display = 'none';
+    document.getElementById('registerCard').style.display = 'none';
+    document.getElementById('forgotCard').style.display = 'none';
+    document.getElementById(type + 'Card').style.display = 'block';
   }
 </script>
-<script src="app.js?v=12"></script>
+<script src="app.js?v=45"></script>
 </body>
 </html>
