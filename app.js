@@ -1,4 +1,4 @@
-/* QUIZ LIVE PPAPP - FULL LOGIC + PREMIUM UI + VOTE BADGE (TOP LEFT) + SCORE ANIMATION */
+/* QUIZ LIVE PPAPP - FULL LOGIC + PREMIUM UI + SCORE ANIMATION + HOST REVEAL SFX */
 (() => {
   "use strict";
 
@@ -6,7 +6,13 @@
   const POLL_INTERVAL_MS = 1500; 
   const $ = (id) => document.getElementById(id);
 
-  const SOUNDS = { bgm_main: new Audio("bgm-lobby.mp3"), sfx_correct: new Audio("sfx-correct.mp3"), sfx_wrong: new Audio("sfx-wrong.mp3") };
+  // --- SISTEM AUDIO (DITAMBAH SFX REVEAL) ---
+  const SOUNDS = { 
+    bgm_main: new Audio("bgm-lobby.mp3"), 
+    sfx_correct: new Audio("sfx-correct.mp3"), 
+    sfx_wrong: new Audio("sfx-wrong.mp3"),
+    sfx_reveal: new Audio("sfx-reveal.mp3") // Bunyi "Tungggg" di skrin Host
+  };
   SOUNDS.bgm_main.loop = true; 
   
   function playBGM() { if (SOUNDS.bgm_main.paused) { const p = SOUNDS.bgm_main.play(); if (p !== undefined) p.catch(() => {}); } }
@@ -20,7 +26,6 @@
     } 
   }, { capture: true });
 
-  // FUNGSI ANIMASI KIRAAN MARKAH
   function animateValue(id, start, end, duration) {
     const obj = $(id);
     if (!obj) return;
@@ -28,7 +33,7 @@
     const step = (timestamp) => {
       if (!startTimestamp) startTimestamp = timestamp;
       const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-      const ease = 1 - Math.pow(1 - progress, 4); // Efek perlahan di hujung (easeOutQuart)
+      const ease = 1 - Math.pow(1 - progress, 4); 
       obj.textContent = Math.floor(ease * (end - start) + start);
       if (progress < 1) window.requestAnimationFrame(step);
       else obj.textContent = end;
@@ -140,7 +145,7 @@
   function initLiveHost() {
     const lobby = $("lobbyPanel"), panel = $("hostLiveQuestionPanel"), control = $("hostControlPanel");
     if (!lobby && !panel) return;
-    let polling = false, currentRenderKey = "", hostTimerInt = null, currentPhase = "";
+    let polling = false, currentRenderKey = "", hostTimerInt = null, currentPhase = "", sfxPlayedForQ = "";
     
     if ($("lobbyPin")) $("lobbyPin").textContent = storageGet("qlp_player_pin") || "------";
     const startBtn = $("hostStartBtn");
@@ -172,9 +177,19 @@
         const newKey = res.status + "_" + (res.question ? res.question.questionId : "0");
         if (currentRenderKey === newKey) return; 
         currentRenderKey = newKey; clearInterval(hostTimerInt); currentPhase = res.status;
+        
         if (res.status === "active") { playBGM(); } else { stopBGM(); }
 
-        // --- ANIMASI DI SKRIN HOST LEADERBOARD ---
+        const q = res.question; if (!q) return;
+
+        // --- MAINKAN SFX "TUNGGG" BILA JAWAPAN DIDEDAHKAN DI HOS ---
+        if (res.status === "revealing_answer") {
+          if (sfxPlayedForQ !== q.questionId) {
+            playSFX('sfx_reveal');
+            sfxPlayedForQ = q.questionId;
+          }
+        }
+
         if (res.status === "leaderboard") {
           const tops = (res.leaderboard || []).map((p, i) => `
             <div style="font-size:24px; margin:12px auto; max-width:600px; background:#1e293b; padding:16px 26px; border-radius:14px; display:flex; justify-content:space-between; align-items:center; border:1px solid #334155;">
@@ -182,19 +197,14 @@
               <span style="font-weight:900;color:#fcd34d;font-size:30px;"><span id="hostLdbAnim_${i}">0</span> pt</span>
             </div>
           `).join("");
-          
           panel.innerHTML = `<div style="text-align:center"><h2 style="font-size:36px; margin-bottom:30px;">🏆 TOP 5 LEADERBOARD 🏆</h2>${tops}</div>`; 
-          
-          // Cetuskan animasi nombor melompat sebaik sahaja di-render
           (res.leaderboard || []).forEach((p, i) => animateValue(`hostLdbAnim_${i}`, 0, p.score, 1500));
           return;
         }
 
-        const q = res.question; if (!q) return;
         const opts = [q.optionA, q.optionB, q.optionC, q.optionD];
         const votes = res.voteCounts || {A:0, B:0, C:0, D:0}; 
 
-        // --- LENCANA DI PENJURU ATAS KIRI (HOST) ---
         panel.innerHTML = `
           <div style="text-align:center;margin-bottom:25px">
             <div style="font-size:14px;font-weight:900;letter-spacing:3px;color:#a5b4fc;text-transform:uppercase">SOALAN ${q.order} ${q.points > 1000 ? '🌟 MARKAH BERGANDA' : ''}</div>
@@ -205,7 +215,6 @@
             ${ANSWER_COLORS.map((item, i) => { 
               const isDim = (res.status === "revealing_answer" && item.option !== q.correctOption); 
               const vCount = votes[item.option] || 0;
-              // Lencana undian diletakkan absolute top:-15px left:-15px dengan background putih supaya jelas timbul
               const voteBadge = res.status === "revealing_answer" ? `<div style="position:absolute; top:-15px; left:-15px; background:#f8fafc; color:#0f172a; padding:6px 16px; border-radius:30px; font-size:18px; font-weight:900; box-shadow:0 4px 10px rgba(0,0,0,0.5); z-index:10; display:flex; align-items:center; gap:6px;">👤 ${vCount}</div>` : '';
               
               return `
@@ -260,12 +269,11 @@
 
         if (res.status === "active") { localStorage.removeItem("qlp_last_isCorrect"); localStorage.setItem("qlp_last_earned", "0"); }
 
-        // --- ANIMASI DI SKRIN PESERTA (MASA JAWAPAN DIBUKA) ---
         if (res.status === "revealing_answer") {
           const answeredState = localStorage.getItem("qlp_last_isCorrect"); 
           const earned = parseInt(localStorage.getItem("qlp_last_earned") || "0");
           const totalScore = parseInt(localStorage.getItem("qlp_last_score") || "0");
-          const prevScore = Math.max(0, totalScore - earned); // Markah lama
+          const prevScore = Math.max(0, totalScore - earned);
           
           let isCorrect = (answeredState === "true"); 
           let message = (answeredState === null) ? "Masa Tamat" : (isCorrect ? "Tepat!" : "Salah");
@@ -280,15 +288,12 @@
                 <div style="font-size:90px; line-height:1; margin-bottom:15px; filter: drop-shadow(0 0 25px ${glowColor});">${icon}</div>
                 <div style="font-size:28px; font-weight:800; color: #f8fafc; letter-spacing:1px;">${message}</div>
                 <div style="font-size:24px; font-weight:900; color:${glowColor}; margin: 10px 0;">+${earned} XP</div>
-                
                 <div style="margin-top:20px; background:rgba(0,0,0,0.3); padding:15px 30px; border-radius:16px; width:80%;">
                   <div style="font-size:14px; color:#94a3b8; text-transform:uppercase; font-weight:bold;">Jumlah Markah</div>
                   <div style="font-size:40px; font-weight:900; color:#3b82f6; margin-top:5px;" id="partTotalAnim">0</div>
                 </div>
               </div>
             </div>`; 
-            
-          // Cetus animasi markah menaik di skrin peserta!
           animateValue("partTotalAnim", prevScore, totalScore, 1500);
           return;
         }
