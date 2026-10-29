@@ -1,4 +1,4 @@
-/* QUIZ LIVE PPAPP - FULL LOGIC + PREMIUM UI + BUG FIX LEADERBOARD HOST */
+/* QUIZ LIVE PPAPP - FULL LOGIC + PREMIUM UI + HOST SCORE ANIMATION WITH COIN SFX */
 (() => {
   "use strict";
 
@@ -6,18 +6,21 @@
   const POLL_INTERVAL_MS = 1500; 
   const $ = (id) => document.getElementById(id);
 
-  // --- SISTEM AUDIO ---
+  // --- SISTEM AUDIO (DITAMBAH SFX COUNT) ---
   const SOUNDS = { 
     bgm_main: new Audio("bgm-lobby.mp3"), 
     sfx_correct: new Audio("sfx-correct.mp3"), 
     sfx_wrong: new Audio("sfx-wrong.mp3"),
-    sfx_reveal: new Audio("sfx-reveal.mp3") 
+    sfx_reveal: new Audio("sfx-reveal.mp3"),
+    sfx_count: new Audio("sfx-count.mp3") // Bunyi syiling menaik
   };
   SOUNDS.bgm_main.loop = true; 
+  SOUNDS.sfx_count.loop = true; // Loop bunyi markah selagi nombor belum tamat
   
   function playBGM() { if (SOUNDS.bgm_main.paused) { const p = SOUNDS.bgm_main.play(); if (p !== undefined) p.catch(() => {}); } }
   function stopBGM() { SOUNDS.bgm_main.pause(); SOUNDS.bgm_main.currentTime = 0; }
   function playSFX(key) { if (SOUNDS[key]) { SOUNDS[key].currentTime = 0; SOUNDS[key].play().catch(() => {}); } }
+  function stopSFX(key) { if (SOUNDS[key]) { SOUNDS[key].pause(); SOUNDS[key].currentTime = 0; } }
   
   document.body.addEventListener('click', () => { 
     if (!window.audioUnlocked) { 
@@ -26,7 +29,8 @@
     } 
   }, { capture: true });
 
-  function animateValue(id, start, end, duration) {
+  // FUNGSI ANIMASI YANG BOLEH CALLBACK SELEPAS TAMAT
+  function animateValue(id, start, end, duration, onComplete) {
     const obj = $(id);
     if (!obj) return;
     let startTimestamp = null;
@@ -35,8 +39,12 @@
       const progress = Math.min((timestamp - startTimestamp) / duration, 1);
       const ease = 1 - Math.pow(1 - progress, 4); 
       obj.textContent = Math.floor(ease * (end - start) + start);
-      if (progress < 1) window.requestAnimationFrame(step);
-      else obj.textContent = end;
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      } else { 
+        obj.textContent = end; 
+        if (onComplete) onComplete(); 
+      }
     };
     window.requestAnimationFrame(step);
   }
@@ -180,7 +188,7 @@
         
         if (res.status === "active") { playBGM(); } else { stopBGM(); }
 
-        // --- PEMBAIKAN BUG LEADERBOARD (KINI BERADA DI SINI) ---
+        // --- ANIMASI DI SKRIN HOST LEADERBOARD (DENGAN BUNYI) ---
         if (res.status === "leaderboard") {
           const tops = (res.leaderboard || []).map((p, i) => `
             <div style="font-size:24px; margin:12px auto; max-width:600px; background:#1e293b; padding:16px 26px; border-radius:14px; display:flex; justify-content:space-between; align-items:center; border:1px solid #334155;">
@@ -189,14 +197,30 @@
             </div>
           `).join("");
           panel.innerHTML = `<div style="text-align:center"><h2 style="font-size:36px; margin-bottom:30px;">🏆 TOP 5 LEADERBOARD 🏆</h2>${tops}</div>`; 
-          (res.leaderboard || []).forEach((p, i) => animateValue(`hostLdbAnim_${i}`, 0, p.score, 1500));
+          
+          let animationDone = 0;
+          const totalTops = (res.leaderboard || []).length;
+          
+          if (totalTops > 0) {
+            playSFX('sfx_count'); // Mula main bunyi syiling
+            (res.leaderboard || []).forEach((p, i) => {
+              animateValue(`hostLdbAnim_${i}`, 0, p.score, 1500, () => {
+                animationDone++;
+                // Berhentikan bunyi apabila semua animasi selesai
+                if (animationDone === totalTops) stopSFX('sfx_count');
+              });
+            });
+          }
           return;
         }
 
         const q = res.question; if (!q) return;
 
         if (res.status === "revealing_answer") {
-          if (sfxPlayedForQ !== q.questionId) { playSFX('sfx_reveal'); sfxPlayedForQ = q.questionId; }
+          if (sfxPlayedForQ !== q.questionId) {
+            playSFX('sfx_reveal');
+            sfxPlayedForQ = q.questionId;
+          }
         }
 
         const opts = [q.optionA, q.optionB, q.optionC, q.optionD];
@@ -270,7 +294,6 @@
           const answeredState = localStorage.getItem("qlp_last_isCorrect"); 
           const earned = parseInt(localStorage.getItem("qlp_last_earned") || "0");
           const totalScore = parseInt(localStorage.getItem("qlp_last_score") || "0");
-          const prevScore = Math.max(0, totalScore - earned);
           
           let isCorrect = (answeredState === "true"); 
           let message = (answeredState === null) ? "Masa Tamat" : (isCorrect ? "Tepat!" : "Salah");
@@ -279,6 +302,7 @@
 
           if (sfxPlayedForQ !== (res.question ? res.question.questionId : "0")) { playSFX(isCorrect ? 'sfx_correct' : 'sfx_wrong'); sfxPlayedForQ = (res.question ? res.question.questionId : "0"); }
           
+          // MARKAH PESERTA DIPAPARKAN TERUS STATIK (TIADA ANIMASI DI PHONE)
           panel.innerHTML = `
             <div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0f172a;color:white;border-radius:20px;">
               <div style="background:#1e293b; border: 1px solid #334155; border-radius: 24px; padding: 40px 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 100%; max-width: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
@@ -287,18 +311,17 @@
                 <div style="font-size:24px; font-weight:900; color:${glowColor}; margin: 10px 0;">+${earned} XP</div>
                 <div style="margin-top:20px; background:rgba(0,0,0,0.3); padding:15px 30px; border-radius:16px; width:80%;">
                   <div style="font-size:14px; color:#94a3b8; text-transform:uppercase; font-weight:bold;">Jumlah Markah</div>
-                  <div style="font-size:40px; font-weight:900; color:#3b82f6; margin-top:5px;" id="partTotalAnim">0</div>
+                  <div style="font-size:40px; font-weight:900; color:#3b82f6; margin-top:5px;">${totalScore}</div>
                 </div>
               </div>
             </div>`; 
-          animateValue("partTotalAnim", prevScore, totalScore, 1500);
           return;
         }
         
         if (res.status === "leaderboard") { 
           const score = parseInt(localStorage.getItem("qlp_last_score") || "0"); 
-          panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0f172a;color:white;"><div style="background:#1e293b; border: 1px solid #334155; border-radius: 24px; padding: 40px 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); width: 100%; max-width: 400px;"><div style="font-size:18px;font-weight:700;color:#94a3b8;text-transform:uppercase;">Jumlah Markah</div><div style="font-size:70px;font-weight:900;color:#3b82f6;margin-top:10px;" id="partLdbAnim">0</div></div></div>`; 
-          animateValue("partLdbAnim", 0, score, 1500);
+          // TIADA ANIMASI DI PHONE
+          panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0f172a;color:white;"><div style="background:#1e293b; border: 1px solid #334155; border-radius: 24px; padding: 40px 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); width: 100%; max-width: 400px;"><div style="font-size:18px;font-weight:700;color:#94a3b8;text-transform:uppercase;">Jumlah Markah</div><div style="font-size:70px;font-weight:900;color:#3b82f6;margin-top:10px;">${score}</div></div></div>`; 
           return; 
         }
         
