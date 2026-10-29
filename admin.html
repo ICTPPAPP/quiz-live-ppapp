@@ -3,108 +3,43 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paparan Hos • QUIZ LIVE PPAPP</title>
+<title>Admin Panel • QUIZ LIVE PPAPP</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { 
-    font-family: 'Segoe UI', system-ui, sans-serif; 
-    background: #0f172a; 
-    color: white; 
-    min-height: 100vh; 
-    display: flex; 
-    flex-direction: column; 
-  }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: #0f172a; color: white; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column; }
   
-  /* HEADER (KEMAS TANPA BUTANG AUDIO) */
-  header { 
-    padding: 20px 40px; 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    border-bottom: 1px solid #1e293b; 
-    background: #0b1120; 
-  }
-  .brand { font-size: 24px; font-weight: 900; letter-spacing: 1px; } 
-  .brand span { color: #3b82f6; }
-  .btn-outline { 
-    border: 1px solid #334155; 
-    color: #94a3b8; 
-    padding: 8px 20px; 
-    border-radius: 30px; 
-    text-decoration: none; 
-    font-size: 14px; 
-    font-weight: 600; 
-    transition: 0.3s; 
-  }
-  .btn-outline:hover { background: #1e293b; color: white; border-color: #64748b; }
+  header { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; background: #0b1120; }
+  .brand { font-size: 24px; font-weight: 900; letter-spacing: 1px; } .brand span { color: #3b82f6; }
+  
+  .header-right { display: flex; align-items: center; gap: 15px; }
+  .participant-link { background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; color: #3b82f6; padding: 8px 16px; border-radius: 30px; font-size: 13px; font-weight: 700; text-decoration: none; transition: all 0.3s ease; display: flex; align-items: center; gap: 6px; }
+  .participant-link:hover { background: #3b82f6; color: white; box-shadow: 0 0 12px rgba(59, 130, 246, 0.5); transform: translateY(-2px); }
 
-  /* LOBBY PANEL */
-  #lobbyPanel { 
-    flex: 1; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center; 
-    padding: 40px; 
-    text-align: center; 
-  }
-  .pin-display { 
-    background: #1e293b; 
-    padding: 20px 50px; 
-    border-radius: 20px; 
-    border: 2px solid #3b82f6; 
-    box-shadow: 0 0 30px rgba(59,130,246,0.3); 
-    margin-bottom: 30px; 
-  }
-  .pin-display h2 { font-size: 18px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
-  .pin-display h1 { font-size: 80px; font-weight: 900; color: #ffffff; letter-spacing: 5px; }
+  .admin-profile { display: none; align-items: center; gap: 12px; background: #1e293b; padding: 6px 16px 6px 6px; border-radius: 30px; border: 1px solid #334155; }
+  .admin-profile .avatar { width: 36px; height: 36px; background: #3b82f6; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; }
+  .logout-btn { color: #ef4444; font-size: 12px; text-decoration: none; margin-left: 10px; font-weight: bold; cursor: pointer; }
   
-  .players-container { 
-    width: 100%; 
-    max-width: 800px; 
-    background: #0b1120; 
-    padding: 30px; 
-    border-radius: 20px; 
-    border: 1px solid #1e293b; 
-    min-height: 200px; 
-  }
-  .players-container h3 { margin-bottom: 20px; color: #cbd5e1; font-size: 20px; }
-  #lobbyPlayers { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-  .player-chip { 
-    background: #3b82f6; 
-    color: white; 
-    padding: 8px 16px; 
-    border-radius: 30px; 
-    font-weight: bold; 
-    font-size: 16px; 
-    animation: popIn 0.3s ease; 
-  }
-  @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+  .admin-nav { display: none; background: #1e293b; padding: 0 40px; border-bottom: 1px solid #334155; }
+  .nav-btn { background: transparent; color: #94a3b8; border: none; padding: 15px 20px; font-weight: 600; cursor: pointer; border-bottom: 3px solid transparent; font-size: 15px; }
+  .nav-btn:hover { color: white; }
+  .nav-btn.active { color: #3b82f6; border-bottom-color: #3b82f6; }
 
-  /* HOST PANELS */
-  #hostLiveQuestionPanel { flex: 1; padding: 40px; display: none; max-width: 1200px; margin: 0 auto; width: 100%; }
+  .auth-card { background: #1e293b; padding: 40px; border-radius: 20px; width: 100%; max-width: 400px; margin: 50px auto; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+  .form-group { margin-bottom: 15px; } .form-group label { display: block; margin-bottom: 5px; color: #94a3b8; font-size: 13px; font-weight: 600; }
+  .form-group input, .form-group select { width: 100%; padding: 12px 15px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; outline: none; }
+  .btn-primary { width: 100%; background: #3b82f6; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+  .btn-primary:hover { background: #2563eb; } 
+  .auth-links { text-align: center; margin-top: 20px; font-size: 13px; } .auth-links a { color: #3b82f6; cursor: pointer; font-weight: 600; }
   
-  /* CONTROL PANEL FOOTER */
-  #hostControlPanel { 
-    padding: 20px 40px; 
-    background: #0b1120; 
-    border-top: 1px solid #1e293b; 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-  }
-  .btn-primary { 
-    background: #3b82f6; color: white; border: none; padding: 15px 40px; font-size: 18px; 
-    font-weight: 900; border-radius: 12px; cursor: pointer; transition: 0.3s; 
-  }
-  .btn-primary:hover { background: #2563eb; transform: translateY(-2px); }
-  .btn-primary:disabled { background: #334155; color: #94a3b8; cursor: not-allowed; transform: none; }
+  .dashboard-view { display: none; padding: 40px; max-width: 1200px; margin: 0 auto; width: 100%; }
+  .grid-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+  .card { background: #1e293b; padding: 30px; border-radius: 20px; border: 1px solid #334155; }
   
-  .btn-danger { 
-    background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 12px 25px; 
-    font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; transition: 0.3s; 
-  }
-  .btn-danger:hover { background: #ef4444; color: white; }
+  table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+  th, td { text-align: left; padding: 12px; border-bottom: 1px solid #334155; font-size: 14px; }
+  th { color: #94a3b8; text-transform: uppercase; font-size: 12px; }
+  .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; background: #3b82f6; color: white; }
+  .badge.master { background: #f59e0b; color: #000; }
 </style>
 </head>
 <body>
@@ -112,49 +47,110 @@
 <header>
   <div class="brand">QUIZ LIVE <span>PPAPP</span></div>
   <div class="header-right">
-    <a href="admin.html" class="btn-outline">← Kembali Admin</a>
+    <a href="index.html" class="participant-link">🎮 Ke Halaman Peserta</a>
+    <div class="admin-profile" id="adminProfile">
+      <div class="avatar" id="adminAvatar">A</div>
+      <div><span id="adminNameDisplay">Admin</span> <a class="logout-btn" id="logoutBtn">Keluar</a></div>
+    </div>
   </div>
 </header>
 
-<main style="flex: 1; display: flex; flex-direction: column;">
-  <!-- LOBI MENUNGGU -->
-  <div id="lobbyPanel">
-    <div class="pin-display">
-      <h2>Sertai di peranti anda dengan PIN</h2>
-      <h1 id="lobbyPin">------</h1>
-    </div>
-    <div class="players-container">
-      <h3>Pemain Bersedia: <span id="lobbyCount" style="color:#10b981; font-size:26px; font-weight:900;">0</span></h3>
-      <div id="lobbyPlayers"></div>
-    </div>
+<div class="admin-nav" id="adminNav">
+  <button class="nav-btn active" onclick="switchTab('papanPemuka')">Papan Pemuka</button>
+  <button class="nav-btn" onclick="switchTab('history')">Sejarah Kuiz</button>
+  <button class="nav-btn" onclick="switchTab('settings')">Tetapan Akaun</button>
+  <button class="nav-btn" id="masterNavBtn" onclick="switchTab('master')" style="display:none; color:#f59e0b;">Master Admin 👑</button>
+</div>
+
+<div id="authSection">
+  <div class="auth-card" id="loginCard">
+    <h2 style="text-align:center;margin-top:0;">Log Masuk</h2>
+    <form id="loginForm"><div class="form-group"><label>Emel</label><input type="email" id="loginEmail" required></div><div class="form-group"><label>Kata Laluan</label><input type="password" id="loginPassword" required></div><button type="submit" class="btn-primary">Masuk</button></form>
+    <div class="auth-links"><a onclick="switchAuth('register')">Daftar Baru</a> | <a onclick="switchAuth('forgot')">Lupa Kata Laluan</a></div>
   </div>
 
-  <!-- PAPARAN SOALAN LIVE -->
-  <div id="hostLiveQuestionPanel"></div>
-</main>
+  <div class="auth-card" id="registerCard" style="display:none;">
+    <h2 style="text-align:center;margin-top:0;">Daftar Admin</h2>
+    <form id="registerForm">
+      <div class="form-group"><label>Nama</label><input type="text" id="regName" required></div><div class="form-group"><label>Emel</label><input type="email" id="regEmail" required></div>
+      <div class="form-group"><label>Kata Laluan</label><input type="password" id="regPassword" required></div>
+      <div class="form-group"><label>Sahkan</label><input type="password" id="regConfirmPassword" required></div>
+      <button type="submit" class="btn-primary">Daftar</button>
+    </form>
+    <div class="auth-links"><a onclick="switchAuth('login')">← Ke Log Masuk</a></div>
+  </div>
 
-<!-- KAWALAN HOS DI BAWAH -->
-<div id="hostControlPanel">
-  <button id="hostStartBtn" class="btn-primary" style="margin: 0 auto; display: block; background: #10b981;">▶ MULA KUIZ SEKARANG</button>
-  
-  <div style="display:none; width: 100%; justify-content: space-between; align-items: center;" id="inGameControls">
-    <button id="nextQuestionBtn" class="btn-primary">➡ SETERUSNYA</button>
-    
-    <!-- Butang Tamat sekiranya kecemasan -->
-    <button onclick="if(confirm('Anda pasti mahu tamatkan kuiz ini sekarang?')) { apiPost({action:'endQuiz', sessionId: storageGet('qlp_session_id'), hostToken: storageGet('qlp_host_token')}) }" class="btn-danger">Tamatkan Kuiz</button>
+  <div class="auth-card" id="forgotCard" style="display:none;">
+    <h2 style="text-align:center;margin-top:0;">Lupa Kata Laluan</h2>
+    <form id="forgotForm"><div class="form-group"><label>Emel Anda</label><input type="email" id="forgotEmail" required></div><button type="submit" class="btn-primary">Hantar</button></form>
+    <div class="auth-links"><a onclick="switchAuth('login')">← Ke Log Masuk</a></div>
   </div>
 </div>
 
-<!-- Sambungan Script Utama -->
-<script src="app.js?v=95"></script>
+<div id="view-papanPemuka" class="dashboard-view">
+  <div class="grid-layout">
+    <div class="card"><h3>1. Cipta Sesi Live (PIN)</h3><div class="form-group"><label>Pilih Kuiz</label><select id="sessionQuiz"></select></div><button id="createSessionBtn" class="btn-primary" style="background:#10b981;">Jana PIN Permainan</button></div>
+    <div class="card"><h3>2. Cipta Kuiz Baharu</h3><form id="quizForm"><div class="form-group"><label>Tajuk Kuiz</label><input type="text" id="quizTitle" required></div><button type="submit" class="btn-primary">Cipta</button></form></div>
+    <div class="card"><h3>3. Tambah Soalan</h3><form id="questionForm">
+      <div class="form-group"><label>Pilih Kuiz</label><select id="questionQuiz" required></select></div><div class="form-group"><label>Soalan</label><input type="text" id="questionText" required></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><div class="form-group"><label>A</label><input type="text" id="optionA" required></div><div class="form-group"><label>B</label><input type="text" id="optionB" required></div><div class="form-group"><label>C</label><input type="text" id="optionC" required></div><div class="form-group"><label>D</label><input type="text" id="optionD" required></div></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><div class="form-group"><label>Jawapan</label><select id="correctOption"><option>A</option><option>B</option><option>C</option><option>D</option></select></div><div class="form-group"><label>Masa (s)</label><input type="number" id="questionTime" value="20" required></div></div>
+      <div class="form-group"><input type="checkbox" id="doublePoints"> Markah Berganda</div><button type="submit" class="btn-primary">Simpan</button>
+    </form></div>
+  </div>
+</div>
+
+<div id="view-history" class="dashboard-view">
+  <div class="card" style="max-width:900px; margin:auto;">
+    <h3 style="display:flex; justify-content:space-between;">Sejarah Kuiz <button onclick="loadHistory()" style="background:none;border:none;color:#3b82f6;cursor:pointer;">🔄 Refresh</button></h3>
+    <div id="historyContainer" style="color:#94a3b8; font-size:14px;">Memuatkan rekod...</div>
+  </div>
+</div>
+
+<div id="view-settings" class="dashboard-view">
+  <div class="card" style="max-width:500px; margin:auto;">
+    <h3>Tetapan Akaun Saya</h3>
+    <form id="settingsForm">
+      <div class="form-group"><label>Nama Penuh</label><input type="text" id="setMyName" required></div>
+      <div class="form-group"><label>Emel Baharu</label><input type="email" id="setMyEmail"></div>
+      <div class="form-group"><label>Kata Laluan Baharu</label><input type="password" id="setMyPassword"></div>
+      <button type="submit" class="btn-primary">Kemas Kini Profil</button>
+    </form>
+  </div>
+</div>
+
+<div id="view-master" class="dashboard-view">
+  <div class="grid-layout">
+    <div class="card" style="grid-column: span 2;">
+      <h3>Senarai Pengguna & Admin</h3>
+      <div style="overflow-x:auto;"><table id="adminTable"><thead><tr><th>ID/Emel</th><th>Nama</th><th>Peranan</th><th>Tindakan</th></tr></thead><tbody id="adminTableBody"></tbody></table></div>
+    </div>
+    
+    <div class="card">
+      <h3>Daftar / Kemas Kini Akaun</h3>
+      <form id="masterManageForm">
+        <input type="hidden" id="targetAdminId">
+        <div class="form-group"><label>Nama Penuh</label><input type="text" id="mName" required></div>
+        <div class="form-group"><label>Emel</label><input type="email" id="mEmail" required></div>
+        <div class="form-group"><label>Kata Laluan</label><input type="text" id="mPassword" required></div>
+        <div class="form-group"><label>Peranan</label><select id="mRole"><option value="admin">Admin</option><option value="master">Master</option></select></div>
+        <button type="submit" class="btn-primary" id="mSubmitBtn">Cipta Akaun Baru</button>
+        <button type="button" class="btn-primary" style="background:#64748b; margin-top:10px; display:none;" id="mCancelBtn">Batal Kemas Kini</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>Tetapan Sistem (API)</h3>
+      <div class="form-group"><label>Pautan Web App (Google Apps Script)</label><input type="text" id="apiUrl" placeholder="https://script.google.com/..." required></div>
+      <button type="button" id="saveApiBtn" class="btn-primary" style="background:#8b5cf6;">Simpan Pautan API</button>
+    </div>
+  </div>
+</div>
+
 <script>
-  // Logik kecil untuk menyorokkan butang mula apabila kuiz sedang berjalan
-  setInterval(() => {
-    if (window.hostPhase && window.hostPhase !== 'waiting') {
-      if(document.getElementById('hostStartBtn')) document.getElementById('hostStartBtn').style.display = 'none';
-      if(document.getElementById('inGameControls')) document.getElementById('inGameControls').style.display = 'flex';
-    }
-  }, 1000);
+  function switchAuth(type) { ['login','register','forgot'].forEach(t => document.getElementById(t+'Card').style.display='none'); document.getElementById(type+'Card').style.display='block'; }
+  function switchTab(viewId) { document.querySelectorAll('.dashboard-view').forEach(v => v.style.display='none'); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('view-'+viewId).style.display='block'; event.currentTarget.classList.add('active'); if(viewId==='history') loadHistory(); if(viewId==='master') loadAdmins(); }
 </script>
+<script src="app.js?v=99"></script>
 </body>
 </html>
