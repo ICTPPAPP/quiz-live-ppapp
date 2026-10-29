@@ -1,4 +1,4 @@
-/* QUIZ LIVE PPAPP - FULL LOGIC + PREMIUM UI + VOTE TALLY DISPLAY */
+/* QUIZ LIVE PPAPP - FULL LOGIC + PREMIUM UI + VOTE BADGE (TOP LEFT) + SCORE ANIMATION */
 (() => {
   "use strict";
 
@@ -19,6 +19,22 @@
       if (window.hostPhase === "waiting" || window.hostPhase === "active") playBGM(); 
     } 
   }, { capture: true });
+
+  // FUNGSI ANIMASI KIRAAN MARKAH
+  function animateValue(id, start, end, duration) {
+    const obj = $(id);
+    if (!obj) return;
+    let startTimestamp = null;
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 4); // Efek perlahan di hujung (easeOutQuart)
+      obj.textContent = Math.floor(ease * (end - start) + start);
+      if (progress < 1) window.requestAnimationFrame(step);
+      else obj.textContent = end;
+    };
+    window.requestAnimationFrame(step);
+  }
 
   const ANSWER_COLORS = [
     { option: "A", color: "#e53232", shape: "▲", label: "Merah", textColor: "#ffffff" },
@@ -41,22 +57,17 @@
   function initJoinForm() {
     const pinInput = $("pin"), joinButton = $("joinBtn"); 
     if (!pinInput || !joinButton) return;
-    
     pinInput.addEventListener("input", () => { pinInput.value = pinInput.value.replace(/\D/g, "").slice(0, 6); });
-    
     joinButton.addEventListener("click", async () => {
       const pin = pinInput.value.trim(), name = ($("playerName") ? $("playerName").value.trim() : "");
       if (!/^\d{6}$/.test(pin) || !name) return alert("Sila masukkan 6 digit PIN dan Nama.");
-      
       joinButton.disabled = true; joinButton.textContent = "Menyemak...";
       try {
         const res = await apiPost({ action: "join", pin, displayName: name });
         if (!res.success) throw new Error(res.message);
         storageSet("qlp_player_session_id", res.sessionId); storageSet("qlp_player_id", res.playerId);
-        
         if ($("waitingRoom")) { $("waitingRoom").hidden = false; $("waitingRoom").style.display = "block"; }
         if (document.querySelector(".hero-wrap")) document.querySelector(".hero-wrap").style.display = "none";
-        
         document.body.classList.add("waiting-page");
         if ($("waitingPin")) $("waitingPin").textContent = pin;
         if ($("waitingName")) $("waitingName").textContent = `Peserta: ${name}`;
@@ -74,14 +85,11 @@
       $("view-papanPemuka").style.display = "block"; $("setMyName").value = myName; $("setMyEmail").value = myEmail;
       if (myRole === "master" && $("masterNavBtn")) $("masterNavBtn").style.display = "inline-block"; 
     }
-
     if ($("logoutBtn")) $("logoutBtn").addEventListener("click", () => { localStorage.clear(); location.reload(); });
-
     if ($("loginForm")) $("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault(); const b = $("loginForm").querySelector("button"); b.textContent = "Menyemak...";
       try { const r = await apiPost({action:"adminLogin", email:$("loginEmail").value, password:$("loginPassword").value}); if(!r.success) throw new Error(r.message); storageSet("qlp_admin_name", r.name); storageSet("qlp_admin_email", r.email); storageSet("qlp_admin_role", r.role); location.reload(); } catch(e) { alert(e.message); b.textContent = "Masuk"; }
     });
-    
     if ($("registerForm")) $("registerForm").addEventListener("submit", async (e) => {
       e.preventDefault(); const p = $("regPassword").value; 
       if(!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/.test(p)) return alert("Kata laluan lemah!");
@@ -89,35 +97,27 @@
       const b = $("registerForm").querySelector("button"); b.textContent = "...";
       try { const r = await apiPost({action:"adminRegister", name:$("regName").value, email:$("regEmail").value, password:p}); if(!r.success) throw new Error(r.message); alert("Berjaya! Sila log masuk."); window.switchAuth('login'); } catch(e) { alert(e.message); } finally { b.textContent = "Daftar"; }
     });
-
     if ($("forgotForm")) $("forgotForm").addEventListener("submit", async (e) => { e.preventDefault(); try{ await apiPost({action:"adminForgot", email:$("forgotEmail").value}); alert("Kata laluan dihantar ke emel!"); window.switchAuth('login'); } catch(e) { alert(e.message); } });
-
     if ($("settingsForm")) $("settingsForm").addEventListener("submit", async (e) => {
       e.preventDefault(); const np = $("setMyPassword").value;
       if(np && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/.test(np)) return alert("Kata laluan lemah!");
       try { const r = await apiPost({action:"updateAccount", oldEmail:myEmail, newName:$("setMyName").value, newEmail:$("setMyEmail").value, newPassword:np}); if(!r.success) throw new Error(r.message); alert("Akaun dikemas kini!"); storageSet("qlp_admin_name", r.newName); storageSet("qlp_admin_email", r.newEmail); location.reload(); } catch(e) { alert(e.message); }
     });
-
     async function loadQ() { if(!$("questionQuiz")) return; try { const r = await apiPost({action:"getQuizzes"}); if(r.success && r.quizzes) { const o = r.quizzes.map(x => `<option value="${x.quizId}">${escapeHtml(x.title)}</option>`).join(""); $("questionQuiz").innerHTML = o || '<option value="">-- Tiada Kuiz --</option>'; $("sessionQuiz").innerHTML = o || '<option value="">-- Tiada Kuiz --</option>'; } } catch(e) {} }
     if(myName) loadQ();
-    
     window.loadHistory = async () => {
       if (!$("historyContainer")) return; $("historyContainer").innerHTML = "Sedang memuat turun rekod...";
       const r = await apiPost({action:"getHistory"});
       if(!r.success || r.history.length === 0) return $("historyContainer").innerHTML = "Tiada rekod kuiz.";
       $("historyContainer").innerHTML = r.history.map(h => `<div style="background:#0f172a; padding:15px; border-radius:10px; margin-bottom:15px; border:1px solid #334155;"><div style="color:#3b82f6; font-weight:bold; font-size:16px;">${escapeHtml(h.quizTitle)}</div><div style="font-size:12px; margin-bottom:10px;">Dimainkan: ${h.date ? new Date(h.date).toLocaleString('ms-MY') : 'Tarikh tiada'}</div>${h.tops.length ? h.tops.map((p,i)=>`<div>#${i+1} ${escapeHtml(p.name)} - ${p.score}pt</div>`).join("") : "Tiada peserta selesai."}</div>`).join("");
     };
-
     window.loadAdmins = async () => {
       if (!$("adminTableBody")) return; const r = await apiPost({action:"getAdmins"});
       if(r.success) { $("adminTableBody").innerHTML = r.admins.map(a => `<tr><td><div style="font-size:11px;color:#64748b;">${a.id}</div>${escapeHtml(a.email)}</td><td>${escapeHtml(a.name)}</td><td><span class="badge ${a.role==='master'?'master':''}">${a.role.toUpperCase()}</span></td><td><button onclick="editAdm('${a.id}','${escapeHtml(a.name)}','${escapeHtml(a.email)}','${a.role}')" style="background:#3b82f6;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">Edit</button> <button onclick="delAdm('${a.id}')" style="background:#ef4444;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">Padam</button></td></tr>`).join(""); }
     };
-
     window.editAdm = (id, nm, em, rl) => { $("targetAdminId").value=id; $("mName").value=nm; $("mEmail").value=em; $("mPassword").value=""; $("mRole").value=rl; $("mSubmitBtn").textContent="Simpan Perubahan"; $("mSubmitBtn").style.background="#f59e0b"; $("mCancelBtn").style.display="inline-block"; };
     window.delAdm = async (id) => { if(confirm("Padam akaun ini?")) { await apiPost({action:"deleteAdmin", targetId:id}); window.loadAdmins(); } };
-
     if($("mCancelBtn")) $("mCancelBtn").addEventListener("click", () => { $("masterManageForm").reset(); $("targetAdminId").value=""; $("mSubmitBtn").textContent="Cipta Akaun Baru"; $("mSubmitBtn").style.background="#3b82f6"; $("mCancelBtn").style.display="none"; });
-
     if($("masterManageForm")) $("masterManageForm").addEventListener("submit", async(e) => {
       e.preventDefault(); const t = $("targetAdminId").value, np = $("mPassword").value;
       if(!t) { 
@@ -129,16 +129,14 @@
       }
       $("mCancelBtn").click(); window.loadAdmins();
     });
-
     if ($("apiUrl")) $("apiUrl").value = getApiUrl();
     if ($("saveApiBtn")) $("saveApiBtn").addEventListener("click", () => { storageSet("qlp_api_url", $("apiUrl").value.trim()); alert("Pautan API Sistem Berjaya Disimpan!"); });
-
     if ($("quizForm")) $("quizForm").addEventListener("submit", async (e) => { e.preventDefault(); const btn = $("quizForm").querySelector("button"); btn.disabled = true; btn.textContent="..."; try { await apiPost({ action: "createQuiz", title: $("quizTitle").value, description: $("quizDescription").value }); alert("Kuiz Dicipta!"); location.reload(); } catch(e) { btn.disabled = false; btn.textContent="Cipta"; } });
     if ($("questionForm")) $("questionForm").addEventListener("submit", async (e) => { e.preventDefault(); const btn = $("questionForm").querySelector("button"); btn.disabled = true; btn.textContent="..."; try { await apiPost({ action: "addQuestion", quizId: $("questionQuiz").value, questionText: $("questionText").value, optionA: $("optionA").value, optionB: $("optionB").value, optionC: $("optionC").value, optionD: $("optionD").value, correctOption: $("correctOption").value, timeLimitSeconds: Number($("questionTime").value), points: $("doublePoints").checked ? 2000 : 1000 }); alert("Soalan Disimpan!"); $("questionForm").reset(); } catch(e) {} finally { btn.disabled = false; btn.textContent="Simpan"; } });
     if ($("createSessionBtn")) $("createSessionBtn").addEventListener("click", async () => { const qid = $("sessionQuiz").value; if(!qid) return alert("Sila Pilih Kuiz"); $("createSessionBtn").disabled = true; $("createSessionBtn").textContent = "Menjana..."; try { const r = await apiPost({action:"createSession", quizId:qid}); storageSet("qlp_session_id", r.sessionId); storageSet("qlp_host_token", r.hostToken); storageSet("qlp_player_pin", r.pin); window.location.href="host.html"; } catch(e) { $("createSessionBtn").disabled = false; $("createSessionBtn").textContent = "Jana PIN Permainan"; } });
   }
 
-  // ---------- PAPARAN HOS (TERMASUK KIRAAN UNDIAN) ----------
+  // ---------- PAPARAN HOS ----------
   function initLiveHost() {
     const lobby = $("lobbyPanel"), panel = $("hostLiveQuestionPanel"), control = $("hostControlPanel");
     if (!lobby && !panel) return;
@@ -176,34 +174,46 @@
         currentRenderKey = newKey; clearInterval(hostTimerInt); currentPhase = res.status;
         if (res.status === "active") { playBGM(); } else { stopBGM(); }
 
+        // --- ANIMASI DI SKRIN HOST LEADERBOARD ---
         if (res.status === "leaderboard") {
-          const tops = (res.leaderboard || []).map((p, i) => `<div style="font-size:24px; margin:12px auto; max-width:600px; background:#1e293b; padding:16px 26px; border-radius:14px; display:flex; justify-content:space-between; align-items:center; border:1px solid #334155;"><span><b style="color:#3b82f6;">#${i+1}</b> ${escapeHtml(p.name)}</span><span style="font-weight:900;color:#fcd34d;font-size:30px;">${p.score} pt</span></div>`).join("");
-          panel.innerHTML = `<div style="text-align:center"><h2 style="font-size:36px; margin-bottom:30px;">🏆 TOP 5 LEADERBOARD 🏆</h2>${tops}</div>`; return;
+          const tops = (res.leaderboard || []).map((p, i) => `
+            <div style="font-size:24px; margin:12px auto; max-width:600px; background:#1e293b; padding:16px 26px; border-radius:14px; display:flex; justify-content:space-between; align-items:center; border:1px solid #334155;">
+              <span><b style="color:#3b82f6;">#${i+1}</b> ${escapeHtml(p.name)}</span>
+              <span style="font-weight:900;color:#fcd34d;font-size:30px;"><span id="hostLdbAnim_${i}">0</span> pt</span>
+            </div>
+          `).join("");
+          
+          panel.innerHTML = `<div style="text-align:center"><h2 style="font-size:36px; margin-bottom:30px;">🏆 TOP 5 LEADERBOARD 🏆</h2>${tops}</div>`; 
+          
+          // Cetuskan animasi nombor melompat sebaik sahaja di-render
+          (res.leaderboard || []).forEach((p, i) => animateValue(`hostLdbAnim_${i}`, 0, p.score, 1500));
+          return;
         }
 
         const q = res.question; if (!q) return;
         const opts = [q.optionA, q.optionB, q.optionC, q.optionD];
-        const votes = res.voteCounts || {A:0, B:0, C:0, D:0}; // Tarik data undian
+        const votes = res.voteCounts || {A:0, B:0, C:0, D:0}; 
 
-        // KEMAS KINI KOTAK JAWAPAN DENGAN LENCANA JUMLAH UNDIAN
+        // --- LENCANA DI PENJURU ATAS KIRI (HOST) ---
         panel.innerHTML = `
           <div style="text-align:center;margin-bottom:25px">
             <div style="font-size:14px;font-weight:900;letter-spacing:3px;color:#a5b4fc;text-transform:uppercase">SOALAN ${q.order} ${q.points > 1000 ? '🌟 MARKAH BERGANDA' : ''}</div>
             <h1 style="font-size:clamp(22px,3.5vw,40px);margin:14px 0;line-height:1.3;color:#ffffff">${escapeHtml(q.questionText)}</h1>
             ${res.status === "active" ? `<div style="display:inline-block;padding:6px 20px;background:#1e293b;border-radius:30px;font-size:28px;font-weight:900;color:#ef4444;border:1px solid #334155;margin-top:6px">⏱ <span id="hostTimerDisplay">${q.timeLimitSeconds}</span>s</div>` : ''}
           </div>
-          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;padding:10px;">
             ${ANSWER_COLORS.map((item, i) => { 
               const isDim = (res.status === "revealing_answer" && item.option !== q.correctOption); 
               const vCount = votes[item.option] || 0;
-              const voteBadge = res.status === "revealing_answer" ? `<span style="background:rgba(0,0,0,0.5); padding:6px 14px; border-radius:30px; font-size:18px; margin-right:12px; display:flex; align-items:center; gap:6px; box-shadow:inset 0 0 5px rgba(255,255,255,0.2);">👤 ${vCount}</span>` : '';
+              // Lencana undian diletakkan absolute top:-15px left:-15px dengan background putih supaya jelas timbul
+              const voteBadge = res.status === "revealing_answer" ? `<div style="position:absolute; top:-15px; left:-15px; background:#f8fafc; color:#0f172a; padding:6px 16px; border-radius:30px; font-size:18px; font-weight:900; box-shadow:0 4px 10px rgba(0,0,0,0.5); z-index:10; display:flex; align-items:center; gap:6px;">👤 ${vCount}</div>` : '';
               
               return `
-                <div style="opacity:${isDim ? '0.35' : '1'};min-height:120px;display:flex;align-items:center;gap:16px;padding:20px;border-radius:18px;background:${item.color};color:${item.textColor};font-size:clamp(18px,2vw,24px);font-weight:800;box-sizing:border-box; transition: opacity 0.3s ease;">
+                <div style="position:relative; opacity:${isDim ? '0.35' : '1'}; min-height:120px; display:flex; align-items:center; gap:16px; padding:20px 20px 20px 40px; border-radius:18px; background:${item.color}; color:${item.textColor}; font-size:clamp(18px,2vw,24px); font-weight:800; box-sizing:border-box; transition: opacity 0.3s ease;">
+                  ${voteBadge}
                   <span style="font-size:32px;line-height:1">${item.shape}</span>
                   <span style="flex:1">${escapeHtml(opts[i])}</span>
-                  ${voteBadge}
-                  ${res.status === "revealing_answer" && !isDim ? '<span style="font-size:32px; filter:drop-shadow(0 0 10px rgba(255,255,255,0.8));">✅</span>' : ''}
+                  ${res.status === "revealing_answer" && !isDim ? '<span style="position:absolute; right:20px; font-size:40px; filter:drop-shadow(0 0 10px rgba(255,255,255,0.8));">✅</span>' : ''}
                 </div>`; 
             }).join("")}
           </div>`;
@@ -250,9 +260,12 @@
 
         if (res.status === "active") { localStorage.removeItem("qlp_last_isCorrect"); localStorage.setItem("qlp_last_earned", "0"); }
 
+        // --- ANIMASI DI SKRIN PESERTA (MASA JAWAPAN DIBUKA) ---
         if (res.status === "revealing_answer") {
           const answeredState = localStorage.getItem("qlp_last_isCorrect"); 
-          const earned = localStorage.getItem("qlp_last_earned") || "0";
+          const earned = parseInt(localStorage.getItem("qlp_last_earned") || "0");
+          const totalScore = parseInt(localStorage.getItem("qlp_last_score") || "0");
+          const prevScore = Math.max(0, totalScore - earned); // Markah lama
           
           let isCorrect = (answeredState === "true"); 
           let message = (answeredState === null) ? "Masa Tamat" : (isCorrect ? "Tepat!" : "Salah");
@@ -263,16 +276,29 @@
           
           panel.innerHTML = `
             <div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0f172a;color:white;border-radius:20px;">
-              <div style="background:#1e293b; border: 1px solid #334155; border-radius: 24px; padding: 50px 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 100%; max-width: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                <div style="font-size:100px; line-height:1; margin-bottom:20px; filter: drop-shadow(0 0 25px ${glowColor});">${icon}</div>
-                <div style="font-size:30px; font-weight:800; color: #f8fafc; letter-spacing:1px; margin-bottom:15px;">${message}</div>
-                <div style="font-size:40px; font-weight:900; color:${glowColor};">+${earned} XP</div>
+              <div style="background:#1e293b; border: 1px solid #334155; border-radius: 24px; padding: 40px 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 100%; max-width: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <div style="font-size:90px; line-height:1; margin-bottom:15px; filter: drop-shadow(0 0 25px ${glowColor});">${icon}</div>
+                <div style="font-size:28px; font-weight:800; color: #f8fafc; letter-spacing:1px;">${message}</div>
+                <div style="font-size:24px; font-weight:900; color:${glowColor}; margin: 10px 0;">+${earned} XP</div>
+                
+                <div style="margin-top:20px; background:rgba(0,0,0,0.3); padding:15px 30px; border-radius:16px; width:80%;">
+                  <div style="font-size:14px; color:#94a3b8; text-transform:uppercase; font-weight:bold;">Jumlah Markah</div>
+                  <div style="font-size:40px; font-weight:900; color:#3b82f6; margin-top:5px;" id="partTotalAnim">0</div>
+                </div>
               </div>
             </div>`; 
+            
+          // Cetus animasi markah menaik di skrin peserta!
+          animateValue("partTotalAnim", prevScore, totalScore, 1500);
           return;
         }
         
-        if (res.status === "leaderboard") { const score = localStorage.getItem("qlp_last_score") || "0"; panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0f172a;color:white;"><div style="background:#1e293b; border: 1px solid #334155; border-radius: 24px; padding: 40px 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); width: 100%; max-width: 400px;"><div style="font-size:18px;font-weight:700;color:#94a3b8;text-transform:uppercase;">Jumlah Markah</div><div style="font-size:70px;font-weight:900;color:#3b82f6;margin-top:10px;">${score}</div></div></div>`; return; }
+        if (res.status === "leaderboard") { 
+          const score = parseInt(localStorage.getItem("qlp_last_score") || "0"); 
+          panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0f172a;color:white;"><div style="background:#1e293b; border: 1px solid #334155; border-radius: 24px; padding: 40px 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); width: 100%; max-width: 400px;"><div style="font-size:18px;font-weight:700;color:#94a3b8;text-transform:uppercase;">Jumlah Markah</div><div style="font-size:70px;font-weight:900;color:#3b82f6;margin-top:10px;" id="partLdbAnim">0</div></div></div>`; 
+          animateValue("partLdbAnim", 0, score, 1500);
+          return; 
+        }
         
         const q = res.question; if (!q) return;
         const startTime = Date.now();
