@@ -50,12 +50,12 @@
   </div>
 </header>
 
-<!-- NAVIGASI (Sembunyi by default) -->
+<!-- NAVIGASI -->
 <div class="admin-nav" id="adminNav">
   <button class="nav-btn active" onclick="switchTab('papanPemuka')">Papan Pemuka</button>
   <button class="nav-btn" onclick="switchTab('history')">Sejarah Kuiz</button>
   <button class="nav-btn" onclick="switchTab('settings')">Tetapan Akaun</button>
-  <button class="nav-btn" id="masterNavBtn" onclick="switchTab('master')" style="display:none; color:#f59e0b;">Pengurusan Admin 👑</button>
+  <button class="nav-btn" id="masterNavBtn" onclick="switchTab('master')" style="display:none; color:#f59e0b;">Master Admin 👑</button>
 </div>
 
 <!-- SECTION AUTHENTICATION -->
@@ -119,21 +119,35 @@
 
 <div id="view-master" class="dashboard-view">
   <div class="grid-layout">
+    <!-- JADUAL ADMIN -->
     <div class="card" style="grid-column: span 2;">
       <h3>Senarai Pengguna & Admin</h3>
       <div style="overflow-x:auto;"><table id="adminTable"><thead><tr><th>ID/Emel</th><th>Nama</th><th>Peranan</th><th>Tindakan</th></tr></thead><tbody id="adminTableBody"></tbody></table></div>
     </div>
+    
+    <!-- DAFTAR / EDIT ADMIN -->
     <div class="card">
-      <h3>Daftar Akaun / Kemas Kini</h3>
+      <h3>Daftar / Kemas Kini Akaun</h3>
       <form id="masterManageForm">
         <input type="hidden" id="targetAdminId">
-        <div class="form-group"><label>Nama</label><input type="text" id="mName" required></div>
+        <div class="form-group"><label>Nama Penuh</label><input type="text" id="mName" required></div>
         <div class="form-group"><label>Emel</label><input type="email" id="mEmail" required></div>
         <div class="form-group"><label>Kata Laluan</label><input type="text" id="mPassword" required></div>
         <div class="form-group"><label>Peranan</label><select id="mRole"><option value="admin">Admin</option><option value="master">Master</option></select></div>
-        <button type="submit" class="btn-primary" id="mSubmitBtn">Daftar Admin Baru</button>
+        <button type="submit" class="btn-primary" id="mSubmitBtn">Cipta Akaun Baru</button>
         <button type="button" class="btn-primary" style="background:#64748b; margin-top:10px; display:none;" id="mCancelBtn">Batal Kemas Kini</button>
       </form>
+    </div>
+
+    <!-- TETAPAN SISTEM (API URL) -->
+    <div class="card">
+      <h3>Tetapan Sistem (API)</h3>
+      <div class="form-group">
+        <label>Pautan Web App (Google Apps Script)</label>
+        <input type="text" id="apiUrl" placeholder="https://script.google.com/macros/s/..." required>
+      </div>
+      <button type="button" id="saveApiBtn" class="btn-primary" style="background:#8b5cf6;">Simpan Pautan API</button>
+      <p style="font-size:12px; color:#94a3b8; margin-top:10px; line-height:1.5;">Amaran: Perubahan pada pautan ini akan menjejaskan sambungan pangkalan data. Pastikan pautan adalah tepat.</p>
     </div>
   </div>
 </div>
@@ -142,6 +156,6 @@
   function switchAuth(type) { ['login','register','forgot'].forEach(t => document.getElementById(t+'Card').style.display='none'); document.getElementById(type+'Card').style.display='block'; }
   function switchTab(viewId) { document.querySelectorAll('.dashboard-view').forEach(v => v.style.display='none'); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('view-'+viewId).style.display='block'; event.currentTarget.classList.add('active'); if(viewId==='history') loadHistory(); if(viewId==='master') loadAdmins(); }
 </script>
-<script src="app.js?v=60"></script>
+<script src="app.js?v=65"></script>
 </body>
 </html>
