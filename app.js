@@ -1,4 +1,4 @@
-/* QUIZ LIVE PPAPP - FULL LOGIC + MASTER ADMIN (INCLUDES API SETTING) */
+/* QUIZ LIVE PPAPP - FULL LOGIC + MASTER ADMIN + HISTORY + AUDIO + PREMIUM RESULT UI */
 (() => {
   "use strict";
 
@@ -6,19 +6,13 @@
   const POLL_INTERVAL_MS = 1500; 
   const $ = (id) => document.getElementById(id);
 
+  // --- SISTEM AUDIO ---
   const SOUNDS = { bgm_main: new Audio("bgm-lobby.mp3"), sfx_correct: new Audio("sfx-correct.mp3"), sfx_wrong: new Audio("sfx-wrong.mp3") };
   SOUNDS.bgm_main.loop = true; 
-  
   function playBGM() { if (SOUNDS.bgm_main.paused) { const p = SOUNDS.bgm_main.play(); if (p !== undefined) p.catch(() => {}); } }
   function stopBGM() { SOUNDS.bgm_main.pause(); SOUNDS.bgm_main.currentTime = 0; }
   function playSFX(key) { if (SOUNDS[key]) { SOUNDS[key].currentTime = 0; SOUNDS[key].play().catch(() => {}); } }
-  
-  document.body.addEventListener('click', () => { 
-    if (!window.audioUnlocked) { 
-      window.audioUnlocked = true; 
-      if (window.hostPhase === "waiting" || window.hostPhase === "active") playBGM(); 
-    } 
-  }, { capture: true });
+  document.body.addEventListener('click', () => { if (!window.audioUnlocked) { window.audioUnlocked = true; if (window.hostPhase === "waiting" || window.hostPhase === "active") playBGM(); } }, { capture: true });
 
   const ANSWER_COLORS = [
     { option: "A", color: "#e53232", shape: "▲", label: "Merah", textColor: "#ffffff" },
@@ -38,6 +32,7 @@
     return await response.json(); 
   }
 
+  // ---------- PENYERTAAN PESERTA ----------
   function initJoinForm() {
     const pinInput = $("pin"), joinButton = $("joinBtn"); 
     if (!pinInput || !joinButton) return;
@@ -49,11 +44,9 @@
       if (!/^\d{6}$/.test(pin) || !name) return alert("Sila masukkan 6 digit PIN dan Nama.");
       
       joinButton.disabled = true; joinButton.textContent = "Menyemak...";
-      
       try {
         const res = await apiPost({ action: "join", pin, displayName: name });
         if (!res.success) throw new Error(res.message);
-        
         storageSet("qlp_player_session_id", res.sessionId); storageSet("qlp_player_id", res.playerId);
         
         if ($("waitingRoom")) { $("waitingRoom").hidden = false; $("waitingRoom").style.display = "block"; }
@@ -66,138 +59,75 @@
     });
   }
 
+  // ---------- LOGIK ADMIN ----------
   function initAdminLogic() {
     if (!$("authSection")) return;
-
-    const myName = storageGet("qlp_admin_name");
-    const myEmail = storageGet("qlp_admin_email");
-    const myRole = storageGet("qlp_admin_role");
+    const myName = storageGet("qlp_admin_name"), myEmail = storageGet("qlp_admin_email"), myRole = storageGet("qlp_admin_role");
     
     if (myName) {
-      $("authSection").style.display = "none"; 
-      $("adminProfile").style.display = "flex"; 
-      $("adminNav").style.display = "flex";
-      $("adminNameDisplay").textContent = myName; 
-      $("adminAvatar").textContent = myName.charAt(0).toUpperCase();
-      $("view-papanPemuka").style.display = "block";
-      $("setMyName").value = myName; 
-      $("setMyEmail").value = myEmail;
-      
+      $("authSection").style.display = "none"; $("adminProfile").style.display = "flex"; $("adminNav").style.display = "flex";
+      $("adminNameDisplay").textContent = myName; $("adminAvatar").textContent = myName.charAt(0).toUpperCase();
+      $("view-papanPemuka").style.display = "block"; $("setMyName").value = myName; $("setMyEmail").value = myEmail;
       if (myRole === "master" && $("masterNavBtn")) $("masterNavBtn").style.display = "inline-block"; 
     }
 
     if ($("logoutBtn")) $("logoutBtn").addEventListener("click", () => { localStorage.clear(); location.reload(); });
 
-    if ($("loginForm")) {
-      $("loginForm").addEventListener("submit", async (e) => {
-        e.preventDefault(); const b = $("loginForm").querySelector("button"); b.textContent = "Menyemak...";
-        try { 
-          const r = await apiPost({action:"adminLogin", email:$("loginEmail").value, password:$("loginPassword").value}); 
-          if(!r.success) throw new Error(r.message); 
-          storageSet("qlp_admin_name", r.name); storageSet("qlp_admin_email", r.email); storageSet("qlp_admin_role", r.role); location.reload(); 
-        } catch(e) { alert(e.message); b.textContent = "Masuk"; }
-      });
-    }
+    if ($("loginForm")) $("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault(); const b = $("loginForm").querySelector("button"); b.textContent = "Menyemak...";
+      try { const r = await apiPost({action:"adminLogin", email:$("loginEmail").value, password:$("loginPassword").value}); if(!r.success) throw new Error(r.message); storageSet("qlp_admin_name", r.name); storageSet("qlp_admin_email", r.email); storageSet("qlp_admin_role", r.role); location.reload(); } catch(e) { alert(e.message); b.textContent = "Masuk"; }
+    });
     
-    if ($("registerForm")) {
-      $("registerForm").addEventListener("submit", async (e) => {
-        e.preventDefault(); const p = $("regPassword").value; 
-        if(!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/.test(p)) return alert("Kata laluan mesti > 8 aksara, ada Huruf Besar, Kecil, Nombor & Simbol.");
-        if(p !== $("regConfirmPassword").value) return alert("Sahkan kata laluan tidak sepadan!");
-        
-        const b = $("registerForm").querySelector("button"); b.textContent = "...";
-        try { 
-          const r = await apiPost({action:"adminRegister", name:$("regName").value, email:$("regEmail").value, password:p}); 
-          if(!r.success) throw new Error(r.message); 
-          alert("Berjaya! Sila log masuk."); window.switchAuth('login'); 
-        } catch(e) { alert(e.message); } finally { b.textContent = "Daftar"; }
-      });
-    }
+    if ($("registerForm")) $("registerForm").addEventListener("submit", async (e) => {
+      e.preventDefault(); const p = $("regPassword").value; 
+      if(!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/.test(p)) return alert("Kata laluan lemah!");
+      if(p !== $("regConfirmPassword").value) return alert("Sahkan kata laluan tidak sepadan!");
+      const b = $("registerForm").querySelector("button"); b.textContent = "...";
+      try { const r = await apiPost({action:"adminRegister", name:$("regName").value, email:$("regEmail").value, password:p}); if(!r.success) throw new Error(r.message); alert("Berjaya! Sila log masuk."); window.switchAuth('login'); } catch(e) { alert(e.message); } finally { b.textContent = "Daftar"; }
+    });
 
-    if ($("forgotForm")) {
-      $("forgotForm").addEventListener("submit", async (e) => { 
-        e.preventDefault(); 
-        try{ await apiPost({action:"adminForgot", email:$("forgotEmail").value}); alert("Kata laluan sementara telah dihantar ke emel anda!"); window.switchAuth('login'); } catch(e) { alert(e.message); } 
-      });
-    }
+    if ($("forgotForm")) $("forgotForm").addEventListener("submit", async (e) => { e.preventDefault(); try{ await apiPost({action:"adminForgot", email:$("forgotEmail").value}); alert("Kata laluan dihantar ke emel!"); window.switchAuth('login'); } catch(e) { alert(e.message); } });
 
-    if ($("settingsForm")) {
-      $("settingsForm").addEventListener("submit", async (e) => {
-        e.preventDefault(); const np = $("setMyPassword").value;
-        if(np && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/.test(np)) return alert("Kata laluan baharu lemah!");
-        try { 
-          const r = await apiPost({action:"updateAccount", oldEmail:myEmail, newName:$("setMyName").value, newEmail:$("setMyEmail").value, newPassword:np}); 
-          if(!r.success) throw new Error(r.message); 
-          alert("Akaun berjaya dikemas kini!"); storageSet("qlp_admin_name", r.newName); storageSet("qlp_admin_email", r.newEmail); location.reload(); 
-        } catch(e) { alert(e.message); }
-      });
-    }
+    if ($("settingsForm")) $("settingsForm").addEventListener("submit", async (e) => {
+      e.preventDefault(); const np = $("setMyPassword").value;
+      if(np && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/.test(np)) return alert("Kata laluan lemah!");
+      try { const r = await apiPost({action:"updateAccount", oldEmail:myEmail, newName:$("setMyName").value, newEmail:$("setMyEmail").value, newPassword:np}); if(!r.success) throw new Error(r.message); alert("Akaun dikemas kini!"); storageSet("qlp_admin_name", r.newName); storageSet("qlp_admin_email", r.newEmail); location.reload(); } catch(e) { alert(e.message); }
+    });
 
-    async function loadQ() { 
-      if(!$("questionQuiz")) return; 
-      try { 
-        const r = await apiPost({action:"getQuizzes"}); 
-        if(r.success && r.quizzes) { 
-          const o = r.quizzes.map(x => `<option value="${x.quizId}">${escapeHtml(x.title)}</option>`).join(""); 
-          $("questionQuiz").innerHTML = o || '<option value="">-- Tiada Kuiz --</option>'; 
-          $("sessionQuiz").innerHTML = o || '<option value="">-- Tiada Kuiz --</option>'; 
-        } 
-      } catch(e) {} 
-    }
+    async function loadQ() { if(!$("questionQuiz")) return; try { const r = await apiPost({action:"getQuizzes"}); if(r.success && r.quizzes) { const o = r.quizzes.map(x => `<option value="${x.quizId}">${escapeHtml(x.title)}</option>`).join(""); $("questionQuiz").innerHTML = o || '<option value="">-- Tiada Kuiz --</option>'; $("sessionQuiz").innerHTML = o || '<option value="">-- Tiada Kuiz --</option>'; } } catch(e) {} }
     if(myName) loadQ();
     
     window.loadHistory = async () => {
-      if (!$("historyContainer")) return;
-      $("historyContainer").innerHTML = "Sedang memuat turun rekod...";
+      if (!$("historyContainer")) return; $("historyContainer").innerHTML = "Sedang memuat turun rekod...";
       const r = await apiPost({action:"getHistory"});
       if(!r.success || r.history.length === 0) return $("historyContainer").innerHTML = "Tiada rekod kuiz.";
       $("historyContainer").innerHTML = r.history.map(h => `<div style="background:#0f172a; padding:15px; border-radius:10px; margin-bottom:15px; border:1px solid #334155;"><div style="color:#3b82f6; font-weight:bold; font-size:16px;">${escapeHtml(h.quizTitle)}</div><div style="font-size:12px; margin-bottom:10px;">Dimainkan: ${h.date ? new Date(h.date).toLocaleString('ms-MY') : 'Tarikh tiada'}</div>${h.tops.length ? h.tops.map((p,i)=>`<div>#${i+1} ${escapeHtml(p.name)} - ${p.score}pt</div>`).join("") : "Tiada peserta selesai."}</div>`).join("");
     };
 
     window.loadAdmins = async () => {
-      if (!$("adminTableBody")) return;
-      const r = await apiPost({action:"getAdmins"});
-      if(r.success) {
-        $("adminTableBody").innerHTML = r.admins.map(a => `<tr><td><div style="font-size:11px;color:#64748b;">${a.id}</div>${escapeHtml(a.email)}</td><td>${escapeHtml(a.name)}</td><td><span class="badge ${a.role==='master'?'master':''}">${a.role.toUpperCase()}</span></td><td><button onclick="editAdm('${a.id}','${escapeHtml(a.name)}','${escapeHtml(a.email)}','${a.role}')" style="background:#3b82f6;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">Edit</button> <button onclick="delAdm('${a.id}')" style="background:#ef4444;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">Padam</button></td></tr>`).join("");
+      if (!$("adminTableBody")) return; const r = await apiPost({action:"getAdmins"});
+      if(r.success) { $("adminTableBody").innerHTML = r.admins.map(a => `<tr><td><div style="font-size:11px;color:#64748b;">${a.id}</div>${escapeHtml(a.email)}</td><td>${escapeHtml(a.name)}</td><td><span class="badge ${a.role==='master'?'master':''}">${a.role.toUpperCase()}</span></td><td><button onclick="editAdm('${a.id}','${escapeHtml(a.name)}','${escapeHtml(a.email)}','${a.role}')" style="background:#3b82f6;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">Edit</button> <button onclick="delAdm('${a.id}')" style="background:#ef4444;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">Padam</button></td></tr>`).join(""); }
+    };
+
+    window.editAdm = (id, nm, em, rl) => { $("targetAdminId").value=id; $("mName").value=nm; $("mEmail").value=em; $("mPassword").value=""; $("mRole").value=rl; $("mSubmitBtn").textContent="Simpan Perubahan"; $("mSubmitBtn").style.background="#f59e0b"; $("mCancelBtn").style.display="inline-block"; };
+    window.delAdm = async (id) => { if(confirm("Padam akaun ini?")) { await apiPost({action:"deleteAdmin", targetId:id}); window.loadAdmins(); } };
+
+    if($("mCancelBtn")) $("mCancelBtn").addEventListener("click", () => { $("masterManageForm").reset(); $("targetAdminId").value=""; $("mSubmitBtn").textContent="Cipta Akaun Baru"; $("mSubmitBtn").style.background="#3b82f6"; $("mCancelBtn").style.display="none"; });
+
+    if($("masterManageForm")) $("masterManageForm").addEventListener("submit", async(e) => {
+      e.preventDefault(); const t = $("targetAdminId").value, np = $("mPassword").value;
+      if(!t) { 
+        if(!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/.test(np)) return alert("Kata laluan lemah!");
+        await apiPost({action:"adminRegister", name:$("mName").value, email:$("mEmail").value, password:np, role:$("mRole").value}); alert("Akaun Dicipta");
+      } else { 
+        if(np && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/.test(np)) return alert("Kata laluan lemah!");
+        await apiPost({action:"updateAdminMaster", targetId:t, newName:$("mName").value, newEmail:$("mEmail").value, newPassword:np, newRole:$("mRole").value}); alert("Dikemas kini!");
       }
-    };
+      $("mCancelBtn").click(); window.loadAdmins();
+    });
 
-    window.editAdm = (id, nm, em, rl) => { 
-      $("targetAdminId").value=id; $("mName").value=nm; $("mEmail").value=em; $("mPassword").value=""; $("mRole").value=rl; $("mSubmitBtn").textContent="Simpan Perubahan"; $("mSubmitBtn").style.background="#f59e0b"; $("mCancelBtn").style.display="inline-block"; 
-    };
-    
-    window.delAdm = async (id) => { 
-      if(confirm("Adakah anda pasti mahu memadam akaun ini?")) { await apiPost({action:"deleteAdmin", targetId:id}); window.loadAdmins(); } 
-    };
-
-    if($("mCancelBtn")) {
-      $("mCancelBtn").addEventListener("click", () => { 
-        $("masterManageForm").reset(); $("targetAdminId").value=""; $("mSubmitBtn").textContent="Cipta Akaun Baru"; $("mSubmitBtn").style.background="#3b82f6"; $("mCancelBtn").style.display="none"; 
-      });
-    }
-
-    if($("masterManageForm")) {
-      $("masterManageForm").addEventListener("submit", async(e) => {
-        e.preventDefault(); const t = $("targetAdminId").value, np = $("mPassword").value;
-        if(!t) { 
-          if(!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/.test(np)) return alert("Kata laluan lemah!");
-          await apiPost({action:"adminRegister", name:$("mName").value, email:$("mEmail").value, password:np, role:$("mRole").value}); alert("Akaun Dicipta");
-        } else { 
-          if(np && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/.test(np)) return alert("Kata laluan lemah!");
-          await apiPost({action:"updateAdminMaster", targetId:t, newName:$("mName").value, newEmail:$("mEmail").value, newPassword:np, newRole:$("mRole").value}); alert("Dikemas kini!");
-        }
-        $("mCancelBtn").click(); window.loadAdmins();
-      });
-    }
-
-    // FUNGSI SIMPAN API URL (DALAM MASTER ADMIN)
     if ($("apiUrl")) $("apiUrl").value = getApiUrl();
-    if ($("saveApiBtn")) {
-      $("saveApiBtn").addEventListener("click", () => { 
-        storageSet("qlp_api_url", $("apiUrl").value.trim()); 
-        alert("Pautan API Sistem Berjaya Disimpan!"); 
-      });
-    }
+    if ($("saveApiBtn")) $("saveApiBtn").addEventListener("click", () => { storageSet("qlp_api_url", $("apiUrl").value.trim()); alert("Pautan API Sistem Berjaya Disimpan!"); });
 
     if ($("quizForm")) $("quizForm").addEventListener("submit", async (e) => { e.preventDefault(); const btn = $("quizForm").querySelector("button"); btn.disabled = true; btn.textContent="..."; try { await apiPost({ action: "createQuiz", title: $("quizTitle").value, description: $("quizDescription").value }); alert("Kuiz Dicipta!"); location.reload(); } catch(e) { btn.disabled = false; btn.textContent="Cipta"; } });
     if ($("questionForm")) $("questionForm").addEventListener("submit", async (e) => { e.preventDefault(); const btn = $("questionForm").querySelector("button"); btn.disabled = true; btn.textContent="..."; try { await apiPost({ action: "addQuestion", quizId: $("questionQuiz").value, questionText: $("questionText").value, optionA: $("optionA").value, optionB: $("optionB").value, optionC: $("optionC").value, optionD: $("optionD").value, correctOption: $("correctOption").value, timeLimitSeconds: Number($("questionTime").value), points: $("doublePoints").checked ? 2000 : 1000 }); alert("Soalan Disimpan!"); $("questionForm").reset(); } catch(e) {} finally { btn.disabled = false; btn.textContent="Simpan"; } });
@@ -285,7 +215,7 @@
         if (room) { room.hidden = true; room.style.display = "none"; }
         panel.style.display = "flex";
         
-        if (res.status === "completed") { panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#10b981;color:white;border-radius:20px;"><div style="font-size:80px;line-height:1;margin-bottom:10px;">🎉</div><div style="font-size:32px;font-weight:bold;">Kuiz Tamat!</div><div style="font-size:20px;margin-top:20px;">Sila lihat skrin utama untuk kedudukan.</div></div>`; clearInterval(playerTimerInt); return; }
+        if (res.status === "completed") { panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0f172a;color:white;"><div style="background:#1e293b; border:1px solid #334155; border-radius:24px; padding:40px 30px; box-shadow:0 20px 40px rgba(0,0,0,0.5); width:100%; max-width:400px;"><div style="font-size:80px;line-height:1;margin-bottom:10px;">🎉</div><div style="font-size:32px;font-weight:bold;color:#10b981;">Kuiz Tamat!</div><div style="font-size:16px;color:#94a3b8;margin-top:15px;">Sila lihat skrin utama untuk kedudukan.</div></div></div>`; clearInterval(playerTimerInt); return; }
         
         const newKey = res.status + "_" + (res.question ? res.question.questionId : "0");
         if (currentRenderKey === newKey) return; 
@@ -293,15 +223,38 @@
 
         if (res.status === "active") { localStorage.removeItem("qlp_last_isCorrect"); localStorage.setItem("qlp_last_earned", "0"); }
 
+        // --- PEMBAIKAN UI JAWAPAN (PREMIUM LOOK) ---
         if (res.status === "revealing_answer") {
-          const answeredState = localStorage.getItem("qlp_last_isCorrect"); const earned = localStorage.getItem("qlp_last_earned") || "0";
-          let isCorrect = (answeredState === "true"); let message = (answeredState === null) ? "Tidak Menjawab" : (isCorrect ? "Tepat!" : "Salah");
-          let icon = (answeredState === null) ? "⏱️" : (isCorrect ? "✅" : "❌"); let bgColor = (answeredState === null || !isCorrect) ? "#b91c1c" : "#15803d";
-          if (sfxPlayedForQ !== (res.question ? res.question.questionId : "0")) { playSFX(isCorrect ? 'sfx_correct' : 'sfx_wrong'); sfxPlayedForQ = (res.question ? res.question.questionId : "0"); }
-          panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:${bgColor};color:white;border-radius:20px;"><div style="font-size:120px;line-height:1;margin-bottom:10px;">${icon}</div><div style="font-size:32px;font-weight:bold;">${message}</div><div style="font-size:38px; font-weight:900; color:${isCorrect ? '#fcd34d' : '#fca5a5'}; margin-top:20px;">+${earned} XP</div></div>`; return;
+          const answeredState = localStorage.getItem("qlp_last_isCorrect"); 
+          const earned = localStorage.getItem("qlp_last_earned") || "0";
+          
+          let isCorrect = (answeredState === "true"); 
+          let message = (answeredState === null) ? "Masa Tamat" : (isCorrect ? "Tepat!" : "Salah");
+          let icon = (answeredState === null) ? "⏱️" : (isCorrect ? "✅" : "❌"); 
+          let glowColor = (answeredState === null) ? "#f59e0b" : (isCorrect ? "#10b981" : "#ef4444");
+
+          if (sfxPlayedForQ !== (res.question ? res.question.questionId : "0")) { 
+            playSFX(isCorrect ? 'sfx_correct' : 'sfx_wrong'); 
+            sfxPlayedForQ = (res.question ? res.question.questionId : "0"); 
+          }
+          
+          // Latar belakang kekal gelap (#0f172a), kotak di tengah bersinar dengan glowColor
+          panel.innerHTML = `
+            <div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0f172a;color:white;border-radius:20px;">
+              <div style="background:#1e293b; border: 1px solid #334155; border-radius: 24px; padding: 50px 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 100%; max-width: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <div style="font-size:100px; line-height:1; margin-bottom:20px; filter: drop-shadow(0 0 25px ${glowColor});">${icon}</div>
+                <div style="font-size:30px; font-weight:800; color: #f8fafc; letter-spacing:1px; margin-bottom:15px;">${message}</div>
+                <div style="font-size:40px; font-weight:900; color:${glowColor};">+${earned} XP</div>
+              </div>
+            </div>`; 
+          return;
         }
         
-        if (res.status === "leaderboard") { const score = localStorage.getItem("qlp_last_score") || "0"; panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#2563eb;color:white;border-radius:20px;"><div style="font-size:24px;font-weight:700;">Jumlah Markah</div><div style="font-size:70px;font-weight:900;color:#fcd34d;">${score}</div></div>`; return; }
+        if (res.status === "leaderboard") { 
+          const score = localStorage.getItem("qlp_last_score") || "0"; 
+          panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0f172a;color:white;"><div style="background:#1e293b; border: 1px solid #334155; border-radius: 24px; padding: 40px 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); width: 100%; max-width: 400px;"><div style="font-size:18px;font-weight:700;color:#94a3b8;text-transform:uppercase;">Jumlah Markah</div><div style="font-size:70px;font-weight:900;color:#3b82f6;margin-top:10px;">${score}</div></div></div>`; 
+          return; 
+        }
         
         const q = res.question; if (!q) return;
         const startTime = Date.now();
