@@ -1,78 +1,171 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ms">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>QUIZ LIVE PPAPP</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<!-- Menghalang zoom tidak sengaja pada telefon -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Sertai Kuiz • QUIZ LIVE PPAPP</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body { 
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+    background: #0f172a; 
+    color: white; 
+    min-height: 100vh; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    overflow-x: hidden;
+  }
+
+  /* REKA BENTUK LOGO */
+  .brand-logo { 
+    font-size: clamp(32px, 8vw, 48px); 
+    font-weight: 900; 
+    letter-spacing: 2px; 
+    margin-bottom: 30px; 
+    text-align: center;
+    text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  }
+  .brand-logo span { color: #3b82f6; }
+
+  /* KOTAK PENYERTAAN */
+  .hero-wrap {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  .join-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 400px;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  .join-card input {
+    width: 100%;
+    padding: 18px;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #0f172a;
+    outline: none;
+    transition: 0.3s;
+  }
+  .join-card input:focus { border-color: #3b82f6; background: #ffffff; }
+  .join-card input::placeholder { color: #94a3b8; font-weight: 600; }
+  
+  /* BUTANG MASUK SAMA MACAM KAHOOT (3D Effect) */
+  #joinBtn {
+    width: 100%;
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 20px;
+    font-size: 22px;
+    font-weight: 900;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+    box-shadow: 0 8px 0 #047857;
+    margin-top: 10px;
+  }
+  #joinBtn:active {
+    transform: translateY(8px);
+    box-shadow: 0 0 0 #047857;
+  }
+  #joinBtn:disabled {
+    background: #94a3b8;
+    box-shadow: 0 8px 0 #64748b;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* RUANG MENUNGGU (WAITING ROOM) */
+  #waitingRoom {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  .waiting-card {
+    background: #1e293b;
+    width: 100%;
+    max-width: 450px;
+    padding: 40px 30px;
+    border-radius: 24px;
+    text-align: center;
+    border: 1px solid #334155;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  }
+  .waiting-card h2 { color: #10b981; font-size: 32px; margin-bottom: 20px; }
+  .waiting-card p { font-size: 20px; color: #cbd5e1; margin-bottom: 10px; font-weight: 600; }
+  .waiting-card strong { color: #f8fafc; font-size: 28px; letter-spacing: 2px; }
+  .waiting-name { font-size: 24px !important; color: #fcd34d !important; font-weight: 900 !important; margin-top: 20px !important; }
+  
+  /* ANIMASI LOADING DI LOBI */
+  .loader-text {
+    margin-top: 30px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #94a3b8;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 0.5; }
+  }
+
+  /* FOOTER KEMAS */
+  footer {
+    margin-top: 40px;
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+</style>
 </head>
 <body>
-  <div class="ambient a1"></div>
-  <div class="ambient a2"></div>
+
+<!-- MUKA DEPAN: BORANG PENYERTAAN -->
+<div class="hero-wrap">
+  <div class="brand-logo">QUIZ LIVE <span>PPAPP</span></div>
   
-  <header class="topbar">
-    <a class="brand" href="index.html">
-      <span class="brand-mark">Q</span>
-      <span>QUIZ LIVE <b>PPAPP</b><small>LIVE LEARNING PLATFORM</small></span>
-    </a>
-    <span class="top-tag"><i></i> PLATFORM KUIZ INTERAKTIF</span>
-  </header>
-
-  <!-- BAHAGIAN UTAMA: BORANG LOG MASUK -->
-  <main class="hero-wrap">
-    <section class="hero">
-      <div class="eyebrow"><span class="spark">✦</span> BELAJAR • BERMAIN • MENANG</div>
-      <h1>Uji minda.<br><span>Raih tempat teratas.</span></h1>
-      <p class="lead">Platform kuiz langsung untuk warga PPAPP. Sertai permainan dengan PIN atau urus kuiz melalui panel pentadbir.</p>
-      
-      <div class="join-card">
-        <div class="card-kicker">SERTAI PERMAINAN</div>
-        <label for="pin">PIN PERMAINAN</label>
-        <input id="pin" inputmode="numeric" maxlength="6" placeholder="Contoh: 482 915" autocomplete="off">
-        
-        <label for="playerName">NAMA PAPARAN</label>
-        <input id="playerName" maxlength="30" placeholder="Masukkan nama anda" autocomplete="name">
-        
-        <button id="joinBtn" class="btn btn-primary full">Sertai kuiz <span>→</span></button>
-        <p id="joinMsg" class="message" role="status">Masukkan PIN yang diberikan oleh hos.</p>
-      </div>
-      
-      <div class="hero-foot"><span>✦</span> Dibina untuk pembelajaran yang lebih menyeronokkan</div>
-    </section>
-    
-    <section class="visual">
-      <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
-      <div class="float-card card-score"><span class="mini-icon purple">✦</span><div><b>+1,200 XP</b><small>Markah terkumpul</small></div></div>
-      <div class="quiz-tile"><div class="tile-top"><span>SOALAN 04 / 10</span><span class="live-dot">● LIVE</span></div><div class="tile-question">Berapa warna dalam logo PPAPP?</div><div class="tile-options"><div class="opt opt-red"><b>▲</b> Dua</div><div class="opt opt-blue"><b>◆</b> Tiga</div><div class="opt opt-yellow"><b>●</b> Empat</div><div class="opt opt-green"><b>■</b> Lima</div></div><div class="tile-bottom"><span>⏱ 00:18</span><span>⚡ 248 pemain</span></div></div>
-      <div class="float-card card-rank"><span class="trophy">♛</span><div><b>TOP 3</b><small>Leaderboard</small></div></div>
-      <div class="bubble bubble-one">✦</div><div class="bubble bubble-two">＋</div>
-    </section>
-  </main>
-
-  <!-- RUANG MENUNGGU: DIASINGKAN DARIPADA BORANG LOG MASUK -->
-  <div id="waitingRoom" hidden style="text-align:center; background:#1e293b; padding:40px 20px; border-radius:16px; margin:40px auto; max-width:500px; box-shadow:0 10px 30px rgba(0,0,0,0.3); border: 1px solid #334155; position: relative; z-index: 10;">
-    <div style="font-size:40px; margin-bottom:10px;">🎮</div>
-    <h2 style="color:#34d399; font-size:28px; margin-top:0; margin-bottom:15px;">Anda Berjaya Masuk!</h2>
-    
-    <p style="color:#94a3b8; font-size:14px; letter-spacing:2px; text-transform:uppercase; margin-bottom:5px;">PIN Permainan</p>
-    <h1 id="waitingPin" style="font-size:46px; color:#fff; margin:0 0 15px 0; letter-spacing:6px;">------</h1>
-    
-    <p id="waitingName" style="font-size:20px; font-weight:bold; color:#fcd34d; margin-bottom:25px;"></p>
-    
-    <div style="display:inline-block; padding:12px 24px; background:#0f172a; border-radius:30px; border:1px solid #3b82f6;">
-      <p id="waitingStatus" style="color:#60a5fa; font-weight:bold; margin:0;"></p>
-    </div>
-    
-    <p style="color:#94a3b8; font-size:13px; margin-top:25px;">Sila kekal di halaman ini. Jangan muat semula (refresh) atau tutup pelayar web anda.</p>
+  <div class="join-card">
+    <input type="text" id="pin" placeholder="PIN PERMAINAN" maxlength="6" inputmode="numeric" autocomplete="off">
+    <input type="text" id="playerName" placeholder="NAMA PANGGILAN" maxlength="20" autocomplete="off">
+    <button id="joinBtn">Sertai Kuiz</button>
   </div>
+  
+  <footer>DIKUASAKAN OLEH ICT PPAPP</footer>
+</div>
 
-  <footer>
-    <span>QUIZ LIVE PPAPP</span>
-    <span>Versi prototaip · 2026</span>
-    <a href="admin.html">Panel Admin ↗</a>
-  </footer>
+<!-- LOBI MENUNGGU PESERTA -->
+<div id="waitingRoom" style="display:none;">
+  <div class="brand-logo">QUIZ LIVE <span>PPAPP</span></div>
+  <div class="waiting-card">
+    <h2>Anda sudah masuk!</h2>
+    <p>PIN: <strong id="waitingPin">------</strong></p>
+    <p id="waitingName" class="waiting-name">Nama Peserta</p>
+    <div class="loader-text">Sila lihat skrin utama.<br>Menunggu hos memulakan permainan...</div>
+  </div>
+</div>
 
-  <!-- VERSI APP.JS DIKEMAS KINI -->
-  <script src="app.js?v=12"></script>
+<!-- Skrip Logik Sistem -->
+<script src="app.js?v=70"></script>
 </body>
 </html>
