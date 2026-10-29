@@ -2,7 +2,6 @@
 <html lang="ms">
 <head>
 <meta charset="UTF-8">
-<!-- Menghalang zoom tidak sengaja pada telefon -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Sertai Kuiz • QUIZ LIVE PPAPP</title>
 <style>
@@ -31,7 +30,7 @@
   }
   .brand-logo span { color: #3b82f6; }
 
-  /* KOTAK PENYERTAAN */
+  /* KOTAK PENYERTAAN (TEMA GELAP) */
   .hero-wrap {
     width: 100%;
     display: flex;
@@ -40,12 +39,13 @@
     padding: 20px;
   }
   .join-card {
-    background: #ffffff;
+    background: #1e293b; /* Warna gelap */
+    border: 1px solid #334155; /* Garis tepi halus */
     width: 100%;
     max-width: 400px;
     padding: 30px;
     border-radius: 20px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -56,17 +56,17 @@
     font-size: 20px;
     font-weight: bold;
     text-align: center;
-    border: 2px solid #e2e8f0;
+    border: 2px solid #334155;
     border-radius: 12px;
-    background: #f8fafc;
-    color: #0f172a;
+    background: #0f172a; /* Latar input gelap */
+    color: #ffffff; /* Tulisan putih */
     outline: none;
     transition: 0.3s;
   }
-  .join-card input:focus { border-color: #3b82f6; background: #ffffff; }
-  .join-card input::placeholder { color: #94a3b8; font-weight: 600; }
+  .join-card input:focus { border-color: #3b82f6; background: #0b1120; }
+  .join-card input::placeholder { color: #64748b; font-weight: 600; }
   
-  /* BUTANG MASUK SAMA MACAM KAHOOT (3D Effect) */
+  /* BUTANG MASUK 3D */
   #joinBtn {
     width: 100%;
     background: #10b981;
@@ -86,8 +86,9 @@
     box-shadow: 0 0 0 #047857;
   }
   #joinBtn:disabled {
-    background: #94a3b8;
-    box-shadow: 0 8px 0 #64748b;
+    background: #334155;
+    box-shadow: 0 8px 0 #1e293b;
+    color: #94a3b8;
     cursor: not-allowed;
     transform: none;
   }
@@ -129,7 +130,7 @@
     100% { opacity: 0.5; }
   }
 
-  /* FOOTER KEMAS */
+  /* FOOTER */
   footer {
     margin-top: 40px;
     font-size: 12px;
@@ -165,7 +166,6 @@
   </div>
 </div>
 
-<!-- Skrip Logik Sistem -->
-<script src="app.js?v=70"></script>
+<script src="app.js?v=71"></script>
 </body>
 </html>
