@@ -11,6 +11,19 @@
   /* HEADER & NAV */
   header { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; background: #0b1120; }
   .brand { font-size: 24px; font-weight: 900; letter-spacing: 1px; } .brand span { color: #3b82f6; }
+  
+  .header-right { display: flex; align-items: center; gap: 15px; }
+  
+  /* BUTANG KE HALAMAN PESERTA */
+  .participant-link {
+    background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; color: #3b82f6;
+    padding: 8px 16px; border-radius: 30px; font-size: 13px; font-weight: 700;
+    text-decoration: none; transition: all 0.3s ease; display: flex; align-items: center; gap: 6px;
+  }
+  .participant-link:hover {
+    background: #3b82f6; color: white; box-shadow: 0 0 12px rgba(59, 130, 246, 0.5); transform: translateY(-2px);
+  }
+
   .admin-profile { display: none; align-items: center; gap: 12px; background: #1e293b; padding: 6px 16px 6px 6px; border-radius: 30px; border: 1px solid #334155; }
   .admin-profile .avatar { width: 36px; height: 36px; background: #3b82f6; color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; }
   .logout-btn { color: #ef4444; font-size: 12px; text-decoration: none; margin-left: 10px; font-weight: bold; cursor: pointer; }
@@ -32,7 +45,6 @@
   .grid-layout { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
   .card { background: #1e293b; padding: 30px; border-radius: 20px; border: 1px solid #334155; }
   
-  /* TABLE CSS */
   table { width: 100%; border-collapse: collapse; margin-top: 15px; }
   th, td { text-align: left; padding: 12px; border-bottom: 1px solid #334155; font-size: 14px; }
   th { color: #94a3b8; text-transform: uppercase; font-size: 12px; }
@@ -44,13 +56,15 @@
 
 <header>
   <div class="brand">QUIZ LIVE <span>PPAPP</span></div>
-  <div class="admin-profile" id="adminProfile">
-    <div class="avatar" id="adminAvatar">A</div>
-    <div><span id="adminNameDisplay">Admin</span> <a class="logout-btn" id="logoutBtn">Keluar</a></div>
+  <div class="header-right">
+    <a href="index.html" class="participant-link">🎮 Ke Halaman Peserta</a>
+    <div class="admin-profile" id="adminProfile">
+      <div class="avatar" id="adminAvatar">A</div>
+      <div><span id="adminNameDisplay">Admin</span> <a class="logout-btn" id="logoutBtn">Keluar</a></div>
+    </div>
   </div>
 </header>
 
-<!-- NAVIGASI -->
 <div class="admin-nav" id="adminNav">
   <button class="nav-btn active" onclick="switchTab('papanPemuka')">Papan Pemuka</button>
   <button class="nav-btn" onclick="switchTab('history')">Sejarah Kuiz</button>
@@ -58,7 +72,6 @@
   <button class="nav-btn" id="masterNavBtn" onclick="switchTab('master')" style="display:none; color:#f59e0b;">Master Admin 👑</button>
 </div>
 
-<!-- SECTION AUTHENTICATION -->
 <div id="authSection">
   <div class="auth-card" id="loginCard">
     <h2 style="text-align:center;margin-top:0;">Log Masuk</h2>
@@ -84,7 +97,6 @@
   </div>
 </div>
 
-<!-- VIEWS -->
 <div id="view-papanPemuka" class="dashboard-view">
   <div class="grid-layout">
     <div class="card"><h3>1. Cipta Sesi Live (PIN)</h3><div class="form-group"><label>Pilih Kuiz</label><select id="sessionQuiz"></select></div><button id="createSessionBtn" class="btn-primary" style="background:#10b981;">Jana PIN Permainan</button></div>
@@ -110,8 +122,8 @@
     <h3>Tetapan Akaun Saya</h3>
     <form id="settingsForm">
       <div class="form-group"><label>Nama Penuh</label><input type="text" id="setMyName" required></div>
-      <div class="form-group"><label>Emel Baharu (Biarkan jika tak mahu tukar)</label><input type="email" id="setMyEmail"></div>
-      <div class="form-group"><label>Kata Laluan Baharu (Biarkan jika tak mahu tukar)</label><input type="password" id="setMyPassword"></div>
+      <div class="form-group"><label>Emel Baharu</label><input type="email" id="setMyEmail"></div>
+      <div class="form-group"><label>Kata Laluan Baharu</label><input type="password" id="setMyPassword"></div>
       <button type="submit" class="btn-primary">Kemas Kini Profil</button>
     </form>
   </div>
@@ -119,13 +131,11 @@
 
 <div id="view-master" class="dashboard-view">
   <div class="grid-layout">
-    <!-- JADUAL ADMIN -->
     <div class="card" style="grid-column: span 2;">
       <h3>Senarai Pengguna & Admin</h3>
       <div style="overflow-x:auto;"><table id="adminTable"><thead><tr><th>ID/Emel</th><th>Nama</th><th>Peranan</th><th>Tindakan</th></tr></thead><tbody id="adminTableBody"></tbody></table></div>
     </div>
     
-    <!-- DAFTAR / EDIT ADMIN -->
     <div class="card">
       <h3>Daftar / Kemas Kini Akaun</h3>
       <form id="masterManageForm">
@@ -139,15 +149,11 @@
       </form>
     </div>
 
-    <!-- TETAPAN SISTEM (API URL) -->
     <div class="card">
       <h3>Tetapan Sistem (API)</h3>
-      <div class="form-group">
-        <label>Pautan Web App (Google Apps Script)</label>
-        <input type="text" id="apiUrl" placeholder="https://script.google.com/macros/s/..." required>
-      </div>
+      <div class="form-group"><label>Pautan Web App (Google Apps Script)</label><input type="text" id="apiUrl" placeholder="https://script.google.com/..." required></div>
       <button type="button" id="saveApiBtn" class="btn-primary" style="background:#8b5cf6;">Simpan Pautan API</button>
-      <p style="font-size:12px; color:#94a3b8; margin-top:10px; line-height:1.5;">Amaran: Perubahan pada pautan ini akan menjejaskan sambungan pangkalan data. Pastikan pautan adalah tepat.</p>
+      <p style="font-size:12px; color:#94a3b8; margin-top:10px; line-height:1.5;">Amaran: Perubahan pada pautan ini akan menjejaskan sambungan pangkalan data.</p>
     </div>
   </div>
 </div>
@@ -156,6 +162,6 @@
   function switchAuth(type) { ['login','register','forgot'].forEach(t => document.getElementById(t+'Card').style.display='none'); document.getElementById(type+'Card').style.display='block'; }
   function switchTab(viewId) { document.querySelectorAll('.dashboard-view').forEach(v => v.style.display='none'); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('view-'+viewId).style.display='block'; event.currentTarget.classList.add('active'); if(viewId==='history') loadHistory(); if(viewId==='master') loadAdmins(); }
 </script>
-<script src="app.js?v=65"></script>
+<script src="app.js?v=73"></script>
 </body>
 </html>
