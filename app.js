@@ -1,4 +1,4 @@
-/* QUIZ LIVE PPAPP - FULL LOGIC + PREMIUM UI + SCORE ANIMATION + HOST REVEAL SFX */
+/* QUIZ LIVE PPAPP - FULL LOGIC + PREMIUM UI + BUG FIX LEADERBOARD HOST */
 (() => {
   "use strict";
 
@@ -6,12 +6,12 @@
   const POLL_INTERVAL_MS = 1500; 
   const $ = (id) => document.getElementById(id);
 
-  // --- SISTEM AUDIO (DITAMBAH SFX REVEAL) ---
+  // --- SISTEM AUDIO ---
   const SOUNDS = { 
     bgm_main: new Audio("bgm-lobby.mp3"), 
     sfx_correct: new Audio("sfx-correct.mp3"), 
     sfx_wrong: new Audio("sfx-wrong.mp3"),
-    sfx_reveal: new Audio("sfx-reveal.mp3") // Bunyi "Tungggg" di skrin Host
+    sfx_reveal: new Audio("sfx-reveal.mp3") 
   };
   SOUNDS.bgm_main.loop = true; 
   
@@ -180,16 +180,7 @@
         
         if (res.status === "active") { playBGM(); } else { stopBGM(); }
 
-        const q = res.question; if (!q) return;
-
-        // --- MAINKAN SFX "TUNGGG" BILA JAWAPAN DIDEDAHKAN DI HOS ---
-        if (res.status === "revealing_answer") {
-          if (sfxPlayedForQ !== q.questionId) {
-            playSFX('sfx_reveal');
-            sfxPlayedForQ = q.questionId;
-          }
-        }
-
+        // --- PEMBAIKAN BUG LEADERBOARD (KINI BERADA DI SINI) ---
         if (res.status === "leaderboard") {
           const tops = (res.leaderboard || []).map((p, i) => `
             <div style="font-size:24px; margin:12px auto; max-width:600px; background:#1e293b; padding:16px 26px; border-radius:14px; display:flex; justify-content:space-between; align-items:center; border:1px solid #334155;">
@@ -200,6 +191,12 @@
           panel.innerHTML = `<div style="text-align:center"><h2 style="font-size:36px; margin-bottom:30px;">🏆 TOP 5 LEADERBOARD 🏆</h2>${tops}</div>`; 
           (res.leaderboard || []).forEach((p, i) => animateValue(`hostLdbAnim_${i}`, 0, p.score, 1500));
           return;
+        }
+
+        const q = res.question; if (!q) return;
+
+        if (res.status === "revealing_answer") {
+          if (sfxPlayedForQ !== q.questionId) { playSFX('sfx_reveal'); sfxPlayedForQ = q.questionId; }
         }
 
         const opts = [q.optionA, q.optionB, q.optionC, q.optionD];
