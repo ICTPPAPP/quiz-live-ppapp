@@ -1,4 +1,4 @@
-/* QUIZ LIVE PPAPP - FULL LOGIC + MASTER ADMIN + HISTORY + AUDIO + PREMIUM RESULT UI */
+/* QUIZ LIVE PPAPP - FULL LOGIC + PREMIUM UI + VOTE TALLY DISPLAY */
 (() => {
   "use strict";
 
@@ -6,13 +6,19 @@
   const POLL_INTERVAL_MS = 1500; 
   const $ = (id) => document.getElementById(id);
 
-  // --- SISTEM AUDIO ---
   const SOUNDS = { bgm_main: new Audio("bgm-lobby.mp3"), sfx_correct: new Audio("sfx-correct.mp3"), sfx_wrong: new Audio("sfx-wrong.mp3") };
   SOUNDS.bgm_main.loop = true; 
+  
   function playBGM() { if (SOUNDS.bgm_main.paused) { const p = SOUNDS.bgm_main.play(); if (p !== undefined) p.catch(() => {}); } }
   function stopBGM() { SOUNDS.bgm_main.pause(); SOUNDS.bgm_main.currentTime = 0; }
   function playSFX(key) { if (SOUNDS[key]) { SOUNDS[key].currentTime = 0; SOUNDS[key].play().catch(() => {}); } }
-  document.body.addEventListener('click', () => { if (!window.audioUnlocked) { window.audioUnlocked = true; if (window.hostPhase === "waiting" || window.hostPhase === "active") playBGM(); } }, { capture: true });
+  
+  document.body.addEventListener('click', () => { 
+    if (!window.audioUnlocked) { 
+      window.audioUnlocked = true; 
+      if (window.hostPhase === "waiting" || window.hostPhase === "active") playBGM(); 
+    } 
+  }, { capture: true });
 
   const ANSWER_COLORS = [
     { option: "A", color: "#e53232", shape: "▲", label: "Merah", textColor: "#ffffff" },
@@ -32,7 +38,6 @@
     return await response.json(); 
   }
 
-  // ---------- PENYERTAAN PESERTA ----------
   function initJoinForm() {
     const pinInput = $("pin"), joinButton = $("joinBtn"); 
     if (!pinInput || !joinButton) return;
@@ -59,7 +64,6 @@
     });
   }
 
-  // ---------- LOGIK ADMIN ----------
   function initAdminLogic() {
     if (!$("authSection")) return;
     const myName = storageGet("qlp_admin_name"), myEmail = storageGet("qlp_admin_email"), myRole = storageGet("qlp_admin_role");
@@ -81,7 +85,7 @@
     if ($("registerForm")) $("registerForm").addEventListener("submit", async (e) => {
       e.preventDefault(); const p = $("regPassword").value; 
       if(!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/.test(p)) return alert("Kata laluan lemah!");
-      if(p !== $("regConfirmPassword").value) return alert("Sahkan kata laluan tidak sepadan!");
+      if(p !== $("regConfirmPassword").value) return alert("Sahkan tidak sepadan!");
       const b = $("registerForm").querySelector("button"); b.textContent = "...";
       try { const r = await apiPost({action:"adminRegister", name:$("regName").value, email:$("regEmail").value, password:p}); if(!r.success) throw new Error(r.message); alert("Berjaya! Sila log masuk."); window.switchAuth('login'); } catch(e) { alert(e.message); } finally { b.textContent = "Daftar"; }
     });
@@ -134,7 +138,7 @@
     if ($("createSessionBtn")) $("createSessionBtn").addEventListener("click", async () => { const qid = $("sessionQuiz").value; if(!qid) return alert("Sila Pilih Kuiz"); $("createSessionBtn").disabled = true; $("createSessionBtn").textContent = "Menjana..."; try { const r = await apiPost({action:"createSession", quizId:qid}); storageSet("qlp_session_id", r.sessionId); storageSet("qlp_host_token", r.hostToken); storageSet("qlp_player_pin", r.pin); window.location.href="host.html"; } catch(e) { $("createSessionBtn").disabled = false; $("createSessionBtn").textContent = "Jana PIN Permainan"; } });
   }
 
-  // ---------- PAPARAN HOS ----------
+  // ---------- PAPARAN HOS (TERMASUK KIRAAN UNDIAN) ----------
   function initLiveHost() {
     const lobby = $("lobbyPanel"), panel = $("hostLiveQuestionPanel"), control = $("hostControlPanel");
     if (!lobby && !panel) return;
@@ -179,7 +183,30 @@
 
         const q = res.question; if (!q) return;
         const opts = [q.optionA, q.optionB, q.optionC, q.optionD];
-        panel.innerHTML = `<div style="text-align:center;margin-bottom:25px"><div style="font-size:14px;font-weight:900;letter-spacing:3px;color:#a5b4fc;text-transform:uppercase">SOALAN ${q.order} ${q.points > 1000 ? '🌟 MARKAH BERGANDA' : ''}</div><h1 style="font-size:clamp(22px,3.5vw,40px);margin:14px 0;line-height:1.3;color:#ffffff">${escapeHtml(q.questionText)}</h1>${res.status === "active" ? `<div style="display:inline-block;padding:6px 20px;background:#1e293b;border-radius:30px;font-size:28px;font-weight:900;color:#ef4444;border:1px solid #334155;margin-top:6px">⏱ <span id="hostTimerDisplay">${q.timeLimitSeconds}</span>s</div>` : ''}</div><div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">${ANSWER_COLORS.map((item, i) => { const isDim = (res.status === "revealing_answer" && item.option !== q.correctOption); return `<div style="opacity:${isDim ? '0.25' : '1'};min-height:120px;display:flex;align-items:center;gap:16px;padding:20px;border-radius:18px;background:${item.color};color:${item.textColor};font-size:clamp(18px,2vw,24px);font-weight:800;box-sizing:border-box"><span style="font-size:32px;line-height:1">${item.shape}</span><span style="flex:1">${escapeHtml(opts[i])}</span>${res.status === "revealing_answer" && !isDim ? '<span style="font-size:32px">✅</span>' : ''}</div>`; }).join("")}</div>`;
+        const votes = res.voteCounts || {A:0, B:0, C:0, D:0}; // Tarik data undian
+
+        // KEMAS KINI KOTAK JAWAPAN DENGAN LENCANA JUMLAH UNDIAN
+        panel.innerHTML = `
+          <div style="text-align:center;margin-bottom:25px">
+            <div style="font-size:14px;font-weight:900;letter-spacing:3px;color:#a5b4fc;text-transform:uppercase">SOALAN ${q.order} ${q.points > 1000 ? '🌟 MARKAH BERGANDA' : ''}</div>
+            <h1 style="font-size:clamp(22px,3.5vw,40px);margin:14px 0;line-height:1.3;color:#ffffff">${escapeHtml(q.questionText)}</h1>
+            ${res.status === "active" ? `<div style="display:inline-block;padding:6px 20px;background:#1e293b;border-radius:30px;font-size:28px;font-weight:900;color:#ef4444;border:1px solid #334155;margin-top:6px">⏱ <span id="hostTimerDisplay">${q.timeLimitSeconds}</span>s</div>` : ''}
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+            ${ANSWER_COLORS.map((item, i) => { 
+              const isDim = (res.status === "revealing_answer" && item.option !== q.correctOption); 
+              const vCount = votes[item.option] || 0;
+              const voteBadge = res.status === "revealing_answer" ? `<span style="background:rgba(0,0,0,0.5); padding:6px 14px; border-radius:30px; font-size:18px; margin-right:12px; display:flex; align-items:center; gap:6px; box-shadow:inset 0 0 5px rgba(255,255,255,0.2);">👤 ${vCount}</span>` : '';
+              
+              return `
+                <div style="opacity:${isDim ? '0.35' : '1'};min-height:120px;display:flex;align-items:center;gap:16px;padding:20px;border-radius:18px;background:${item.color};color:${item.textColor};font-size:clamp(18px,2vw,24px);font-weight:800;box-sizing:border-box; transition: opacity 0.3s ease;">
+                  <span style="font-size:32px;line-height:1">${item.shape}</span>
+                  <span style="flex:1">${escapeHtml(opts[i])}</span>
+                  ${voteBadge}
+                  ${res.status === "revealing_answer" && !isDim ? '<span style="font-size:32px; filter:drop-shadow(0 0 10px rgba(255,255,255,0.8));">✅</span>' : ''}
+                </div>`; 
+            }).join("")}
+          </div>`;
 
         if (res.status === "active") {
           let hostTimeLeft = q.timeLimitSeconds; const nextBtn = $("nextQuestionBtn");
@@ -223,7 +250,6 @@
 
         if (res.status === "active") { localStorage.removeItem("qlp_last_isCorrect"); localStorage.setItem("qlp_last_earned", "0"); }
 
-        // --- PEMBAIKAN UI JAWAPAN (PREMIUM LOOK) ---
         if (res.status === "revealing_answer") {
           const answeredState = localStorage.getItem("qlp_last_isCorrect"); 
           const earned = localStorage.getItem("qlp_last_earned") || "0";
@@ -233,12 +259,8 @@
           let icon = (answeredState === null) ? "⏱️" : (isCorrect ? "✅" : "❌"); 
           let glowColor = (answeredState === null) ? "#f59e0b" : (isCorrect ? "#10b981" : "#ef4444");
 
-          if (sfxPlayedForQ !== (res.question ? res.question.questionId : "0")) { 
-            playSFX(isCorrect ? 'sfx_correct' : 'sfx_wrong'); 
-            sfxPlayedForQ = (res.question ? res.question.questionId : "0"); 
-          }
+          if (sfxPlayedForQ !== (res.question ? res.question.questionId : "0")) { playSFX(isCorrect ? 'sfx_correct' : 'sfx_wrong'); sfxPlayedForQ = (res.question ? res.question.questionId : "0"); }
           
-          // Latar belakang kekal gelap (#0f172a), kotak di tengah bersinar dengan glowColor
           panel.innerHTML = `
             <div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0f172a;color:white;border-radius:20px;">
               <div style="background:#1e293b; border: 1px solid #334155; border-radius: 24px; padding: 50px 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 100%; max-width: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
@@ -250,11 +272,7 @@
           return;
         }
         
-        if (res.status === "leaderboard") { 
-          const score = localStorage.getItem("qlp_last_score") || "0"; 
-          panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0f172a;color:white;"><div style="background:#1e293b; border: 1px solid #334155; border-radius: 24px; padding: 40px 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); width: 100%; max-width: 400px;"><div style="font-size:18px;font-weight:700;color:#94a3b8;text-transform:uppercase;">Jumlah Markah</div><div style="font-size:70px;font-weight:900;color:#3b82f6;margin-top:10px;">${score}</div></div></div>`; 
-          return; 
-        }
+        if (res.status === "leaderboard") { const score = localStorage.getItem("qlp_last_score") || "0"; panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0f172a;color:white;"><div style="background:#1e293b; border: 1px solid #334155; border-radius: 24px; padding: 40px 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); width: 100%; max-width: 400px;"><div style="font-size:18px;font-weight:700;color:#94a3b8;text-transform:uppercase;">Jumlah Markah</div><div style="font-size:70px;font-weight:900;color:#3b82f6;margin-top:10px;">${score}</div></div></div>`; return; }
         
         const q = res.question; if (!q) return;
         const startTime = Date.now();
