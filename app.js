@@ -1,4 +1,4 @@
-/* QUIZ LIVE PPAPP - FULL LOGIC + PREMIUM UI + HOST SCORE ANIMATION WITH COIN SFX */
+/* QUIZ LIVE PPAPP - FULL LOGIC + PREMIUM UI + HOST SCORE ANIMATION (NO TICK ON BOX) */
 (() => {
   "use strict";
 
@@ -6,16 +6,16 @@
   const POLL_INTERVAL_MS = 1500; 
   const $ = (id) => document.getElementById(id);
 
-  // --- SISTEM AUDIO (DITAMBAH SFX COUNT) ---
+  // --- SISTEM AUDIO ---
   const SOUNDS = { 
     bgm_main: new Audio("bgm-lobby.mp3"), 
     sfx_correct: new Audio("sfx-correct.mp3"), 
     sfx_wrong: new Audio("sfx-wrong.mp3"),
     sfx_reveal: new Audio("sfx-reveal.mp3"),
-    sfx_count: new Audio("sfx-count.mp3") // Bunyi syiling menaik
+    sfx_count: new Audio("sfx-count.mp3") 
   };
   SOUNDS.bgm_main.loop = true; 
-  SOUNDS.sfx_count.loop = true; // Loop bunyi markah selagi nombor belum tamat
+  SOUNDS.sfx_count.loop = true; 
   
   function playBGM() { if (SOUNDS.bgm_main.paused) { const p = SOUNDS.bgm_main.play(); if (p !== undefined) p.catch(() => {}); } }
   function stopBGM() { SOUNDS.bgm_main.pause(); SOUNDS.bgm_main.currentTime = 0; }
@@ -29,7 +29,6 @@
     } 
   }, { capture: true });
 
-  // FUNGSI ANIMASI YANG BOLEH CALLBACK SELEPAS TAMAT
   function animateValue(id, start, end, duration, onComplete) {
     const obj = $(id);
     if (!obj) return;
@@ -188,7 +187,6 @@
         
         if (res.status === "active") { playBGM(); } else { stopBGM(); }
 
-        // --- ANIMASI DI SKRIN HOST LEADERBOARD (DENGAN BUNYI) ---
         if (res.status === "leaderboard") {
           const tops = (res.leaderboard || []).map((p, i) => `
             <div style="font-size:24px; margin:12px auto; max-width:600px; background:#1e293b; padding:16px 26px; border-radius:14px; display:flex; justify-content:space-between; align-items:center; border:1px solid #334155;">
@@ -202,11 +200,10 @@
           const totalTops = (res.leaderboard || []).length;
           
           if (totalTops > 0) {
-            playSFX('sfx_count'); // Mula main bunyi syiling
+            playSFX('sfx_count'); 
             (res.leaderboard || []).forEach((p, i) => {
               animateValue(`hostLdbAnim_${i}`, 0, p.score, 1500, () => {
                 animationDone++;
-                // Berhentikan bunyi apabila semua animasi selesai
                 if (animationDone === totalTops) stopSFX('sfx_count');
               });
             });
@@ -238,12 +235,12 @@
               const vCount = votes[item.option] || 0;
               const voteBadge = res.status === "revealing_answer" ? `<div style="position:absolute; top:-15px; left:-15px; background:#f8fafc; color:#0f172a; padding:6px 16px; border-radius:30px; font-size:18px; font-weight:900; box-shadow:0 4px 10px rgba(0,0,0,0.5); z-index:10; display:flex; align-items:center; gap:6px;">👤 ${vCount}</div>` : '';
               
+              // IKON TICK ✅ DIBUANG DARI BLOK INI
               return `
                 <div style="position:relative; opacity:${isDim ? '0.35' : '1'}; min-height:120px; display:flex; align-items:center; gap:16px; padding:20px 20px 20px 40px; border-radius:18px; background:${item.color}; color:${item.textColor}; font-size:clamp(18px,2vw,24px); font-weight:800; box-sizing:border-box; transition: opacity 0.3s ease;">
                   ${voteBadge}
                   <span style="font-size:32px;line-height:1">${item.shape}</span>
                   <span style="flex:1">${escapeHtml(opts[i])}</span>
-                  ${res.status === "revealing_answer" && !isDim ? '<span style="position:absolute; right:20px; font-size:40px; filter:drop-shadow(0 0 10px rgba(255,255,255,0.8));">✅</span>' : ''}
                 </div>`; 
             }).join("")}
           </div>`;
@@ -294,6 +291,7 @@
           const answeredState = localStorage.getItem("qlp_last_isCorrect"); 
           const earned = parseInt(localStorage.getItem("qlp_last_earned") || "0");
           const totalScore = parseInt(localStorage.getItem("qlp_last_score") || "0");
+          const prevScore = Math.max(0, totalScore - earned);
           
           let isCorrect = (answeredState === "true"); 
           let message = (answeredState === null) ? "Masa Tamat" : (isCorrect ? "Tepat!" : "Salah");
@@ -302,7 +300,6 @@
 
           if (sfxPlayedForQ !== (res.question ? res.question.questionId : "0")) { playSFX(isCorrect ? 'sfx_correct' : 'sfx_wrong'); sfxPlayedForQ = (res.question ? res.question.questionId : "0"); }
           
-          // MARKAH PESERTA DIPAPARKAN TERUS STATIK (TIADA ANIMASI DI PHONE)
           panel.innerHTML = `
             <div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0f172a;color:white;border-radius:20px;">
               <div style="background:#1e293b; border: 1px solid #334155; border-radius: 24px; padding: 40px 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 100%; max-width: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
@@ -320,7 +317,6 @@
         
         if (res.status === "leaderboard") { 
           const score = parseInt(localStorage.getItem("qlp_last_score") || "0"); 
-          // TIADA ANIMASI DI PHONE
           panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0f172a;color:white;"><div style="background:#1e293b; border: 1px solid #334155; border-radius: 24px; padding: 40px 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); width: 100%; max-width: 400px;"><div style="font-size:18px;font-weight:700;color:#94a3b8;text-transform:uppercase;">Jumlah Markah</div><div style="font-size:70px;font-weight:900;color:#3b82f6;margin-top:10px;">${score}</div></div></div>`; 
           return; 
         }
