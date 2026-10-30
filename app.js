@@ -1,4 +1,4 @@
-/* QUIZ LIVE PPAPP - FULL LOGIC + PREMIUM UI + IMAGE SUPPORT */
+/* QUIZ LIVE PPAPP - FULL LOGIC + PREMIUM UI + IMAGE SUPPORT + START BUTTON FIX */
 (() => {
   "use strict";
 
@@ -110,7 +110,7 @@
       e.preventDefault(); const t = $("targetAdminId").value, np = $("mPassword").value;
       if(!t) { 
         if(!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/.test(np)) return alert("Kata laluan lemah!");
-        await apiPost({action:"adminRegister", name:$("mName").value, email:$("mEmail").value, password:np, role:$("mRole").value}); alert("Akaun Dicipta");
+        await apiPost({action:"adminRegister", name:$("mName").value, email:$mEmail.value, password:np, role:$("mRole").value}); alert("Akaun Dicipta");
       } else { 
         if(np && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/.test(np)) return alert("Kata laluan lemah!");
         await apiPost({action:"updateAdminMaster", targetId:t, newName:$("mName").value, newEmail:$("mEmail").value, newPassword:np, newRole:$("mRole").value}); alert("Dikemas kini!");
@@ -121,7 +121,6 @@
     if ($("saveApiBtn")) $("saveApiBtn").addEventListener("click", () => { storageSet("qlp_api_url", $("apiUrl").value.trim()); alert("Pautan API Sistem Berjaya Disimpan!"); });
     if ($("quizForm")) $("quizForm").addEventListener("submit", async (e) => { e.preventDefault(); const btn = $("quizForm").querySelector("button"); btn.disabled = true; btn.textContent="..."; try { await apiPost({ action: "createQuiz", title: $("quizTitle").value, description: $("quizDescription").value }); alert("Kuiz Dicipta!"); location.reload(); } catch(e) { btn.disabled = false; btn.textContent="Cipta"; } });
     
-    // MENGHANTAR DATA GAMBAR BILA SOALAN DICIPTA
     if ($("questionForm")) $("questionForm").addEventListener("submit", async (e) => { 
       e.preventDefault(); const btn = $("questionForm").querySelector("button"); btn.disabled = true; btn.textContent="..."; 
       try { 
@@ -130,7 +129,7 @@
           optionA: $("optionA").value, optionB: $("optionB").value, optionC: $("optionC").value, optionD: $("optionD").value, 
           correctOption: $("correctOption").value, timeLimitSeconds: Number($("questionTime").value), 
           points: $("doublePoints").checked ? 2000 : 1000,
-          imageUrl: $("questionImage") ? $("questionImage").value.trim() : "" // Ambil link gambar
+          imageUrl: $("questionImage") ? $("questionImage").value.trim() : "" 
         }); 
         alert("Soalan Disimpan!"); $("questionForm").reset(); 
       } catch(e) {} finally { btn.disabled = false; btn.textContent="Simpan"; } 
@@ -157,11 +156,15 @@
         if (!res || !res.success) throw new Error();
         window.hostPhase = res.status;
 
+        // PEMBETULAN BUTANG START DI SINI: control.style.display = "flex"
         if (res.status === "waiting") {
           if (currentPhase !== "waiting") { currentPhase = "waiting"; playBGM(); }
           if (lobby) { lobby.style.display = "flex"; if ($("lobbyPin")) $("lobbyPin").textContent = storageGet("qlp_player_pin") || "------"; const players = Array.isArray(res.players) ? res.players : []; if ($("lobbyCount")) $("lobbyCount").textContent = players.length; if ($("lobbyPlayers")) { $("lobbyPlayers").innerHTML = players.length > 0 ? players.map(p => `<div class="player-chip">${escapeHtml(p)}</div>`).join("") : `<p style="color:#94a3b8;">Menunggu pemain masuk...</p>`; } }
-          if (panel) panel.style.display = "none"; if (control) control.style.display = "none"; return;
+          if (panel) panel.style.display = "none"; 
+          if (control) control.style.display = "flex"; 
+          return;
         } 
+        
         if (lobby) lobby.style.display = "none"; if (panel) panel.style.display = "block"; if (control) control.style.display = "flex";
 
         if (res.status === "completed") {
@@ -204,7 +207,6 @@
         const opts = [q.optionA, q.optionB, q.optionC, q.optionD];
         const votes = res.voteCounts || {A:0, B:0, C:0, D:0}; 
         
-        // PAPARAN GAMBAR DI SKRIN HOS
         const imgHtml = q.imageUrl ? `<img src="${escapeHtml(q.imageUrl)}" style="max-height:25vh; border-radius:15px; margin: 15px auto; display:block; box-shadow:0 10px 30px rgba(0,0,0,0.5); object-fit:contain;">` : '';
 
         panel.innerHTML = `
@@ -305,7 +307,6 @@
         const q = res.question; if (!q) return;
         const startTime = Date.now();
         
-        // PAPARAN GAMBAR KECIL DI SKRIN PESERTA
         const imgHtml = q.imageUrl ? `<img src="${escapeHtml(q.imageUrl)}" style="max-height:12vh; border-radius:10px; margin: 5px auto; display:block; object-fit:contain;">` : '';
 
         panel.innerHTML = `
