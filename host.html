@@ -7,19 +7,15 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: white; min-height: 100vh; display: flex; flex-direction: column; }
-  
   header { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; background: #0b1120; }
   .brand { font-size: 24px; font-weight: 900; letter-spacing: 1px; } .brand span { color: #3b82f6; }
   .btn-outline { border: 1px solid #334155; color: #94a3b8; padding: 8px 20px; border-radius: 30px; text-decoration: none; font-size: 14px; font-weight: 600; transition: 0.3s; }
   .btn-outline:hover { background: #1e293b; color: white; border-color: #64748b; }
 
   #lobbyPanel { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
-  
-  /* REKAAN BARU UNTUK PIN DAN QR CODE BERSEBELAHAN */
   .pin-wrapper { display: flex; align-items: center; justify-content: center; gap: 40px; background: #1e293b; padding: 30px 60px; border-radius: 20px; border: 2px solid #3b82f6; box-shadow: 0 0 30px rgba(59,130,246,0.3); margin-bottom: 30px; flex-wrap: wrap; }
   .pin-text h2 { font-size: 18px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
   .pin-text h1 { font-size: 80px; font-weight: 900; color: #ffffff; letter-spacing: 5px; }
-  
   .qr-box { background: white; padding: 15px; border-radius: 15px; display: none; }
   .qr-box img { width: 140px; height: 140px; display: block; }
   
@@ -35,30 +31,37 @@
   .btn-primary:hover { background: #2563eb; transform: translateY(-2px); }
   .btn-primary:disabled { background: #334155; color: #94a3b8; cursor: not-allowed; transform: none; }
   .btn-danger { background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 12px 25px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; }
+
+  /* CSS ANIMASI PODIUM */
+  .podium-wrap { display: flex; align-items: flex-end; justify-content: center; gap: 15px; height: 350px; margin-top: 60px; padding-bottom: 20px; }
+  .podium-col { width: 150px; border-radius: 15px 15px 0 0; position: relative; text-align: center; color: black; font-weight: 900; font-size: 40px; display: flex; flex-direction: column; justify-content: flex-start; padding-top: 15px; transform-origin: bottom; transform: scaleY(0); animation: popUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); }
+  .podium-col .p-name { position: absolute; top: -70px; left: 50%; transform: translateX(-50%); color: white; font-size: 22px; width: 200px; text-shadow: 0 4px 10px rgba(0,0,0,0.8); }
+  .podium-col .p-score { position: absolute; top: -35px; left: 50%; transform: translateX(-50%); color: #10b981; font-size: 18px; width: 200px; font-weight: bold; }
+  .pos-1 { height: 100%; background: linear-gradient(to top, #d4af37, #fde047); z-index: 3; animation-delay: 2.5s; }
+  .pos-2 { height: 75%; background: linear-gradient(to top, #94a3b8, #cbd5e1); z-index: 2; animation-delay: 1.5s; }
+  .pos-3 { height: 55%; background: linear-gradient(to top, #b45309, #d97706); z-index: 1; animation-delay: 0.5s; }
+  @keyframes popUp { to { transform: scaleY(1); } }
+  
+  /* CSS JADUAL STATISTIK PENUH */
+  .stats-table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #1e293b; border-radius: 15px; overflow: hidden; }
+  .stats-table th, .stats-table td { padding: 15px; text-align: center; border-bottom: 1px solid #334155; }
+  .stats-table th { background: #0b1120; color: #94a3b8; font-size: 14px; text-transform: uppercase; }
+  .stats-table tr:hover { background: #27354f; }
 </style>
 </head>
 <body>
 
 <header>
   <div class="brand">QUIZ LIVE <span>PPAPP</span></div>
-  <div class="header-right">
-    <a href="admin.html" class="btn-outline">← Kembali Admin</a>
-  </div>
+  <div class="header-right"><a href="admin.html" class="btn-outline">← Kembali Admin</a></div>
 </header>
 
 <main style="flex: 1; display: flex; flex-direction: column;">
   <div id="lobbyPanel">
     <div class="pin-wrapper">
-      <div class="pin-text">
-        <h2>Sertai di peranti anda dengan PIN</h2>
-        <h1 id="lobbyPin">------</h1>
-      </div>
-      <!-- KOTAK QR CODE -->
-      <div class="qr-box" id="qrContainer">
-        <img id="qrImage" src="" alt="QR Code">
-      </div>
+      <div class="pin-text"><h2>Sertai di peranti anda dengan PIN</h2><h1 id="lobbyPin">------</h1></div>
+      <div class="qr-box" id="qrContainer"><img id="qrImage" src="" alt="QR Code"></div>
     </div>
-    
     <div class="players-container">
       <h3>Pemain Bersedia: <span id="lobbyCount" style="color:#10b981; font-size:26px; font-weight:900;">0</span></h3>
       <div id="lobbyPlayers"></div>
@@ -75,25 +78,20 @@
   </div>
 </div>
 
-<script src="app.js?v=130"></script>
+<script src="app.js?v=135"></script>
 <script>
-  // LOGIK PAPARAN BUTANG HOS & QR CODE AUTOMATIK
   setInterval(() => {
     if (window.hostPhase && window.hostPhase !== 'waiting') {
       if(document.getElementById('hostStartBtn')) document.getElementById('hostStartBtn').style.display = 'none';
       if(document.getElementById('inGameControls')) document.getElementById('inGameControls').style.display = 'flex';
     }
-    
-    // Jana QR Code secara automatik
     const pin = localStorage.getItem("qlp_player_pin");
     const qrImg = document.getElementById("qrImage");
     const qrBox = document.getElementById("qrContainer");
-    
     if (pin && pin !== "------" && qrImg.getAttribute("data-pin") !== pin) {
       const participantUrl = window.location.href.split('host.html')[0] + 'index.html';
       qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(participantUrl);
-      qrImg.setAttribute("data-pin", pin);
-      qrBox.style.display = "block";
+      qrImg.setAttribute("data-pin", pin); qrBox.style.display = "block";
     }
   }, 1000);
 </script>
