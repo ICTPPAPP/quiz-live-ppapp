@@ -1,4 +1,4 @@
-/* QUIZ LIVE PPAPP - FINAL FIX: IMAGE + PODIUM END + HISTORY */
+/* QUIZ LIVE PPAPP - FINAL FIX: IMAGE + PODIUM END + FULL HISTORY BUTTON */
 (() => {
   "use strict";
 
@@ -75,7 +75,70 @@
     if ($("settingsForm")) $("settingsForm").addEventListener("submit", async (e) => { e.preventDefault(); const np = $("setMyPassword").value; if(np && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/.test(np)) return alert("Kata laluan lemah!"); try { const r = await apiPost({action:"updateAccount", oldEmail:myEmail, newName:$("setMyName").value, newEmail:$("setMyEmail").value, newPassword:np}); if(!r.success) throw new Error(r.message); alert("Akaun dikemas kini!"); storageSet("qlp_admin_name", r.newName); storageSet("qlp_admin_email", r.newEmail); location.reload(); } catch(e) { alert(e.message); } });
     async function loadQ() { if(!$("questionQuiz")) return; try { const r = await apiPost({action:"getQuizzes"}); if(r.success && r.quizzes) { const o = r.quizzes.map(x => `<option value="${x.quizId}">${escapeHtml(x.title)}</option>`).join(""); $("questionQuiz").innerHTML = o || '<option value="">-- Tiada Kuiz --</option>'; $("sessionQuiz").innerHTML = o || '<option value="">-- Tiada Kuiz --</option>'; } } catch(e) {} }
     if(myName) loadQ();
-    window.loadHistory = async () => { if (!$("historyContainer")) return; $("historyContainer").innerHTML = "Sedang memuat turun rekod..."; const r = await apiPost({action:"getHistory"}); if(!r.success || r.history.length === 0) return $("historyContainer").innerHTML = "Tiada rekod kuiz."; $("historyContainer").innerHTML = r.history.map(h => `<div style="background:#0f172a; padding:15px; border-radius:10px; margin-bottom:15px; border:1px solid #334155;"><div style="color:#3b82f6; font-weight:bold; font-size:16px;">${escapeHtml(h.quizTitle)}</div><div style="font-size:12px; margin-bottom:10px;">Dimainkan: ${h.date ? new Date(h.date).toLocaleString('ms-MY') : 'Tarikh tiada'}</div>${h.tops.length ? h.tops.map((p,i)=>`<div>#${i+1} ${escapeHtml(p.name)} - ${p.score}pt</div>`).join("") : "Tiada peserta selesai."}</div>`).join(""); };
+    
+    // LOGIK SEJARAH KUIZ DIPERBAHARUI (PAPAR FULL LEADERBOARD)
+    window.loadHistory = async () => { 
+      if (!$("historyContainer")) return; 
+      $("historyContainer").innerHTML = "Sedang memuat turun rekod..."; 
+      const r = await apiPost({action:"getHistory"}); 
+      if(!r.success || r.history.length === 0) return $("historyContainer").innerHTML = "Tiada rekod kuiz."; 
+      
+      window.qlp_history_data = r.history; // Simpan ke memori untuk butang penuh
+      
+      $("historyContainer").innerHTML = r.history.map((h, i) => `
+        <div style="background:#0f172a; padding:15px 20px; border-radius:10px; margin-bottom:15px; border:1px solid #334155; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="color:#3b82f6; font-weight:bold; font-size:18px;">${escapeHtml(h.quizTitle)}</div>
+            <div style="font-size:12px; color:#94a3b8; margin-top:5px;">Dimainkan: ${h.date ? new Date(h.date).toLocaleString('ms-MY') : 'Tarikh tiada'}</div>
+            <div style="font-size:12px; margin-top:5px; color:#10b981; font-weight:bold;">👤 ${h.allPlayers ? h.allPlayers.length : 0} Peserta Menjawab</div>
+          </div>
+          <button onclick="paparSejarahPenuh(${i})" style="background:#3b82f6; color:white; border:none; padding:10px 20px; border-radius:30px; cursor:pointer; font-weight:bold; transition:0.3s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">Lihat Keputusan ➡</button>
+        </div>`).join(""); 
+    };
+
+    window.paparSejarahPenuh = (idx) => {
+      const h = window.qlp_history_data[idx];
+      if(!h) return;
+      const ap = h.allPlayers || [];
+      const listHtml = ap.map((p, i) => {
+        const totalAttempts = p.correct + p.wrong;
+        const accuracy = totalAttempts > 0 ? Math.round((p.correct / totalAttempts) * 100) : 0;
+        return `<tr>
+          <td style="font-weight:bold; color:${i<3?'#fbbf24':'white'}; text-align:center;">#${i+1}</td>
+          <td style="font-weight:bold; text-align:left;">${escapeHtml(p.name)}</td>
+          <td style="color:#10b981; text-align:center;">✔ ${p.correct}</td>
+          <td style="color:#ef4444; text-align:center;">✖ ${p.wrong}</td>
+          <td style="color:#a855f7; font-weight:bold; text-align:center;">${accuracy}%</td>
+          <td style="text-align:center;">🔥 ${p.maxStreak}</td>
+          <td style="font-weight:900; color:#3b82f6; text-align:center; font-size:16px;">${p.score}</td>
+        </tr>`;
+      }).join("");
+
+      $("historyContainer").innerHTML = `
+        <button onclick="loadHistory()" style="background:transparent; border:1px solid #3b82f6; color:#3b82f6; padding:8px 20px; border-radius:20px; margin-bottom:15px; cursor:pointer; font-weight:bold;">⬅ Kembali ke Senarai</button>
+        <div style="background:#0f172a; padding:25px; border-radius:15px; border:1px solid #334155;">
+          <h3 style="color:#10b981; margin-top:0; margin-bottom:5px; font-size:22px;">${escapeHtml(h.quizTitle)}</h3>
+          <div style="font-size:13px; color:#94a3b8; margin-bottom:20px;">Dimainkan: ${h.date ? new Date(h.date).toLocaleString('ms-MY') : '-'} &nbsp;|&nbsp; 👤 ${ap.length} Peserta</div>
+          <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; min-width:600px;">
+              <thead>
+                <tr>
+                  <th style="border-bottom:2px solid #334155; padding:12px; text-align:center;">Rank</th>
+                  <th style="border-bottom:2px solid #334155; padding:12px; text-align:left;">Nama</th>
+                  <th style="border-bottom:2px solid #334155; padding:12px; text-align:center;">Betul</th>
+                  <th style="border-bottom:2px solid #334155; padding:12px; text-align:center;">Salah</th>
+                  <th style="border-bottom:2px solid #334155; padding:12px; text-align:center;">Tepat</th>
+                  <th style="border-bottom:2px solid #334155; padding:12px; text-align:center;">Streak</th>
+                  <th style="border-bottom:2px solid #334155; padding:12px; text-align:center;">Markah</th>
+                </tr>
+              </thead>
+              <tbody>${listHtml || '<tr><td colspan="7" style="text-align:center; padding:20px;">Tiada data peserta</td></tr>'}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    };
+
     window.loadAdmins = async () => { if (!$("adminTableBody")) return; const r = await apiPost({action:"getAdmins"}); if(r.success) { $("adminTableBody").innerHTML = r.admins.map(a => `<tr><td><div style="font-size:11px;color:#64748b;">${a.id}</div>${escapeHtml(a.email)}</td><td>${escapeHtml(a.name)}</td><td><span class="badge ${a.role==='master'?'master':''}">${a.role.toUpperCase()}</span></td><td><button onclick="editAdm('${a.id}','${escapeHtml(a.name)}','${escapeHtml(a.email)}','${a.role}')" style="background:#3b82f6;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">Edit</button> <button onclick="delAdm('${a.id}')" style="background:#ef4444;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">Padam</button></td></tr>`).join(""); } };
     window.editAdm = (id, nm, em, rl) => { $("targetAdminId").value=id; $("mName").value=nm; $("mEmail").value=em; $("mPassword").value=""; $("mRole").value=rl; $("mSubmitBtn").textContent="Simpan Perubahan"; $("mSubmitBtn").style.background="#f59e0b"; $("mCancelBtn").style.display="inline-block"; };
     window.delAdm = async (id) => { if(confirm("Padam akaun ini?")) { await apiPost({action:"deleteAdmin", targetId:id}); window.loadAdmins(); } };
@@ -98,7 +161,6 @@
     const startBtn = $("hostStartBtn");
     if (startBtn) startBtn.addEventListener("click", async () => { startBtn.disabled = true; startBtn.textContent = "MEMULAKAN..."; try { await apiPost({ action: "startSession", sessionId: storageGet("qlp_session_id"), hostToken: storageGet("qlp_host_token") }); } catch(e) { startBtn.disabled = false; startBtn.textContent = "▶ MULA KUIZ SEKARANG"; } });
 
-    // FUNGSI BUTANG TAMAT KUIZ (DIPERBAIKI)
     const endQuizBtn = $("endQuizBtn");
     if (endQuizBtn) {
       endQuizBtn.addEventListener("click", async () => {
