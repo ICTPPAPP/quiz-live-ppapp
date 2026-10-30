@@ -2,7 +2,7 @@
 (() => {
   "use strict";
 
-  const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbxlHmVrFF84wSGQF3z0F_qEvVWZpirbgo0D06FclCDkhZTWXv_YgFTAHIAx381FERKT/exec";
+  const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbwMCsWmhnMVajbWWOULbXO8imoRyjj1kFC_i4Ls1RlTorlDRWIHHSX4NkEQoMXqJWYH/exec";
   const POLL_INTERVAL_MS = 1500; 
   const $ = (id) => document.getElementById(id);
 
