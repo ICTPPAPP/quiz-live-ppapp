@@ -14,9 +14,14 @@
   .btn-outline:hover { background: #1e293b; color: white; border-color: #64748b; }
 
   #lobbyPanel { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
-  .pin-display { background: #1e293b; padding: 20px 50px; border-radius: 20px; border: 2px solid #3b82f6; box-shadow: 0 0 30px rgba(59,130,246,0.3); margin-bottom: 30px; }
-  .pin-display h2 { font-size: 18px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
-  .pin-display h1 { font-size: 80px; font-weight: 900; color: #ffffff; letter-spacing: 5px; }
+  
+  /* REKAAN BARU UNTUK PIN DAN QR CODE BERSEBELAHAN */
+  .pin-wrapper { display: flex; align-items: center; justify-content: center; gap: 40px; background: #1e293b; padding: 30px 60px; border-radius: 20px; border: 2px solid #3b82f6; box-shadow: 0 0 30px rgba(59,130,246,0.3); margin-bottom: 30px; flex-wrap: wrap; }
+  .pin-text h2 { font-size: 18px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
+  .pin-text h1 { font-size: 80px; font-weight: 900; color: #ffffff; letter-spacing: 5px; }
+  
+  .qr-box { background: white; padding: 15px; border-radius: 15px; display: none; }
+  .qr-box img { width: 140px; height: 140px; display: block; }
   
   .players-container { width: 100%; max-width: 800px; background: #0b1120; padding: 30px; border-radius: 20px; border: 1px solid #1e293b; min-height: 200px; }
   .players-container h3 { margin-bottom: 20px; color: #cbd5e1; font-size: 20px; }
@@ -43,10 +48,17 @@
 
 <main style="flex: 1; display: flex; flex-direction: column;">
   <div id="lobbyPanel">
-    <div class="pin-display">
-      <h2>Sertai di peranti anda dengan PIN</h2>
-      <h1 id="lobbyPin">------</h1>
+    <div class="pin-wrapper">
+      <div class="pin-text">
+        <h2>Sertai di peranti anda dengan PIN</h2>
+        <h1 id="lobbyPin">------</h1>
+      </div>
+      <!-- KOTAK QR CODE -->
+      <div class="qr-box" id="qrContainer">
+        <img id="qrImage" src="" alt="QR Code">
+      </div>
     </div>
+    
     <div class="players-container">
       <h3>Pemain Bersedia: <span id="lobbyCount" style="color:#10b981; font-size:26px; font-weight:900;">0</span></h3>
       <div id="lobbyPlayers"></div>
@@ -63,12 +75,25 @@
   </div>
 </div>
 
-<script src="app.js?v=99"></script>
+<script src="app.js?v=130"></script>
 <script>
+  // LOGIK PAPARAN BUTANG HOS & QR CODE AUTOMATIK
   setInterval(() => {
     if (window.hostPhase && window.hostPhase !== 'waiting') {
       if(document.getElementById('hostStartBtn')) document.getElementById('hostStartBtn').style.display = 'none';
       if(document.getElementById('inGameControls')) document.getElementById('inGameControls').style.display = 'flex';
+    }
+    
+    // Jana QR Code secara automatik
+    const pin = localStorage.getItem("qlp_player_pin");
+    const qrImg = document.getElementById("qrImage");
+    const qrBox = document.getElementById("qrContainer");
+    
+    if (pin && pin !== "------" && qrImg.getAttribute("data-pin") !== pin) {
+      const participantUrl = window.location.href.split('host.html')[0] + 'index.html';
+      qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(participantUrl);
+      qrImg.setAttribute("data-pin", pin);
+      qrBox.style.display = "block";
     }
   }, 1000);
 </script>
