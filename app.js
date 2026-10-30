@@ -1,4 +1,4 @@
-/* QUIZ LIVE PPAPP - FULL LOGIC + PREMIUM UI + HOST SCORE ANIMATION (NO TICK ON BOX) */
+/* QUIZ LIVE PPAPP - FULL LOGIC + PREMIUM UI + IMAGE SUPPORT */
 (() => {
   "use strict";
 
@@ -6,44 +6,27 @@
   const POLL_INTERVAL_MS = 1500; 
   const $ = (id) => document.getElementById(id);
 
-  // --- SISTEM AUDIO ---
   const SOUNDS = { 
-    bgm_main: new Audio("bgm-lobby.mp3"), 
-    sfx_correct: new Audio("sfx-correct.mp3"), 
-    sfx_wrong: new Audio("sfx-wrong.mp3"),
-    sfx_reveal: new Audio("sfx-reveal.mp3"),
-    sfx_count: new Audio("sfx-count.mp3") 
+    bgm_main: new Audio("bgm-lobby.mp3"), sfx_correct: new Audio("sfx-correct.mp3"), 
+    sfx_wrong: new Audio("sfx-wrong.mp3"), sfx_reveal: new Audio("sfx-reveal.mp3"), sfx_count: new Audio("sfx-count.mp3") 
   };
-  SOUNDS.bgm_main.loop = true; 
-  SOUNDS.sfx_count.loop = true; 
+  SOUNDS.bgm_main.loop = true; SOUNDS.sfx_count.loop = true; 
   
   function playBGM() { if (SOUNDS.bgm_main.paused) { const p = SOUNDS.bgm_main.play(); if (p !== undefined) p.catch(() => {}); } }
   function stopBGM() { SOUNDS.bgm_main.pause(); SOUNDS.bgm_main.currentTime = 0; }
   function playSFX(key) { if (SOUNDS[key]) { SOUNDS[key].currentTime = 0; SOUNDS[key].play().catch(() => {}); } }
   function stopSFX(key) { if (SOUNDS[key]) { SOUNDS[key].pause(); SOUNDS[key].currentTime = 0; } }
   
-  document.body.addEventListener('click', () => { 
-    if (!window.audioUnlocked) { 
-      window.audioUnlocked = true; 
-      if (window.hostPhase === "waiting" || window.hostPhase === "active") playBGM(); 
-    } 
-  }, { capture: true });
+  document.body.addEventListener('click', () => { if (!window.audioUnlocked) { window.audioUnlocked = true; if (window.hostPhase === "waiting" || window.hostPhase === "active") playBGM(); } }, { capture: true });
 
   function animateValue(id, start, end, duration, onComplete) {
-    const obj = $(id);
-    if (!obj) return;
-    let startTimestamp = null;
+    const obj = $(id); if (!obj) return; let startTimestamp = null;
     const step = (timestamp) => {
       if (!startTimestamp) startTimestamp = timestamp;
       const progress = Math.min((timestamp - startTimestamp) / duration, 1);
       const ease = 1 - Math.pow(1 - progress, 4); 
       obj.textContent = Math.floor(ease * (end - start) + start);
-      if (progress < 1) {
-        window.requestAnimationFrame(step);
-      } else { 
-        obj.textContent = end; 
-        if (onComplete) onComplete(); 
-      }
+      if (progress < 1) { window.requestAnimationFrame(step); } else { obj.textContent = end; if (onComplete) onComplete(); }
     };
     window.requestAnimationFrame(step);
   }
@@ -102,13 +85,6 @@
       e.preventDefault(); const b = $("loginForm").querySelector("button"); b.textContent = "Menyemak...";
       try { const r = await apiPost({action:"adminLogin", email:$("loginEmail").value, password:$("loginPassword").value}); if(!r.success) throw new Error(r.message); storageSet("qlp_admin_name", r.name); storageSet("qlp_admin_email", r.email); storageSet("qlp_admin_role", r.role); location.reload(); } catch(e) { alert(e.message); b.textContent = "Masuk"; }
     });
-    if ($("registerForm")) $("registerForm").addEventListener("submit", async (e) => {
-      e.preventDefault(); const p = $("regPassword").value; 
-      if(!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/.test(p)) return alert("Kata laluan lemah!");
-      if(p !== $("regConfirmPassword").value) return alert("Sahkan tidak sepadan!");
-      const b = $("registerForm").querySelector("button"); b.textContent = "...";
-      try { const r = await apiPost({action:"adminRegister", name:$("regName").value, email:$("regEmail").value, password:p}); if(!r.success) throw new Error(r.message); alert("Berjaya! Sila log masuk."); window.switchAuth('login'); } catch(e) { alert(e.message); } finally { b.textContent = "Daftar"; }
-    });
     if ($("forgotForm")) $("forgotForm").addEventListener("submit", async (e) => { e.preventDefault(); try{ await apiPost({action:"adminForgot", email:$("forgotEmail").value}); alert("Kata laluan dihantar ke emel!"); window.switchAuth('login'); } catch(e) { alert(e.message); } });
     if ($("settingsForm")) $("settingsForm").addEventListener("submit", async (e) => {
       e.preventDefault(); const np = $("setMyPassword").value;
@@ -144,11 +120,25 @@
     if ($("apiUrl")) $("apiUrl").value = getApiUrl();
     if ($("saveApiBtn")) $("saveApiBtn").addEventListener("click", () => { storageSet("qlp_api_url", $("apiUrl").value.trim()); alert("Pautan API Sistem Berjaya Disimpan!"); });
     if ($("quizForm")) $("quizForm").addEventListener("submit", async (e) => { e.preventDefault(); const btn = $("quizForm").querySelector("button"); btn.disabled = true; btn.textContent="..."; try { await apiPost({ action: "createQuiz", title: $("quizTitle").value, description: $("quizDescription").value }); alert("Kuiz Dicipta!"); location.reload(); } catch(e) { btn.disabled = false; btn.textContent="Cipta"; } });
-    if ($("questionForm")) $("questionForm").addEventListener("submit", async (e) => { e.preventDefault(); const btn = $("questionForm").querySelector("button"); btn.disabled = true; btn.textContent="..."; try { await apiPost({ action: "addQuestion", quizId: $("questionQuiz").value, questionText: $("questionText").value, optionA: $("optionA").value, optionB: $("optionB").value, optionC: $("optionC").value, optionD: $("optionD").value, correctOption: $("correctOption").value, timeLimitSeconds: Number($("questionTime").value), points: $("doublePoints").checked ? 2000 : 1000 }); alert("Soalan Disimpan!"); $("questionForm").reset(); } catch(e) {} finally { btn.disabled = false; btn.textContent="Simpan"; } });
+    
+    // MENGHANTAR DATA GAMBAR BILA SOALAN DICIPTA
+    if ($("questionForm")) $("questionForm").addEventListener("submit", async (e) => { 
+      e.preventDefault(); const btn = $("questionForm").querySelector("button"); btn.disabled = true; btn.textContent="..."; 
+      try { 
+        await apiPost({ 
+          action: "addQuestion", quizId: $("questionQuiz").value, questionText: $("questionText").value, 
+          optionA: $("optionA").value, optionB: $("optionB").value, optionC: $("optionC").value, optionD: $("optionD").value, 
+          correctOption: $("correctOption").value, timeLimitSeconds: Number($("questionTime").value), 
+          points: $("doublePoints").checked ? 2000 : 1000,
+          imageUrl: $("questionImage") ? $("questionImage").value.trim() : "" // Ambil link gambar
+        }); 
+        alert("Soalan Disimpan!"); $("questionForm").reset(); 
+      } catch(e) {} finally { btn.disabled = false; btn.textContent="Simpan"; } 
+    });
+    
     if ($("createSessionBtn")) $("createSessionBtn").addEventListener("click", async () => { const qid = $("sessionQuiz").value; if(!qid) return alert("Sila Pilih Kuiz"); $("createSessionBtn").disabled = true; $("createSessionBtn").textContent = "Menjana..."; try { const r = await apiPost({action:"createSession", quizId:qid}); storageSet("qlp_session_id", r.sessionId); storageSet("qlp_host_token", r.hostToken); storageSet("qlp_player_pin", r.pin); window.location.href="host.html"; } catch(e) { $("createSessionBtn").disabled = false; $("createSessionBtn").textContent = "Jana PIN Permainan"; } });
   }
 
-  // ---------- PAPARAN HOS ----------
   function initLiveHost() {
     const lobby = $("lobbyPanel"), panel = $("hostLiveQuestionPanel"), control = $("hostControlPanel");
     if (!lobby && !panel) return;
@@ -196,15 +186,12 @@
           `).join("");
           panel.innerHTML = `<div style="text-align:center"><h2 style="font-size:36px; margin-bottom:30px;">🏆 TOP 5 LEADERBOARD 🏆</h2>${tops}</div>`; 
           
-          let animationDone = 0;
-          const totalTops = (res.leaderboard || []).length;
-          
+          let animationDone = 0; const totalTops = (res.leaderboard || []).length;
           if (totalTops > 0) {
             playSFX('sfx_count'); 
             (res.leaderboard || []).forEach((p, i) => {
               animateValue(`hostLdbAnim_${i}`, 0, p.score, 1500, () => {
-                animationDone++;
-                if (animationDone === totalTops) stopSFX('sfx_count');
+                animationDone++; if (animationDone === totalTops) stopSFX('sfx_count');
               });
             });
           }
@@ -212,21 +199,19 @@
         }
 
         const q = res.question; if (!q) return;
-
-        if (res.status === "revealing_answer") {
-          if (sfxPlayedForQ !== q.questionId) {
-            playSFX('sfx_reveal');
-            sfxPlayedForQ = q.questionId;
-          }
-        }
+        if (res.status === "revealing_answer") { if (sfxPlayedForQ !== q.questionId) { playSFX('sfx_reveal'); sfxPlayedForQ = q.questionId; } }
 
         const opts = [q.optionA, q.optionB, q.optionC, q.optionD];
         const votes = res.voteCounts || {A:0, B:0, C:0, D:0}; 
+        
+        // PAPARAN GAMBAR DI SKRIN HOS
+        const imgHtml = q.imageUrl ? `<img src="${escapeHtml(q.imageUrl)}" style="max-height:25vh; border-radius:15px; margin: 15px auto; display:block; box-shadow:0 10px 30px rgba(0,0,0,0.5); object-fit:contain;">` : '';
 
         panel.innerHTML = `
           <div style="text-align:center;margin-bottom:25px">
             <div style="font-size:14px;font-weight:900;letter-spacing:3px;color:#a5b4fc;text-transform:uppercase">SOALAN ${q.order} ${q.points > 1000 ? '🌟 MARKAH BERGANDA' : ''}</div>
             <h1 style="font-size:clamp(22px,3.5vw,40px);margin:14px 0;line-height:1.3;color:#ffffff">${escapeHtml(q.questionText)}</h1>
+            ${imgHtml}
             ${res.status === "active" ? `<div style="display:inline-block;padding:6px 20px;background:#1e293b;border-radius:30px;font-size:28px;font-weight:900;color:#ef4444;border:1px solid #334155;margin-top:6px">⏱ <span id="hostTimerDisplay">${q.timeLimitSeconds}</span>s</div>` : ''}
           </div>
           <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;padding:10px;">
@@ -234,8 +219,6 @@
               const isDim = (res.status === "revealing_answer" && item.option !== q.correctOption); 
               const vCount = votes[item.option] || 0;
               const voteBadge = res.status === "revealing_answer" ? `<div style="position:absolute; top:-15px; left:-15px; background:#f8fafc; color:#0f172a; padding:6px 16px; border-radius:30px; font-size:18px; font-weight:900; box-shadow:0 4px 10px rgba(0,0,0,0.5); z-index:10; display:flex; align-items:center; gap:6px;">👤 ${vCount}</div>` : '';
-              
-              // IKON TICK ✅ DIBUANG DARI BLOK INI
               return `
                 <div style="position:relative; opacity:${isDim ? '0.35' : '1'}; min-height:120px; display:flex; align-items:center; gap:16px; padding:20px 20px 20px 40px; border-radius:18px; background:${item.color}; color:${item.textColor}; font-size:clamp(18px,2vw,24px); font-weight:800; box-sizing:border-box; transition: opacity 0.3s ease;">
                   ${voteBadge}
@@ -261,7 +244,6 @@
     pollHost(); window.setInterval(pollHost, POLL_INTERVAL_MS);
   }
 
-  // ---------- LIVE PARTICIPANT ----------
   function initLiveParticipant() {
     if (!$("waitingRoom") && !$("joinBtn")) return;
     let polling = false, currentRenderKey = "", playerTimerInt = null, sfxPlayedForQ = ""; 
@@ -291,7 +273,6 @@
           const answeredState = localStorage.getItem("qlp_last_isCorrect"); 
           const earned = parseInt(localStorage.getItem("qlp_last_earned") || "0");
           const totalScore = parseInt(localStorage.getItem("qlp_last_score") || "0");
-          const prevScore = Math.max(0, totalScore - earned);
           
           let isCorrect = (answeredState === "true"); 
           let message = (answeredState === null) ? "Masa Tamat" : (isCorrect ? "Tepat!" : "Salah");
@@ -324,7 +305,16 @@
         const q = res.question; if (!q) return;
         const startTime = Date.now();
         
-        panel.innerHTML = `<div style="text-align:center;margin-bottom:20px"><h2 style="font-size:clamp(19px,5vw,26px);margin:0">${q.points > 1000 ? '🌟 MARKAH BERGANDA' : 'Pilih Jawapan'}</h2><div style="font-size:30px; font-weight:900; color:#ef4444; margin:10px 0;">⏱ <span id="playerTimerDisplay">${q.timeLimitSeconds}</span></div></div><div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;flex:1;align-content:center">${ANSWER_COLORS.map(item => `<button type="button" data-option="${item.option}" style="min-height:clamp(120px,25vh,200px);border:0;border-radius:22px;background:${item.color};color:${item.textColor};font-size:clamp(46px,12vw,76px);font-weight:900;cursor:pointer;box-shadow:0 8px 0 rgba(0,0,0,0.15);">${item.shape}</button>`).join("")}</div><p id="playerAnswerStatus" style="text-align:center;font-weight:800;font-size:16px;margin:20px 0 0;color:#94a3b8">Menunggu jawapan anda...</p>`;
+        // PAPARAN GAMBAR KECIL DI SKRIN PESERTA
+        const imgHtml = q.imageUrl ? `<img src="${escapeHtml(q.imageUrl)}" style="max-height:12vh; border-radius:10px; margin: 5px auto; display:block; object-fit:contain;">` : '';
+
+        panel.innerHTML = `
+          <div style="text-align:center;margin-bottom:20px">
+            <h2 style="font-size:clamp(19px,5vw,26px);margin:0">${q.points > 1000 ? '🌟 MARKAH BERGANDA' : 'Pilih Jawapan'}</h2>
+            ${imgHtml}
+            <div style="font-size:30px; font-weight:900; color:#ef4444; margin:5px 0;">⏱ <span id="playerTimerDisplay">${q.timeLimitSeconds}</span></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;flex:1;align-content:center">${ANSWER_COLORS.map(item => `<button type="button" data-option="${item.option}" style="min-height:clamp(120px,25vh,200px);border:0;border-radius:22px;background:${item.color};color:${item.textColor};font-size:clamp(46px,12vw,76px);font-weight:900;cursor:pointer;box-shadow:0 8px 0 rgba(0,0,0,0.15);">${item.shape}</button>`).join("")}</div><p id="playerAnswerStatus" style="text-align:center;font-weight:800;font-size:16px;margin:20px 0 0;color:#94a3b8">Menunggu jawapan anda...</p>`;
           
         const btns = [...panel.querySelectorAll("button")]; let playerTimeLeft = q.timeLimitSeconds;
         
