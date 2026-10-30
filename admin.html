@@ -70,7 +70,6 @@
       <div class="form-group"><label>Kata Laluan</label><input type="password" id="loginPassword" required></div>
       <button type="submit" class="btn-primary">Masuk</button>
     </form>
-    <!-- Hanya Lupa Kata Laluan sahaja dipaparkan -->
     <div class="auth-links"><a onclick="switchAuth('forgot')">Lupa Kata Laluan</a></div>
   </div>
 
@@ -83,18 +82,49 @@
 
 <div id="view-papanPemuka" class="dashboard-view">
   <div class="grid-layout">
-    <div class="card"><h3>1. Cipta Sesi Live (PIN)</h3><div class="form-group"><label>Pilih Kuiz</label><select id="sessionQuiz"></select></div><button id="createSessionBtn" class="btn-primary" style="background:#10b981;">Jana PIN Permainan</button></div>
-    <div class="card"><h3>2. Cipta Kuiz Baharu</h3><form id="quizForm"><div class="form-group"><label>Tajuk Kuiz</label><input type="text" id="quizTitle" required></div><button type="submit" class="btn-primary">Cipta</button></form></div>
-    <div class="card"><h3>3. Tambah Soalan</h3><form id="questionForm">
-      <div class="form-group"><label>Pilih Kuiz</label><select id="questionQuiz" required></select></div>
-  <div class="form-group"><label>Soalan</label><input type="text" id="questionText" required></div>
-  <!-- RUANGAN BARU UNTUK GAMBAR -->
-  <div class="form-group"><label>URL Gambar (Pilihan)</label><input type="url" id="questionImage" placeholder="https://contoh.com/gambar.jpg"></div>
-  
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><div class="form-group"><label>A</label><input type="text" id="optionA" required></div><div class="form-group"><label>B</label><input type="text" id="optionB" required></div><div class="form-group"><label>C</label><input type="text" id="optionC" required></div><div class="form-group"><label>D</label><input type="text" id="optionD" required></div></div>
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><div class="form-group"><label>Jawapan</label><select id="correctOption"><option>A</option><option>B</option><option>C</option><option>D</option></select></div><div class="form-group"><label>Masa (s)</label><input type="number" id="questionTime" value="20" required></div></div>
-  <div class="form-group"><input type="checkbox" id="doublePoints"> Markah Berganda</div><button type="submit" class="btn-primary">Simpan</button>
-    </form></div>
+    
+    <div class="card">
+      <h3>1. Cipta Sesi Live (PIN)</h3>
+      <div class="form-group"><label>Pilih Kuiz</label><select id="sessionQuiz"></select></div>
+      <button id="createSessionBtn" class="btn-primary" style="background:#10b981;">Jana PIN Permainan</button>
+    </div>
+    
+    <div class="card">
+      <h3>2. Cipta Kuiz Baharu</h3>
+      <form id="quizForm">
+        <div class="form-group"><label>Tajuk Kuiz</label><input type="text" id="quizTitle" required></div>
+        <div class="form-group"><label>Penerangan (Pilihan)</label><input type="text" id="quizDescription" placeholder="Contoh: Kuiz Sejarah"></div>
+        <button type="submit" class="btn-primary">Cipta</button>
+      </form>
+    </div>
+    
+    <div class="card">
+      <h3>3. Tambah Soalan</h3>
+      <form id="questionForm">
+        <div class="form-group"><label>Pilih Kuiz</label><select id="questionQuiz" required></select></div>
+        <div class="form-group"><label>Soalan</label><input type="text" id="questionText" required></div>
+        <div class="form-group"><label>URL Gambar (Pilihan)</label><input type="url" id="questionImage" placeholder="https://contoh.com/gambar.jpg"></div>
+        
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group"><label>A</label><input type="text" id="optionA" required></div>
+          <div class="form-group"><label>B</label><input type="text" id="optionB" required></div>
+          <div class="form-group"><label>C</label><input type="text" id="optionC" required></div>
+          <div class="form-group"><label>D</label><input type="text" id="optionD" required></div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div class="form-group">
+            <label>Jawapan</label>
+            <select id="correctOption"><option>A</option><option>B</option><option>C</option><option>D</option></select>
+          </div>
+          <div class="form-group">
+            <label>Masa (s)</label><input type="number" id="questionTime" value="20" required>
+          </div>
+        </div>
+        <div class="form-group"><input type="checkbox" id="doublePoints"> Markah Berganda</div>
+        <button type="submit" class="btn-primary">Simpan</button>
+      </form>
+    </div>
+
   </div>
 </div>
 
@@ -149,6 +179,6 @@
   function switchAuth(type) { ['login','forgot'].forEach(t => document.getElementById(t+'Card').style.display='none'); document.getElementById(type+'Card').style.display='block'; }
   function switchTab(viewId) { document.querySelectorAll('.dashboard-view').forEach(v => v.style.display='none'); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('view-'+viewId).style.display='block'; event.currentTarget.classList.add('active'); if(viewId==='history') loadHistory(); if(viewId==='master') loadAdmins(); }
 </script>
-<script src="app.js?v=100"></script>
+<script src="app.js?v=115"></script>
 </body>
 </html>
