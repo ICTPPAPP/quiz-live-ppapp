@@ -1,4 +1,4 @@
-/* QUIZ LIVE PPAPP - FULL LOGIC + PREMIUM UI + IMAGE + PODIUM ANIMATION */
+/* QUIZ LIVE PPAPP - FULL LOGIC + PREMIUM UI + IMAGE + PODIUM WITH LOBBY BGM */
 (() => {
   "use strict";
 
@@ -6,11 +6,11 @@
   const POLL_INTERVAL_MS = 1500; 
   const $ = (id) => document.getElementById(id);
 
-  // TAMBAH BUNYI PODIUM DI SINI
+  // Buang sfx-podium, kekalkan bunyi sedia ada
   const SOUNDS = { 
     bgm_main: new Audio("bgm-lobby.mp3"), sfx_correct: new Audio("sfx-correct.mp3"), 
     sfx_wrong: new Audio("sfx-wrong.mp3"), sfx_reveal: new Audio("sfx-reveal.mp3"), 
-    sfx_count: new Audio("sfx-count.mp3"), sfx_podium: new Audio("sfx-podium.mp3") 
+    sfx_count: new Audio("sfx-count.mp3")
   };
   SOUNDS.bgm_main.loop = true; SOUNDS.sfx_count.loop = true; 
   
@@ -19,7 +19,8 @@
   function playSFX(key) { if (SOUNDS[key]) { SOUNDS[key].currentTime = 0; SOUNDS[key].play().catch(() => {}); } }
   function stopSFX(key) { if (SOUNDS[key]) { SOUNDS[key].pause(); SOUNDS[key].currentTime = 0; } }
   
-  document.body.addEventListener('click', () => { if (!window.audioUnlocked) { window.audioUnlocked = true; if (window.hostPhase === "waiting" || window.hostPhase === "active") playBGM(); } }, { capture: true });
+  // Pastikan BGM boleh mula di Lobi, Soalan (Active), dan Podium (Completed)
+  document.body.addEventListener('click', () => { if (!window.audioUnlocked) { window.audioUnlocked = true; if (window.hostPhase === "waiting" || window.hostPhase === "active" || window.hostPhase === "completed") playBGM(); } }, { capture: true });
 
   function animateValue(id, start, end, duration, onComplete) {
     const obj = $(id); if (!obj) return; let startTimestamp = null;
@@ -68,7 +69,6 @@
   }
 
   function initAdminLogic() {
-    // Logik admin kekal sama seperti sebelum ini...
     if (!$("authSection")) return; const myName = storageGet("qlp_admin_name"), myEmail = storageGet("qlp_admin_email"), myRole = storageGet("qlp_admin_role");
     if (myName) { $("authSection").style.display = "none"; $("adminProfile").style.display = "flex"; $("adminNav").style.display = "flex"; $("adminNameDisplay").textContent = myName; $("adminAvatar").textContent = myName.charAt(0).toUpperCase(); $("view-papanPemuka").style.display = "block"; $("setMyName").value = myName; $("setMyEmail").value = myEmail; if (myRole === "master" && $("masterNavBtn")) $("masterNavBtn").style.display = "inline-block"; }
     if ($("logoutBtn")) $("logoutBtn").addEventListener("click", () => { localStorage.clear(); location.reload(); });
@@ -99,7 +99,6 @@
     const startBtn = $("hostStartBtn");
     if (startBtn) startBtn.addEventListener("click", async () => { startBtn.disabled = true; startBtn.textContent = "MEMULAKAN..."; try { await apiPost({ action: "startSession", sessionId: storageGet("qlp_session_id"), hostToken: storageGet("qlp_host_token") }); } catch(e) { startBtn.disabled = false; startBtn.textContent = "▶ MULA KUIZ SEKARANG"; } });
 
-    // FUNGSI UNTUK TUKAR PANDANGAN PENUH
     window.tunjukLeaderboardPenuh = () => { window.hostCompletedView = "full"; };
 
     async function pollHost() {
@@ -120,14 +119,15 @@
         if (lobby) lobby.style.display = "none"; if (panel) panel.style.display = "block"; if (control) control.style.display = "flex";
 
         if (res.status === "completed") {
-          if (control) control.style.display = "none"; clearInterval(hostTimerInt); stopBGM();
+          if (control) control.style.display = "none"; clearInterval(hostTimerInt); 
+          
+          // PLAY BGM UNTUK PODIUM (BUKAN SFX)
+          playBGM();
           
           if (!window.hostCompletedView) window.hostCompletedView = "podium";
           const ap = res.fullLeaderboard || [];
 
           if (window.hostCompletedView === "podium") {
-            if (!window.podiumSfxPlayed) { playSFX('sfx_podium'); window.podiumSfxPlayed = true; }
-            
             const p1 = ap[0] || {name:"-", score:0};
             const p2 = ap[1] || {name:"-", score:0};
             const p3 = ap[2] || {name:"-", score:0};
