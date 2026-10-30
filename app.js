@@ -1,4 +1,4 @@
-/* QUIZ LIVE PPAPP - FULL LOGIC + PREMIUM UI + IMAGE + PODIUM WITH LOBBY BGM */
+/* QUIZ LIVE PPAPP - FULL LOGIC + PREMIUM UI + IMAGE + PODIUM FIX */
 (() => {
   "use strict";
 
@@ -6,7 +6,6 @@
   const POLL_INTERVAL_MS = 1500; 
   const $ = (id) => document.getElementById(id);
 
-  // Buang sfx-podium, kekalkan bunyi sedia ada
   const SOUNDS = { 
     bgm_main: new Audio("bgm-lobby.mp3"), sfx_correct: new Audio("sfx-correct.mp3"), 
     sfx_wrong: new Audio("sfx-wrong.mp3"), sfx_reveal: new Audio("sfx-reveal.mp3"), 
@@ -19,7 +18,6 @@
   function playSFX(key) { if (SOUNDS[key]) { SOUNDS[key].currentTime = 0; SOUNDS[key].play().catch(() => {}); } }
   function stopSFX(key) { if (SOUNDS[key]) { SOUNDS[key].pause(); SOUNDS[key].currentTime = 0; } }
   
-  // Pastikan BGM boleh mula di Lobi, Soalan (Active), dan Podium (Completed)
   document.body.addEventListener('click', () => { if (!window.audioUnlocked) { window.audioUnlocked = true; if (window.hostPhase === "waiting" || window.hostPhase === "active" || window.hostPhase === "completed") playBGM(); } }, { capture: true });
 
   function animateValue(id, start, end, duration, onComplete) {
@@ -99,7 +97,10 @@
     const startBtn = $("hostStartBtn");
     if (startBtn) startBtn.addEventListener("click", async () => { startBtn.disabled = true; startBtn.textContent = "MEMULAKAN..."; try { await apiPost({ action: "startSession", sessionId: storageGet("qlp_session_id"), hostToken: storageGet("qlp_host_token") }); } catch(e) { startBtn.disabled = false; startBtn.textContent = "▶ MULA KUIZ SEKARANG"; } });
 
-    window.tunjukLeaderboardPenuh = () => { window.hostCompletedView = "full"; };
+    window.tunjukLeaderboardPenuh = () => { 
+      window.hostCompletedView = "full"; 
+      currentRenderKey = ""; // Paksa sistem bina semula paparan tanpa menunggu
+    };
 
     async function pollHost() {
       if (polling) return;
@@ -118,10 +119,14 @@
         
         if (lobby) lobby.style.display = "none"; if (panel) panel.style.display = "block"; if (control) control.style.display = "flex";
 
+        // KUNCI RENDER DIPINDAHKAN KE SINI SUPAYA KUIZ TAMAT TIDAK BERULANG KALI DILUKIS
+        const newKey = res.status + "_" + (res.question ? res.question.questionId : "0") + "_" + (window.hostCompletedView || "podium");
+        if (currentRenderKey === newKey) return; 
+        currentRenderKey = newKey; clearInterval(hostTimerInt); currentPhase = res.status;
+
         if (res.status === "completed") {
-          if (control) control.style.display = "none"; clearInterval(hostTimerInt); 
+          if (control) control.style.display = "none"; 
           
-          // PLAY BGM UNTUK PODIUM (BUKAN SFX)
           playBGM();
           
           if (!window.hostCompletedView) window.hostCompletedView = "podium";
@@ -170,9 +175,6 @@
           return;
         }
 
-        const newKey = res.status + "_" + (res.question ? res.question.questionId : "0");
-        if (currentRenderKey === newKey) return; 
-        currentRenderKey = newKey; clearInterval(hostTimerInt); currentPhase = res.status;
         if (res.status === "active") { playBGM(); } else { stopBGM(); }
 
         if (res.status === "leaderboard") {
