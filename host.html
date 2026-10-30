@@ -74,11 +74,11 @@
   <button id="hostStartBtn" class="btn-primary" style="margin: 0 auto; display: block; background: #10b981;">▶ MULA KUIZ SEKARANG</button>
   <div style="display:none; width: 100%; justify-content: space-between; align-items: center;" id="inGameControls">
     <button id="nextQuestionBtn" class="btn-primary">➡ SETERUSNYA</button>
-    <button onclick="if(confirm('Tamatkan kuiz sekarang?')) { apiPost({action:'endQuiz', sessionId: storageGet('qlp_session_id'), hostToken: storageGet('qlp_host_token')}) }" class="btn-danger">Tamatkan Kuiz</button>
+    <button id="endQuizBtn" class="btn-danger">Tamatkan Kuiz</button>
   </div>
 </div>
 
-<script src="app.js?v=135"></script>
+<script src="app.js?v=140"></script>
 <script>
   setInterval(() => {
     if (window.hostPhase && window.hostPhase !== 'waiting') {
