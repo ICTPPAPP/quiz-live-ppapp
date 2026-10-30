@@ -98,18 +98,27 @@
       </form>
     </div>
     
+    <!-- KAD 3: TAMBAH SOALAN (ALIRAN KERJA BAHARU) -->
     <div class="card">
       <h3>3. Tambah Soalan</h3>
-      <!-- onsubmit akan menyembunyikan semula form selepas berjaya dihantar -->
-      <form id="questionForm" onsubmit="setTimeout(() => { document.getElementById('questionDetails').style.display='none'; }, 500);">
-        
+      
+      <!-- PAGE 1: PILIH KUIZ TERLEBIH DAHULU -->
+      <div id="setupKuizArea">
         <div class="form-group">
-          <label>Pilih Kuiz Terlebih Dahulu</label>
-          <select id="questionQuiz" required onchange="document.getElementById('questionDetails').style.display = this.value ? 'block' : 'none';"></select>
+          <label>Pilih Kuiz Anda</label>
+          <select id="questionQuiz"></select> <!-- Populated by app.js -->
         </div>
-        
-        <!-- BAHAGIAN INI TERSEMBUNYI SEHINGGA KUIZ DIPILIH -->
-        <div id="questionDetails" style="display:none; margin-top:20px; padding-top:20px; border-top:1px dashed #334155;">
+        <button type="button" class="btn-primary" onclick="bukaPageSoalan()" style="background:#8b5cf6;">Mula Tambah Soalan ➡</button>
+      </div>
+
+      <!-- PAGE 2: BILIK TAMBAH SOALAN (MUNCUL SELEPAS PILIH) -->
+      <div id="borangSoalanArea" style="display:none;">
+        <div style="background:#0b1120; padding:15px; border-radius:10px; border:1px solid #334155; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+          <div>📝 Menambah ke: <strong id="namaKuizAktif" style="color:#3b82f6;">-</strong></div>
+          <button type="button" onclick="tutupPageSoalan()" style="background:transparent; border:1px solid #ef4444; color:#ef4444; padding:5px 15px; border-radius:20px; cursor:pointer; font-size:12px; font-weight:bold;">Tukar Kuiz</button>
+        </div>
+
+        <form id="questionForm">
           <div class="form-group"><label>Soalan</label><input type="text" id="questionText" required></div>
           <div class="form-group"><label>URL Gambar (Pilihan)</label><input type="url" id="questionImage" placeholder="https://contoh.com/gambar.jpg"></div>
           
@@ -130,17 +139,17 @@
             </div>
           </div>
           
-          <!-- PEMBETULAN KEDUDUKAN CHECKBOX MARKAH BERGANDA (Guna Flexbox) -->
-          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; background: #0b1120; padding: 12px; border-radius: 10px; border: 1px solid #334155;">
+          <!-- KOTAK TICK MARKAH BERGANDA (DIBETULKAN ALIGNMENT) -->
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; background: #1e293b; padding: 12px; border-radius: 10px; border: 1px solid #334155;">
             <input type="checkbox" id="doublePoints" style="width: 20px; height: 20px; margin: 0; cursor: pointer;">
             <label for="doublePoints" style="margin: 0; cursor: pointer; color: #f8fafc; font-size: 14px; font-weight: 600;">✨ Markah Berganda untuk Soalan Ini</label>
           </div>
           
           <button type="submit" class="btn-primary">Simpan Soalan</button>
-        </div>
-      </form>
-    </div>
+        </form>
+      </div>
 
+    </div>
   </div>
 </div>
 
@@ -194,8 +203,22 @@
 <script>
   function switchAuth(type) { ['login','forgot'].forEach(t => document.getElementById(t+'Card').style.display='none'); document.getElementById(type+'Card').style.display='block'; }
   function switchTab(viewId) { document.querySelectorAll('.dashboard-view').forEach(v => v.style.display='none'); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('view-'+viewId).style.display='block'; event.currentTarget.classList.add('active'); if(viewId==='history') loadHistory(); if(viewId==='master') loadAdmins(); }
-  
-  // SCRIPT: Pastikan "Pilih Kuiz" ada ruang kosong (placeholder) supaya admin wajib klik
+
+  // FUNGSI NAVIGASI PAGE TAMBAH SOALAN
+  function bukaPageSoalan() {
+    const q = document.getElementById("questionQuiz");
+    if(!q.value) return alert("Sila pilih kuiz terlebih dahulu!");
+    document.getElementById("namaKuizAktif").textContent = q.options[q.selectedIndex].text;
+    document.getElementById("setupKuizArea").style.display = "none";
+    document.getElementById("borangSoalanArea").style.display = "block";
+  }
+
+  function tutupPageSoalan() {
+    document.getElementById("setupKuizArea").style.display = "block";
+    document.getElementById("borangSoalanArea").style.display = "none";
+  }
+
+  // FUNGSI PLACEHOLDER DEFAULT KUIZ
   document.addEventListener("DOMContentLoaded", () => {
      const qq = document.getElementById("questionQuiz");
      const observer = new MutationObserver(() => {
@@ -206,12 +229,11 @@
            opt.disabled = true;
            opt.selected = true;
            qq.insertBefore(opt, qq.firstChild);
-           document.getElementById("questionDetails").style.display = "none";
         }
      });
      observer.observe(qq, { childList: true });
   });
 </script>
-<script src="app.js?v=120"></script>
+<script src="app.js?v=125"></script>
 </body>
 </html>
