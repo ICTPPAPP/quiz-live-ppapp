@@ -1,4 +1,4 @@
-/* QUIZ LIVE PPAPP - FULL LOGIC + PREMIUM UI + IMAGE + PODIUM FIX */
+/* QUIZ LIVE PPAPP - FINAL FIX: IMAGE + PODIUM END + HISTORY */
 (() => {
   "use strict";
 
@@ -94,12 +94,28 @@
     let polling = false, currentRenderKey = "", hostTimerInt = null, currentPhase = "", sfxPlayedForQ = "";
     
     if ($("lobbyPin")) $("lobbyPin").textContent = storageGet("qlp_player_pin") || "------";
+    
     const startBtn = $("hostStartBtn");
     if (startBtn) startBtn.addEventListener("click", async () => { startBtn.disabled = true; startBtn.textContent = "MEMULAKAN..."; try { await apiPost({ action: "startSession", sessionId: storageGet("qlp_session_id"), hostToken: storageGet("qlp_host_token") }); } catch(e) { startBtn.disabled = false; startBtn.textContent = "▶ MULA KUIZ SEKARANG"; } });
 
+    // FUNGSI BUTANG TAMAT KUIZ (DIPERBAIKI)
+    const endQuizBtn = $("endQuizBtn");
+    if (endQuizBtn) {
+      endQuizBtn.addEventListener("click", async () => {
+        if(confirm('Adakah anda pasti untuk tamatkan kuiz sekarang?')) {
+          endQuizBtn.disabled = true; endQuizBtn.textContent = "Menamatkan...";
+          try {
+            await apiPost({ action: "endQuiz", sessionId: storageGet("qlp_session_id"), hostToken: storageGet("qlp_host_token") });
+          } catch(e) {
+            endQuizBtn.disabled = false; endQuizBtn.textContent = "Tamatkan Kuiz";
+          }
+        }
+      });
+    }
+
     window.tunjukLeaderboardPenuh = () => { 
       window.hostCompletedView = "full"; 
-      currentRenderKey = ""; // Paksa sistem bina semula paparan tanpa menunggu
+      currentRenderKey = ""; 
     };
 
     async function pollHost() {
@@ -119,14 +135,12 @@
         
         if (lobby) lobby.style.display = "none"; if (panel) panel.style.display = "block"; if (control) control.style.display = "flex";
 
-        // KUNCI RENDER DIPINDAHKAN KE SINI SUPAYA KUIZ TAMAT TIDAK BERULANG KALI DILUKIS
         const newKey = res.status + "_" + (res.question ? res.question.questionId : "0") + "_" + (window.hostCompletedView || "podium");
         if (currentRenderKey === newKey) return; 
         currentRenderKey = newKey; clearInterval(hostTimerInt); currentPhase = res.status;
 
         if (res.status === "completed") {
           if (control) control.style.display = "none"; 
-          
           playBGM();
           
           if (!window.hostCompletedView) window.hostCompletedView = "podium";
