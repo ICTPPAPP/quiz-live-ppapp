@@ -7,10 +7,8 @@
 <style>
   * { box-sizing: border-box; }
   body { margin: 0; min-height: 100vh; background: #0f172a; color: white; font-family: 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column; }
-  
   header { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; background: #0b1120; }
   .brand { font-size: 24px; font-weight: 900; letter-spacing: 1px; } .brand span { color: #3b82f6; }
-  
   .header-right { display: flex; align-items: center; gap: 15px; }
   .participant-link { background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; color: #3b82f6; padding: 8px 16px; border-radius: 30px; font-size: 13px; font-weight: 700; text-decoration: none; transition: all 0.3s ease; display: flex; align-items: center; gap: 6px; }
   .participant-link:hover { background: #3b82f6; color: white; box-shadow: 0 0 12px rgba(59, 130, 246, 0.5); transform: translateY(-2px); }
@@ -46,13 +44,7 @@
 
 <header>
   <div class="brand">QUIZ LIVE <span>PPAPP</span></div>
-  <div class="header-right">
-    <a href="index.html" class="participant-link">🎮 Ke Halaman Peserta</a>
-    <div class="admin-profile" id="adminProfile">
-      <div class="avatar" id="adminAvatar">A</div>
-      <div><span id="adminNameDisplay">Admin</span> <a class="logout-btn" id="logoutBtn">Keluar</a></div>
-    </div>
-  </div>
+  <div class="header-right"><a href="index.html" class="participant-link">🎮 Ke Halaman Peserta</a><div class="admin-profile" id="adminProfile"><div class="avatar" id="adminAvatar">A</div><div><span id="adminNameDisplay">Admin</span> <a class="logout-btn" id="logoutBtn">Keluar</a></div></div></div>
 </header>
 
 <div class="admin-nav" id="adminNav">
@@ -63,21 +55,8 @@
 </div>
 
 <div id="authSection">
-  <div class="auth-card" id="loginCard">
-    <h2 style="text-align:center;margin-top:0;">Log Masuk</h2>
-    <form id="loginForm">
-      <div class="form-group"><label>Emel</label><input type="email" id="loginEmail" required></div>
-      <div class="form-group"><label>Kata Laluan</label><input type="password" id="loginPassword" required></div>
-      <button type="submit" class="btn-primary">Masuk</button>
-    </form>
-    <div class="auth-links"><a onclick="switchAuth('forgot')">Lupa Kata Laluan</a></div>
-  </div>
-
-  <div class="auth-card" id="forgotCard" style="display:none;">
-    <h2 style="text-align:center;margin-top:0;">Lupa Kata Laluan</h2>
-    <form id="forgotForm"><div class="form-group"><label>Emel Anda</label><input type="email" id="forgotEmail" required></div><button type="submit" class="btn-primary">Hantar</button></form>
-    <div class="auth-links"><a onclick="switchAuth('login')">← Ke Log Masuk</a></div>
-  </div>
+  <div class="auth-card" id="loginCard"><h2 style="text-align:center;margin-top:0;">Log Masuk</h2><form id="loginForm"><div class="form-group"><label>Emel</label><input type="email" id="loginEmail" required></div><div class="form-group"><label>Kata Laluan</label><input type="password" id="loginPassword" required></div><button type="submit" class="btn-primary">Masuk</button></form><div class="auth-links"><a onclick="switchAuth('forgot')">Lupa Kata Laluan</a></div></div>
+  <div class="auth-card" id="forgotCard" style="display:none;"><h2 style="text-align:center;margin-top:0;">Lupa Kata Laluan</h2><form id="forgotForm"><div class="form-group"><label>Emel Anda</label><input type="email" id="forgotEmail" required></div><button type="submit" class="btn-primary">Hantar</button></form><div class="auth-links"><a onclick="switchAuth('login')">← Ke Log Masuk</a></div></div>
 </div>
 
 <div id="view-papanPemuka" class="dashboard-view">
@@ -91,149 +70,122 @@
     
     <div class="card">
       <h3>2. Cipta Kuiz Baharu</h3>
-      <form id="quizForm">
-        <div class="form-group"><label>Tajuk Kuiz</label><input type="text" id="quizTitle" required></div>
-        <div class="form-group"><label>Penerangan (Pilihan)</label><input type="text" id="quizDescription" placeholder="Contoh: Kuiz Sejarah"></div>
-        <button type="submit" class="btn-primary">Cipta</button>
-      </form>
+      <form id="quizForm"><div class="form-group"><label>Tajuk Kuiz</label><input type="text" id="quizTitle" required></div><div class="form-group"><label>Penerangan (Pilihan)</label><input type="text" id="quizDescription" placeholder="Contoh: Kuiz Sejarah"></div><button type="submit" class="btn-primary">Cipta</button></form>
     </div>
     
-    <!-- KAD 3: TAMBAH SOALAN (ALIRAN KERJA BAHARU) -->
     <div class="card">
       <h3>3. Tambah Soalan</h3>
-      
-      <!-- PAGE 1: PILIH KUIZ TERLEBIH DAHULU -->
-      <div id="setupKuizArea">
-        <div class="form-group">
-          <label>Pilih Kuiz Anda</label>
-          <select id="questionQuiz"></select> <!-- Populated by app.js -->
-        </div>
-        <button type="button" class="btn-primary" onclick="bukaPageSoalan()" style="background:#8b5cf6;">Mula Tambah Soalan ➡</button>
-      </div>
-
-      <!-- PAGE 2: BILIK TAMBAH SOALAN (MUNCUL SELEPAS PILIH) -->
+      <div id="setupKuizArea"><div class="form-group"><label>Pilih Kuiz Anda</label><select id="questionQuiz"></select></div><button type="button" class="btn-primary" onclick="bukaPageSoalan()" style="background:#8b5cf6;">Mula Tambah Soalan ➡</button></div>
       <div id="borangSoalanArea" style="display:none;">
-        <div style="background:#0b1120; padding:15px; border-radius:10px; border:1px solid #334155; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
-          <div>📝 Menambah ke: <strong id="namaKuizAktif" style="color:#3b82f6;">-</strong></div>
-          <button type="button" onclick="tutupPageSoalan()" style="background:transparent; border:1px solid #ef4444; color:#ef4444; padding:5px 15px; border-radius:20px; cursor:pointer; font-size:12px; font-weight:bold;">Tukar Kuiz</button>
-        </div>
-
+        <div style="background:#0b1120; padding:15px; border-radius:10px; border:1px solid #334155; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;"><div>📝 Menambah ke: <strong id="namaKuizAktif" style="color:#3b82f6;">-</strong></div><button type="button" onclick="tutupPageSoalan()" style="background:transparent; border:1px solid #ef4444; color:#ef4444; padding:5px 15px; border-radius:20px; cursor:pointer; font-size:12px; font-weight:bold;">Tukar Kuiz</button></div>
         <form id="questionForm">
           <div class="form-group"><label>Soalan</label><input type="text" id="questionText" required></div>
           <div class="form-group"><label>URL Gambar (Pilihan)</label><input type="url" id="questionImage" placeholder="https://contoh.com/gambar.jpg"></div>
-          
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <div class="form-group"><label>A</label><input type="text" id="optionA" required></div>
-            <div class="form-group"><label>B</label><input type="text" id="optionB" required></div>
-            <div class="form-group"><label>C</label><input type="text" id="optionC" required></div>
-            <div class="form-group"><label>D</label><input type="text" id="optionD" required></div>
-          </div>
-          
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-            <div class="form-group">
-              <label>Jawapan Betul</label>
-              <select id="correctOption"><option>A</option><option>B</option><option>C</option><option>D</option></select>
-            </div>
-            <div class="form-group">
-              <label>Masa (s)</label><input type="number" id="questionTime" value="20" required>
-            </div>
-          </div>
-          
-          <!-- KOTAK TICK MARKAH BERGANDA (DIBETULKAN ALIGNMENT) -->
-          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; background: #1e293b; padding: 12px; border-radius: 10px; border: 1px solid #334155;">
-            <input type="checkbox" id="doublePoints" style="width: 20px; height: 20px; margin: 0; cursor: pointer;">
-            <label for="doublePoints" style="margin: 0; cursor: pointer; color: #f8fafc; font-size: 14px; font-weight: 600;">✨ Markah Berganda untuk Soalan Ini</label>
-          </div>
-          
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><div class="form-group"><label>A</label><input type="text" id="optionA" required></div><div class="form-group"><label>B</label><input type="text" id="optionB" required></div><div class="form-group"><label>C</label><input type="text" id="optionC" required></div><div class="form-group"><label>D</label><input type="text" id="optionD" required></div></div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><div class="form-group"><label>Jawapan Betul</label><select id="correctOption"><option>A</option><option>B</option><option>C</option><option>D</option></select></div><div class="form-group"><label>Masa (s)</label><input type="number" id="questionTime" value="20" required></div></div>
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; background: #1e293b; padding: 12px; border-radius: 10px; border: 1px solid #334155;"><input type="checkbox" id="doublePoints" style="width: 20px; height: 20px; margin: 0; cursor: pointer;"><label for="doublePoints" style="margin: 0; cursor: pointer; color: #f8fafc; font-size: 14px; font-weight: 600;">✨ Markah Berganda</label></div>
           <button type="submit" class="btn-primary">Simpan Soalan</button>
         </form>
       </div>
-
     </div>
+
+    <!-- KAD 4: URUS & EDIT SOALAN SEDIA ADA -->
+    <div class="card" style="grid-column: 1 / -1; border-color: #8b5cf6;">
+      <h3 style="color:#8b5cf6;">4. Urus & Edit Soalan Sedia Ada</h3>
+      <div class="form-group" style="max-width: 400px;">
+        <label>Pilih Kuiz Untuk Diuruskan</label>
+        <select id="manageQuestionQuiz"></select>
+      </div>
+      <div id="manageQuestionArea" style="display:none; margin-top:20px;">
+        <div style="overflow-x:auto;">
+          <table style="width:100%; border-collapse:collapse; min-width:700px; background:#0f172a; border-radius:10px;">
+            <thead>
+              <tr>
+                <th style="border-bottom:2px solid #334155; padding:15px; text-align:center; width:50px;">No</th>
+                <th style="border-bottom:2px solid #334155; padding:15px; text-align:left;">Teks Soalan</th>
+                <th style="border-bottom:2px solid #334155; padding:15px; text-align:center;">Masa (s)</th>
+                <th style="border-bottom:2px solid #334155; padding:15px; text-align:center;">Markah</th>
+                <th style="border-bottom:2px solid #334155; padding:15px; text-align:center;">Tindakan</th>
+              </tr>
+            </thead>
+            <tbody id="manageQuestionsBody">
+              <!-- Dipenuhi oleh app.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
-<div id="view-history" class="dashboard-view">
-  <div class="card" style="max-width:900px; margin:auto;">
-    <h3 style="display:flex; justify-content:space-between;">Sejarah Kuiz <button onclick="loadHistory()" style="background:none;border:none;color:#3b82f6;cursor:pointer;">🔄 Refresh</button></h3>
-    <div id="historyContainer" style="color:#94a3b8; font-size:14px;">Memuatkan rekod...</div>
-  </div>
-</div>
-
-<div id="view-settings" class="dashboard-view">
-  <div class="card" style="max-width:500px; margin:auto;">
-    <h3>Tetapan Akaun Saya</h3>
-    <form id="settingsForm">
-      <div class="form-group"><label>Nama Penuh</label><input type="text" id="setMyName" required></div>
-      <div class="form-group"><label>Emel Baharu</label><input type="email" id="setMyEmail"></div>
-      <div class="form-group"><label>Kata Laluan Baharu</label><input type="password" id="setMyPassword"></div>
-      <button type="submit" class="btn-primary">Kemas Kini Profil</button>
-    </form>
-  </div>
-</div>
-
+<div id="view-history" class="dashboard-view"><div class="card" style="max-width:900px; margin:auto;"><h3 style="display:flex; justify-content:space-between;">Sejarah Kuiz <button onclick="loadHistory()" style="background:none;border:none;color:#3b82f6;cursor:pointer;">🔄 Refresh</button></h3><div id="historyContainer" style="color:#94a3b8; font-size:14px;">Memuatkan rekod...</div></div></div>
+<div id="view-settings" class="dashboard-view"><div class="card" style="max-width:500px; margin:auto;"><h3>Tetapan Akaun Saya</h3><form id="settingsForm"><div class="form-group"><label>Nama Penuh</label><input type="text" id="setMyName" required></div><div class="form-group"><label>Emel Baharu</label><input type="email" id="setMyEmail"></div><div class="form-group"><label>Kata Laluan Baharu</label><input type="password" id="setMyPassword"></div><button type="submit" class="btn-primary">Kemas Kini Profil</button></form></div></div>
 <div id="view-master" class="dashboard-view">
   <div class="grid-layout">
-    <div class="card" style="grid-column: span 2;">
-      <h3>Senarai Pengguna & Admin</h3>
-      <div style="overflow-x:auto;"><table id="adminTable"><thead><tr><th>ID/Emel</th><th>Nama</th><th>Peranan</th><th>Tindakan</th></tr></thead><tbody id="adminTableBody"></tbody></table></div>
-    </div>
-    
-    <div class="card">
-      <h3>Daftar / Kemas Kini Akaun</h3>
-      <form id="masterManageForm">
-        <input type="hidden" id="targetAdminId">
-        <div class="form-group"><label>Nama Penuh</label><input type="text" id="mName" required></div>
-        <div class="form-group"><label>Emel</label><input type="email" id="mEmail" required></div>
-        <div class="form-group"><label>Kata Laluan</label><input type="text" id="mPassword" required></div>
-        <div class="form-group"><label>Peranan</label><select id="mRole"><option value="admin">Admin</option><option value="master">Master</option></select></div>
-        <button type="submit" class="btn-primary" id="mSubmitBtn">Cipta Akaun Baru</button>
-        <button type="button" class="btn-primary" style="background:#64748b; margin-top:10px; display:none;" id="mCancelBtn">Batal Kemas Kini</button>
-      </form>
-    </div>
+    <div class="card" style="grid-column: span 2;"><h3>Senarai Pengguna & Admin</h3><div style="overflow-x:auto;"><table id="adminTable"><thead><tr><th>ID/Emel</th><th>Nama</th><th>Peranan</th><th>Tindakan</th></tr></thead><tbody id="adminTableBody"></tbody></table></div></div>
+    <div class="card"><h3>Daftar / Kemas Kini Akaun</h3><form id="masterManageForm"><input type="hidden" id="targetAdminId"><div class="form-group"><label>Nama Penuh</label><input type="text" id="mName" required></div><div class="form-group"><label>Emel</label><input type="email" id="mEmail" required></div><div class="form-group"><label>Kata Laluan</label><input type="text" id="mPassword" required></div><div class="form-group"><label>Peranan</label><select id="mRole"><option value="admin">Admin</option><option value="master">Master</option></select></div><button type="submit" class="btn-primary" id="mSubmitBtn">Cipta Akaun Baru</button><button type="button" class="btn-primary" style="background:#64748b; margin-top:10px; display:none;" id="mCancelBtn">Batal Kemas Kini</button></form></div>
+    <div class="card"><h3>Tetapan Sistem (API)</h3><div class="form-group"><label>Pautan Web App (Google Apps Script)</label><input type="text" id="apiUrl" placeholder="https://script.google.com/..." required></div><button type="button" id="saveApiBtn" class="btn-primary" style="background:#8b5cf6;">Simpan Pautan API</button></div>
+  </div>
+</div>
 
-    <div class="card">
-      <h3>Tetapan Sistem (API)</h3>
-      <div class="form-group"><label>Pautan Web App (Google Apps Script)</label><input type="text" id="apiUrl" placeholder="https://script.google.com/..." required></div>
-      <button type="button" id="saveApiBtn" class="btn-primary" style="background:#8b5cf6;">Simpan Pautan API</button>
-    </div>
+<!-- TETINGKAP POPUP (MODAL) UNTUK EDIT SOALAN -->
+<div id="editQuestionModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center; padding:20px;">
+  <div style="background:#1e293b; padding:30px; border-radius:20px; width:100%; max-width:600px; max-height:90vh; overflow-y:auto; border:1px solid #334155; box-shadow:0 20px 50px rgba(0,0,0,0.8);">
+    <h3 style="margin-top:0; color:#3b82f6; border-bottom:1px solid #334155; padding-bottom:15px;">✏️ Kemas Kini Soalan</h3>
+    <form id="editQuestionForm">
+      <input type="hidden" id="editQuestionId">
+      <div class="form-group"><label>Soalan</label><input type="text" id="editQText" required></div>
+      <div class="form-group"><label>URL Gambar (Pilihan)</label><input type="url" id="editQImage"></div>
+      
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="form-group"><label>A</label><input type="text" id="editOptA" required></div>
+        <div class="form-group"><label>B</label><input type="text" id="editOptB" required></div>
+        <div class="form-group"><label>C</label><input type="text" id="editOptC" required></div>
+        <div class="form-group"><label>D</label><input type="text" id="editOptD" required></div>
+      </div>
+      
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div class="form-group"><label>Jawapan Betul</label><select id="editCorrect"><option>A</option><option>B</option><option>C</option><option>D</option></select></div>
+        <div class="form-group"><label>Masa (s)</label><input type="number" id="editTime" required></div>
+      </div>
+      
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; background: #0b1120; padding: 12px; border-radius: 10px; border: 1px solid #334155;">
+        <input type="checkbox" id="editDoublePoints" style="width: 20px; height: 20px; margin: 0; cursor: pointer;">
+        <label for="editDoublePoints" style="margin: 0; cursor: pointer; color: #f8fafc; font-size: 14px; font-weight: 600;">✨ Markah Berganda</label>
+      </div>
+      
+      <div style="display:flex; gap:15px;">
+        <button type="submit" class="btn-primary" style="flex:1;">Simpan Perubahan</button>
+        <button type="button" onclick="document.getElementById('editQuestionModal').style.display='none'" class="btn-primary" style="flex:1; background:#64748b;">Batal</button>
+      </div>
+    </form>
   </div>
 </div>
 
 <script>
   function switchAuth(type) { ['login','forgot'].forEach(t => document.getElementById(t+'Card').style.display='none'); document.getElementById(type+'Card').style.display='block'; }
   function switchTab(viewId) { document.querySelectorAll('.dashboard-view').forEach(v => v.style.display='none'); document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.getElementById('view-'+viewId).style.display='block'; event.currentTarget.classList.add('active'); if(viewId==='history') loadHistory(); if(viewId==='master') loadAdmins(); }
-
-  // FUNGSI NAVIGASI PAGE TAMBAH SOALAN
-  function bukaPageSoalan() {
-    const q = document.getElementById("questionQuiz");
-    if(!q.value) return alert("Sila pilih kuiz terlebih dahulu!");
-    document.getElementById("namaKuizAktif").textContent = q.options[q.selectedIndex].text;
-    document.getElementById("setupKuizArea").style.display = "none";
-    document.getElementById("borangSoalanArea").style.display = "block";
-  }
-
-  function tutupPageSoalan() {
-    document.getElementById("setupKuizArea").style.display = "block";
-    document.getElementById("borangSoalanArea").style.display = "none";
-  }
-
-  // FUNGSI PLACEHOLDER DEFAULT KUIZ
+  function bukaPageSoalan() { const q = document.getElementById("questionQuiz"); if(!q.value) return alert("Sila pilih kuiz!"); document.getElementById("namaKuizAktif").textContent = q.options[q.selectedIndex].text; document.getElementById("setupKuizArea").style.display = "none"; document.getElementById("borangSoalanArea").style.display = "block"; }
+  function tutupPageSoalan() { document.getElementById("setupKuizArea").style.display = "block"; document.getElementById("borangSoalanArea").style.display = "none"; }
+  
+  // Pastikan kesemua dropdown "Pilih Kuiz" ada Placeholder
   document.addEventListener("DOMContentLoaded", () => {
-     const qq = document.getElementById("questionQuiz");
-     const observer = new MutationObserver(() => {
-        if(qq.options.length > 0 && qq.options[0].value !== "") {
-           const opt = document.createElement("option");
-           opt.value = "";
-           opt.text = "-- Sila Pilih Kuiz --";
-           opt.disabled = true;
-           opt.selected = true;
-           qq.insertBefore(opt, qq.firstChild);
-        }
+     ['questionQuiz', 'manageQuestionQuiz'].forEach(id => {
+         const qq = document.getElementById(id);
+         if(qq) {
+             const observer = new MutationObserver(() => {
+                if(qq.options.length > 0 && qq.options[0].value !== "") {
+                   const opt = document.createElement("option");
+                   opt.value = ""; opt.text = "-- Sila Pilih Kuiz --"; opt.disabled = true; opt.selected = true;
+                   qq.insertBefore(opt, qq.firstChild);
+                }
+             });
+             observer.observe(qq, { childList: true });
+         }
      });
-     observer.observe(qq, { childList: true });
   });
 </script>
-<script src="app.js?v=125"></script>
+<script src="app.js?v=145"></script>
 </body>
 </html>
