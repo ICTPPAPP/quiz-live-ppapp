@@ -48,6 +48,16 @@
     transform: translateY(-2px);
   }
 
+  /* KELAS BAHARU UNTUK LOGO LIBRARY */
+  .library-logo {
+    width: 100%;
+    max-width: 250px;
+    max-height: 100px;
+    object-fit: contain;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+  }
+
   .brand-logo { 
     font-size: clamp(32px, 8vw, 48px); font-weight: 900; letter-spacing: 2px; 
     margin-bottom: 30px; text-align: center; text-shadow: 0 4px 10px rgba(0,0,0,0.3);
@@ -97,6 +107,9 @@
 <a href="admin.html" class="admin-link">🛡️ Panel Admin</a>
 
 <div class="hero-wrap">
+  <!-- LOGO GAMBAR DARI FOLDER -->
+  <img src="logo.png" alt="Logo Library" class="library-logo">
+
   <div class="brand-logo">QUIZ LIVE <span>PPAPP</span></div>
   <div class="join-card">
     <input type="text" id="pin" placeholder="PIN PERMAINAN" maxlength="6" inputmode="numeric" autocomplete="off">
@@ -107,6 +120,9 @@
 </div>
 
 <div id="waitingRoom" style="display:none;">
+  <!-- LOGO GAMBAR DARI FOLDER (Bilik Menunggu) -->
+  <img src="logo.png" alt="Logo Library" class="library-logo">
+
   <div class="brand-logo">QUIZ LIVE <span>PPAPP</span></div>
   <div class="waiting-card">
     <h2>Anda sudah masuk!</h2>
