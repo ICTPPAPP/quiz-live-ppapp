@@ -2,8 +2,8 @@
 (() => {
   "use strict";
 
-  // URL Web App rasmi anda telah disetkan di sini 👇
-  const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbxZ7ng_4zoJZVTfuDaSTWhiXaLLrg6t-_28KJttB88EBGCfW-b0AB25Ary34XkCc_rZ/exec";
+  // URL Web App rasmi anda
+  const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbzi2T_vr40GxnlWqVqXBs_69HJKYvMWAVzJA00nJlBU2_j-8veU64PmarShnTkiJa2y/exec";
 
   const POLL_INTERVAL_MS = 1500; 
   const $ = (id) => document.getElementById(id);
@@ -40,7 +40,6 @@
     { option: "D", color: "#f4c430", shape: "■", label: "Kuning", textColor: "#172033" }
   ];
 
-  // PENYELAMAT URL: Buang sebarang 'space' yang tidak sengaja tercopy
   function getApiUrl() { try { const url = localStorage.getItem("qlp_api_url"); return (url && url.length > 10) ? url.replace(/\s/g, '') : DEFAULT_API_URL.replace(/\s/g, ''); } catch (e) { return DEFAULT_API_URL.replace(/\s/g, ''); } }
   function storageGet(key, fallback = "") { try { return localStorage.getItem(key) ?? fallback; } catch (e) { return fallback; } }
   function storageSet(key, value) { try { localStorage.setItem(key, String(value ?? "")); } catch (e) {} }
