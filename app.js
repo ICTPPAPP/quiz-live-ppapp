@@ -1,10 +1,9 @@
-/* QUIZ LIVE PPAPP - V5.0 WOW FACTOR: EMOJI, FASTEST PLAYER, FIRE STREAK */
+/* QUIZ LIVE PPAPP - V5.1 (STABLE & BUG FIXES) */
 (() => {
   "use strict";
 
-  // 👇 GANTIKAN DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA 👇
-  const DEFAULT_API_URL = "SILA_TAMPAL_LINK_API_ANDA_DI_SINI";
-  // 👆 GANTIKAN DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA 👆
+  // URL Web App rasmi anda telah disetkan di sini 👇
+  const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbxZ7ng_4zoJZVTfuDaSTWhiXaLLrg6t-_28KJttB88EBGCfW-b0AB25Ary34XkCc_rZ/exec";
 
   const POLL_INTERVAL_MS = 1500; 
   const $ = (id) => document.getElementById(id);
@@ -41,13 +40,14 @@
     { option: "D", color: "#f4c430", shape: "■", label: "Kuning", textColor: "#172033" }
   ];
 
-  function getApiUrl() { try { const url = localStorage.getItem("qlp_api_url"); return (url && url.length > 10) ? url.trim() : DEFAULT_API_URL; } catch (e) { return DEFAULT_API_URL; } }
+  // PENYELAMAT URL: Buang sebarang 'space' yang tidak sengaja tercopy
+  function getApiUrl() { try { const url = localStorage.getItem("qlp_api_url"); return (url && url.length > 10) ? url.replace(/\s/g, '') : DEFAULT_API_URL.replace(/\s/g, ''); } catch (e) { return DEFAULT_API_URL.replace(/\s/g, ''); } }
   function storageGet(key, fallback = "") { try { return localStorage.getItem(key) ?? fallback; } catch (e) { return fallback; } }
   function storageSet(key, value) { try { localStorage.setItem(key, String(value ?? "")); } catch (e) {} }
   function escapeHtml(value) { return String(value ?? "").replace(/[&<>"']/g, (c) => ({"&": "&amp;","<": "&lt;",">": "&gt;",'"': "&quot;","'": "&#39;"})[c]); }
+  
   async function apiPost(payload) { const url = getApiUrl(); const response = await fetch(url, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) }); return await response.json(); }
 
-  // FUNGSI SEND EMOJI UNTUK PESERTA
   window.sendEmoji = (emoji) => {
     const sessionId = storageGet("qlp_player_session_id");
     if(sessionId) apiPost({ action: "sendEmoji", sessionId, emoji });
@@ -64,7 +64,7 @@
         const res = await apiPost({ action: "join", pin, displayName: name });
         if (!res.success) throw new Error(res.message);
         storageSet("qlp_player_session_id", res.sessionId); storageSet("qlp_player_id", res.playerId);
-        localStorage.removeItem("qlp_streak"); // Reset streak baru masuk
+        localStorage.removeItem("qlp_streak"); 
         
         if ($("waitingRoom")) { $("waitingRoom").hidden = false; $("waitingRoom").style.display = "block"; }
         if (document.querySelector(".hero-wrap")) document.querySelector(".hero-wrap").style.display = "none";
@@ -182,7 +182,15 @@
       if (polling) return; const sessionId = storageGet("qlp_player_session_id"); if (!sessionId) return; polling = true;
       try {
         const res = await apiPost({ action: "getSessionState", sessionId });
-        const panel = $("liveQuestionPanel") || document.body.appendChild(Object.assign(document.createElement("section"), { id: "liveQuestionPanel", style: "position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;box-sizing:border-box;padding:20px;display:none;flex-direction:column;justify-content:center;background:#0f172a;color:#fff;" }));
+        
+        let panel = $("liveQuestionPanel");
+        if (!panel) {
+          panel = document.createElement("section");
+          panel.id = "liveQuestionPanel";
+          panel.style.cssText = "position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;box-sizing:border-box;padding:20px;display:none;flex-direction:column;justify-content:center;background:#0f172a;color:#fff;";
+          document.body.appendChild(panel);
+        }
+        
         const room = $("waitingRoom");
         
         if ($("emojiBar") && res.status !== "completed") { $("emojiBar").style.display = "flex"; } else if ($("emojiBar")) { $("emojiBar").style.display = "none"; }
