@@ -9,107 +9,64 @@
   
   body { 
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
-    background: #0f172a; 
-    color: white; 
-    min-height: 100vh; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center; 
-    overflow-x: hidden;
-    position: relative;
+    background: #0f172a; color: white; min-height: 100vh; display: flex; 
+    flex-direction: column; align-items: center; justify-content: center; 
+    overflow-x: hidden; position: relative; transition: all 0.5s ease;
   }
 
-  /* BUTANG KE PANEL ADMIN (Premium Pill) */
-  .admin-link {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: rgba(30, 41, 59, 0.7);
-    border: 1px solid #334155;
-    color: #94a3b8;
-    padding: 8px 16px;
-    border-radius: 30px;
-    font-size: 12px;
-    font-weight: 700;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    backdrop-filter: blur(5px);
-    transition: all 0.3s ease;
-    z-index: 100;
+  /* EFEK "STREAK BERAPI" - WOW FACTOR */
+  body.fire-mode { animation: fireBg 1.5s infinite alternate; }
+  @keyframes fireBg {
+    0% { box-shadow: inset 0 0 20px #ef4444, inset 0 0 40px #f59e0b; }
+    100% { box-shadow: inset 0 0 60px #ef4444, inset 0 0 100px #f59e0b; }
   }
-  .admin-link:hover {
-    background: #1e293b;
-    color: #f8fafc;
-    border-color: #3b82f6;
-    box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
-    transform: translateY(-2px);
-  }
+  .fire-text { display: none; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); color: #fcd34d; font-weight: 900; font-size: 20px; text-shadow: 0 0 10px #ef4444; animation: pulse 1s infinite; z-index: 10; letter-spacing: 2px; }
+  body.fire-mode .fire-text { display: block; }
 
-  /* KELAS BAHARU UNTUK LOGO LIBRARY */
-  .library-logo {
-    width: 100%;
-    max-width: 250px;
-    max-height: 100px;
-    object-fit: contain;
-    margin-bottom: 10px;
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+  /* PALANG EMOJI (TIKTOK STYLE) */
+  .emoji-bar {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 15px; background: rgba(30,41,59,0.9); padding: 10px 25px;
+    border-radius: 40px; border: 1px solid #334155; backdrop-filter: blur(5px); z-index: 10000;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   }
+  .emoji-bar button {
+    background: none; border: none; font-size: 28px; cursor: pointer; transition: transform 0.2s;
+  }
+  .emoji-bar button:active { transform: scale(1.4); }
 
-  .brand-logo { 
-    font-size: clamp(32px, 8vw, 48px); font-weight: 900; letter-spacing: 2px; 
-    margin-bottom: 30px; text-align: center; text-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  }
+  .admin-link { position: absolute; top: 20px; right: 20px; background: rgba(30, 41, 59, 0.7); border: 1px solid #334155; color: #94a3b8; padding: 8px 16px; border-radius: 30px; font-size: 12px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 6px; backdrop-filter: blur(5px); transition: all 0.3s ease; z-index: 100; }
+  .admin-link:hover { background: #1e293b; color: #f8fafc; border-color: #3b82f6; box-shadow: 0 0 12px rgba(59, 130, 246, 0.4); transform: translateY(-2px); }
+
+  .library-logo { width: 100%; max-width: 250px; max-height: 100px; object-fit: contain; margin-bottom: 10px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
+  .brand-logo { font-size: clamp(32px, 8vw, 48px); font-weight: 900; letter-spacing: 2px; margin-bottom: 30px; text-align: center; text-shadow: 0 4px 10px rgba(0,0,0,0.3); }
   .brand-logo span { color: #3b82f6; }
-
   .hero-wrap { width: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-  .join-card {
-    background: #1e293b; border: 1px solid #334155; width: 100%; max-width: 400px;
-    padding: 30px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-    display: flex; flex-direction: column; gap: 15px;
-  }
-  .join-card input {
-    width: 100%; padding: 18px; font-size: 20px; font-weight: bold; text-align: center;
-    border: 2px solid #334155; border-radius: 12px; background: #0f172a; color: #ffffff;
-    outline: none; transition: 0.3s;
-  }
+  .join-card { background: #1e293b; border: 1px solid #334155; width: 100%; max-width: 400px; padding: 30px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 15px; }
+  .join-card input { width: 100%; padding: 18px; font-size: 20px; font-weight: bold; text-align: center; border: 2px solid #334155; border-radius: 12px; background: #0f172a; color: #ffffff; outline: none; transition: 0.3s; }
   .join-card input:focus { border-color: #3b82f6; background: #0b1120; }
   .join-card input::placeholder { color: #64748b; font-weight: 600; }
-  
-  #joinBtn {
-    width: 100%; background: #10b981; color: white; border: none; padding: 20px;
-    font-size: 22px; font-weight: 900; border-radius: 12px; cursor: pointer;
-    transition: 0.2s; box-shadow: 0 8px 0 #047857; margin-top: 10px;
-  }
+  #joinBtn { width: 100%; background: #10b981; color: white; border: none; padding: 20px; font-size: 22px; font-weight: 900; border-radius: 12px; cursor: pointer; transition: 0.2s; box-shadow: 0 8px 0 #047857; margin-top: 10px; }
   #joinBtn:active { transform: translateY(8px); box-shadow: 0 0 0 #047857; }
   #joinBtn:disabled { background: #334155; box-shadow: 0 8px 0 #1e293b; color: #94a3b8; cursor: not-allowed; transform: none; }
-
   #waitingRoom { width: 100%; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-  .waiting-card {
-    background: #1e293b; width: 100%; max-width: 450px; padding: 40px 30px;
-    border-radius: 24px; text-align: center; border: 1px solid #334155; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-  }
+  .waiting-card { background: #1e293b; width: 100%; max-width: 450px; padding: 40px 30px; border-radius: 24px; text-align: center; border: 1px solid #334155; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
   .waiting-card h2 { color: #10b981; font-size: 32px; margin-bottom: 20px; }
   .waiting-card p { font-size: 20px; color: #cbd5e1; margin-bottom: 10px; font-weight: 600; }
   .waiting-card strong { color: #f8fafc; font-size: 28px; letter-spacing: 2px; }
   .waiting-name { font-size: 24px !important; color: #fcd34d !important; font-weight: 900 !important; margin-top: 20px !important; }
-  
   .loader-text { margin-top: 30px; font-size: 16px; font-weight: bold; color: #94a3b8; animation: pulse 1.5s infinite; }
   @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
-
   footer { margin-top: 40px; font-size: 12px; color: #64748b; font-weight: 600; letter-spacing: 1px; }
 </style>
 </head>
 <body>
 
+<div class="fire-text">🔥 ON FIRE 🔥</div>
 <a href="admin.html" class="admin-link">🛡️ Panel Admin</a>
 
 <div class="hero-wrap">
-  <!-- LOGO GAMBAR DARI FOLDER -->
   <img src="logo.png" alt="Logo Library" class="library-logo">
-
   <div class="brand-logo">QUIZ LIVE <span>PPAPP</span></div>
   <div class="join-card">
     <input type="text" id="pin" placeholder="PIN PERMAINAN" maxlength="6" inputmode="numeric" autocomplete="off">
@@ -120,9 +77,7 @@
 </div>
 
 <div id="waitingRoom" style="display:none;">
-  <!-- LOGO GAMBAR DARI FOLDER (Bilik Menunggu) -->
   <img src="logo.png" alt="Logo Library" class="library-logo">
-
   <div class="brand-logo">QUIZ LIVE <span>PPAPP</span></div>
   <div class="waiting-card">
     <h2>Anda sudah masuk!</h2>
@@ -132,6 +87,14 @@
   </div>
 </div>
 
-<script src="app.js?v=73"></script>
+<!-- KOTAK BUTANG EMOJI (Hanya Muncul Bila Masuk Bilik) -->
+<div class="emoji-bar" id="emojiBar" style="display:none;">
+  <button onclick="window.sendEmoji('🔥')">🔥</button>
+  <button onclick="window.sendEmoji('😂')">😂</button>
+  <button onclick="window.sendEmoji('👏')">👏</button>
+  <button onclick="window.sendEmoji('😱')">😱</button>
+</div>
+
+<script src="app.js?v=160"></script>
 </body>
 </html>
