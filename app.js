@@ -2,7 +2,10 @@
 (() => {
   "use strict";
 
-  const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbxlHmVrFF84wSGQF3z0F_qEvVWZpirbgo0D06FclCDkhZTWXv_YgFTAHIAx381FERKT/exec";
+  // 👇 GANTIKAN DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA 👇
+  const DEFAULT_API_URL = "SILA_TAMPAL_LINK_API_ANDA_DI_SINI";
+  // 👆 GANTIKAN DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA 👆
+
   const POLL_INTERVAL_MS = 1500; 
   const $ = (id) => document.getElementById(id);
 
@@ -38,7 +41,7 @@
     { option: "D", color: "#f4c430", shape: "■", label: "Kuning", textColor: "#172033" }
   ];
 
-  function getApiUrl() { try { return (localStorage.getItem("qlp_api_url") || DEFAULT_API_URL).trim(); } catch (e) { return DEFAULT_API_URL; } }
+  function getApiUrl() { try { const url = localStorage.getItem("qlp_api_url"); return (url && url.length > 10) ? url.trim() : DEFAULT_API_URL; } catch (e) { return DEFAULT_API_URL; } }
   function storageGet(key, fallback = "") { try { return localStorage.getItem(key) ?? fallback; } catch (e) { return fallback; } }
   function storageSet(key, value) { try { localStorage.setItem(key, String(value ?? "")); } catch (e) {} }
   function escapeHtml(value) { return String(value ?? "").replace(/[&<>"']/g, (c) => ({"&": "&amp;","<": "&lt;",">": "&gt;",'"': "&quot;","'": "&#39;"})[c]); }
@@ -116,16 +119,15 @@
     async function pollHost() {
       if (polling) return; const sessionId = storageGet("qlp_session_id"); if (!sessionId) return; polling = true;
       try {
-        const res = await apiPost({ action: "getSessionState", sessionId, isHost: true }); // isHost dipanggil
+        const res = await apiPost({ action: "getSessionState", sessionId, isHost: true });
         if (!res || !res.success) throw new Error();
         window.hostPhase = res.status;
 
-        // EMOJI ANIMATION LOGIC DI SKRIN HOS
         if (res.emojis && res.emojis.length > 0) {
           res.emojis.forEach((emj, idx) => {
             setTimeout(() => {
               const el = document.createElement("div"); el.className = "floating-emoji"; el.textContent = emj;
-              el.style.left = (Math.random() * 25 + 70) + "%"; // Berterbangan di belah kanan skrin (70% - 95%)
+              el.style.left = (Math.random() * 25 + 70) + "%"; 
               document.body.appendChild(el);
               setTimeout(() => el.remove(), 2500);
             }, idx * 150);
@@ -155,7 +157,6 @@
 
         const q = res.question; if (!q) return;
         
-        // POP-UP RAJA PECUT
         if (res.status === "revealing_answer") { 
           if (sfxPlayedForQ !== q.questionId) { playSFX('sfx_reveal'); sfxPlayedForQ = q.questionId; } 
           if (res.fastestPlayer && window.lastFastestQ !== q.questionId) {
@@ -184,10 +185,8 @@
         const panel = $("liveQuestionPanel") || document.body.appendChild(Object.assign(document.createElement("section"), { id: "liveQuestionPanel", style: "position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;box-sizing:border-box;padding:20px;display:none;flex-direction:column;justify-content:center;background:#0f172a;color:#fff;" }));
         const room = $("waitingRoom");
         
-        // PAPARKAN EMOJI BAR JIKA DALAM SESI
         if ($("emojiBar") && res.status !== "completed") { $("emojiBar").style.display = "flex"; } else if ($("emojiBar")) { $("emojiBar").style.display = "none"; }
 
-        // STREAK BERAPI LOGIK
         const streak = parseInt(localStorage.getItem("qlp_streak") || "0");
         if (streak >= 3) { document.body.classList.add("fire-mode"); } else { document.body.classList.remove("fire-mode"); }
 
