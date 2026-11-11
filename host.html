@@ -6,7 +6,8 @@
 <title>Paparan Hos • QUIZ LIVE PPAPP</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: white; min-height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  /* PERUBAHAN: overflow-x: hidden dan padding-bottom membenarkan skrin skrol jika soalan terlalu panjang */
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: white; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; overflow-y: auto; padding-bottom: 100px; }
   header { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; background: #0b1120; z-index: 50; }
   .brand { font-size: 24px; font-weight: 900; letter-spacing: 1px; } .brand span { color: #3b82f6; }
   .btn-outline { border: 1px solid #334155; color: #94a3b8; padding: 8px 20px; border-radius: 30px; text-decoration: none; font-size: 14px; font-weight: 600; transition: 0.3s; }
@@ -26,11 +27,14 @@
 
   #hostLiveQuestionPanel { flex: 1; padding: 40px; display: none; max-width: 1200px; margin: 0 auto; width: 100%; z-index: 10; position: relative; }
   
-  #hostControlPanel { padding: 20px 40px; background: #0b1120; border-top: 1px solid #1e293b; display: flex; justify-content: space-between; align-items: center; z-index: 50; }
+  /* PERUBAHAN UTAMA: Panel dikunci (fixed) di bawah skrin */
+  #hostControlPanel { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 40px; background: rgba(11, 17, 32, 0.95); backdrop-filter: blur(10px); border-top: 1px solid #1e293b; display: flex; justify-content: space-between; align-items: center; z-index: 9999; box-shadow: 0 -10px 40px rgba(0,0,0,0.6); }
+  
   .btn-primary { background: #3b82f6; color: white; border: none; padding: 15px 40px; font-size: 18px; font-weight: 900; border-radius: 12px; cursor: pointer; transition: 0.3s; }
   .btn-primary:hover { background: #2563eb; transform: translateY(-2px); }
   .btn-primary:disabled { background: #334155; color: #94a3b8; cursor: not-allowed; transform: none; }
-  .btn-danger { background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 12px 25px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; }
+  .btn-danger { background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 12px 25px; font-size: 16px; font-weight: bold; border-radius: 10px; cursor: pointer; transition: 0.3s; }
+  .btn-danger:hover { background: rgba(239, 68, 68, 0.1); }
 
   /* CSS ANIMASI PODIUM */
   .podium-wrap { display: flex; align-items: flex-end; justify-content: center; gap: 15px; height: 350px; margin-top: 60px; padding-bottom: 20px; }
@@ -48,23 +52,11 @@
   .stats-table tr:hover { background: #27354f; }
 
   /* CSS EMOJI TERAPUNG */
-  .floating-emoji {
-    position: fixed; bottom: -50px; font-size: 45px; z-index: 1;
-    animation: floatUp 2.5s ease-in forwards; opacity: 1; pointer-events: none;
-  }
-  @keyframes floatUp {
-    0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
-    100% { transform: translateY(-90vh) scale(1.8) rotate(20deg); opacity: 0; }
-  }
+  .floating-emoji { position: fixed; bottom: -50px; font-size: 45px; z-index: 1; animation: floatUp 2.5s ease-in forwards; opacity: 1; pointer-events: none; }
+  @keyframes floatUp { 0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; } 100% { transform: translateY(-90vh) scale(1.8) rotate(20deg); opacity: 0; } }
 
   /* CSS RAJA PECUT (FASTEST PLAYER) */
-  .raja-pecut-popup {
-    position: fixed; top: 45%; left: 50%; transform: translate(-50%, -50%) scale(0);
-    background: linear-gradient(135deg, #f59e0b, #ef4444); padding: 40px 60px;
-    border-radius: 30px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-    z-index: 10000; border: 5px solid #fcd34d;
-    animation: popRaja 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-  }
+  .raja-pecut-popup { position: fixed; top: 45%; left: 50%; transform: translate(-50%, -50%) scale(0); background: linear-gradient(135deg, #f59e0b, #ef4444); padding: 40px 60px; border-radius: 30px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.8); z-index: 10000; border: 5px solid #fcd34d; animation: popRaja 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
   .rp-title { color: white; font-weight: 900; font-size: 26px; letter-spacing: 4px; margin-bottom: 15px; text-transform: uppercase; }
   .rp-name { color: white; font-weight: 900; font-size: 60px; text-shadow: 0 6px 15px rgba(0,0,0,0.5); line-height: 1; }
   .rp-time { color: #fef08a; font-weight: 900; font-size: 24px; margin-top: 15px; background: rgba(0,0,0,0.3); padding: 5px 15px; border-radius: 20px; display: inline-block; }
@@ -92,15 +84,16 @@
   <div id="hostLiveQuestionPanel"></div>
 </main>
 
+<!-- PANEL KAWALAN DIPAKU DI BAWAH SKRIN (FIXED BOTTOM) -->
 <div id="hostControlPanel">
-  <button id="hostStartBtn" class="btn-primary" style="margin: 0 auto; display: block; background: #10b981;">▶ MULA KUIZ SEKARANG</button>
+  <button id="hostStartBtn" class="btn-primary" style="margin: 0 auto; display: block; background: #10b981; padding: 15px 50px;">▶ MULA KUIZ SEKARANG</button>
   <div style="display:none; width: 100%; justify-content: space-between; align-items: center;" id="inGameControls">
-    <button id="nextQuestionBtn" class="btn-primary">➡ SETERUSNYA</button>
+    <button id="nextQuestionBtn" class="btn-primary" style="padding: 12px 30px; box-shadow: 0 4px 15px rgba(59,130,246,0.4);">➡ SETERUSNYA</button>
     <button id="endQuizBtn" class="btn-danger">Tamatkan Kuiz</button>
   </div>
 </div>
 
-<script src="app.js?v=160"></script>
+<script src="app.js?v=170"></script>
 <script>
   setInterval(() => {
     if (window.hostPhase && window.hostPhase !== 'waiting') {
