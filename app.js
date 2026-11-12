@@ -1,14 +1,12 @@
-/* QUIZ LIVE PPAPP - V5.8 (ULTIMATE FINALE + TENSE + CSV) */
+/* QUIZ LIVE PPAPP - V5.8 (ULTIMATE FINALE + TENSE + CSV + TEXT UPDATE) */
 (() => {
   "use strict";
 
-  // URL Web App rasmi anda
   const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbzi2T_vr40GxnlWqVqXBs_69HJKYvMWAVzJA00nJlBU2_j-8veU64PmarShnTkiJa2y/exec";
 
   const POLL_INTERVAL_MS = 1500; 
   const $ = (id) => document.getElementById(id);
 
-  // TAMBAHAN BUNYI BARU (CHEERING & TENSE COUNTDOWN)
   const SOUNDS = { 
     bgm_main: new Audio("bgm-lobby.mp3"), sfx_correct: new Audio("sfx-correct.mp3"), 
     sfx_wrong: new Audio("sfx-wrong.mp3"), sfx_reveal: new Audio("sfx-reveal.mp3"), 
@@ -23,12 +21,10 @@
   function playSFX(key) { if (SOUNDS[key]) { SOUNDS[key].playbackRate = 1.0; SOUNDS[key].currentTime = 0; SOUNDS[key].play().catch(() => {}); } }
   function stopSFX(key) { if (SOUNDS[key]) { SOUNDS[key].pause(); SOUNDS[key].currentTime = 0; } }
   
-  // INJECT CSS UNTUK ANIMASI BERKELIP 5 SAAT TERAKHIR
   const style = document.createElement('style');
   style.innerHTML = `@keyframes pulseRed { 0% { transform: scale(1); opacity: 1; text-shadow: 0 0 10px #ef4444; } 50% { transform: scale(1.2); opacity: 0.8; text-shadow: 0 0 30px #ef4444; } 100% { transform: scale(1); opacity: 1; text-shadow: 0 0 10px #ef4444; } } .timer-tense { color: #ef4444 !important; animation: pulseRed 0.6s infinite !important; font-size: 40px !important; transition: 0.3s; }`;
   document.head.appendChild(style);
 
-  // FUNGSI ANIMASI CONFETTI MERIAH
   function fireConfetti() {
     const colors = ['#3b82f6', '#10b981', '#fbbf24', '#ef4444', '#a855f7', '#ec4899'];
     for(let i=0; i<150; i++) {
@@ -44,7 +40,6 @@
     }
   }
 
-  // FUNGSI MUAT TURUN CSV (UNTUK ADMIN)
   window.muatTurunCSV = (idx) => {
     const h = window.qlp_history_data[idx]; if(!h) return;
     let csv = "Rank,Nama Peserta,Jawapan Betul,Jawapan Salah,Ketepatan (%),Max Streak,Jumlah Markah\n";
@@ -112,8 +107,6 @@
     if ($("settingsForm")) $("settingsForm").addEventListener("submit", async (e) => { e.preventDefault(); const np = $("setMyPassword").value; if(np && !/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/.test(np)) return alert("Kata laluan lemah!"); try { const r = await apiPost({action:"updateAccount", oldEmail:myEmail, newName:$("setMyName").value, newEmail:$("setMyEmail").value, newPassword:np}); if(!r.success) throw new Error(r.message); alert("Akaun dikemas kini!"); storageSet("qlp_admin_name", r.newName); storageSet("qlp_admin_email", r.newEmail); location.reload(); } catch(e) { alert(e.message); } });
     async function loadQ() { if(!$("questionQuiz")) return; try { const r = await apiPost({action:"getQuizzes"}); if(r.success && r.quizzes) { const o = r.quizzes.map(x => `<option value="${x.quizId}">${escapeHtml(x.title)}</option>`).join(""); $("questionQuiz").innerHTML = o || '<option value="">-- Tiada Kuiz --</option>'; $("sessionQuiz").innerHTML = o || '<option value="">-- Tiada Kuiz --</option>'; if($("manageQuestionQuiz")) $("manageQuestionQuiz").innerHTML = o || '<option value="">-- Tiada Kuiz --</option>'; } } catch(e) {} }
     if(myName) loadQ();
-    
-    // PAPAR SEJARAH & BUTANG CSV BARU
     window.loadHistory = async () => { if (!$("historyContainer")) return; $("historyContainer").innerHTML = "Sedang memuat turun rekod..."; const r = await apiPost({action:"getHistory"}); if(!r.success || r.history.length === 0) return $("historyContainer").innerHTML = "Tiada rekod kuiz."; window.qlp_history_data = r.history; $("historyContainer").innerHTML = r.history.map((h, i) => `<div style="background:#0f172a; padding:15px 20px; border-radius:10px; margin-bottom:15px; border:1px solid #334155; display:flex; justify-content:space-between; align-items:center;"><div><div style="color:#3b82f6; font-weight:bold; font-size:18px;">${escapeHtml(h.quizTitle)}</div><div style="font-size:12px; color:#94a3b8; margin-top:5px;">Dimainkan: ${h.date ? new Date(h.date).toLocaleString('ms-MY') : 'Tarikh tiada'}</div><div style="font-size:12px; margin-top:5px; color:#10b981; font-weight:bold;">👤 ${h.allPlayers ? h.allPlayers.length : 0} Peserta Menjawab</div></div><button onclick="paparSejarahPenuh(${i})" style="background:#3b82f6; color:white; border:none; padding:10px 20px; border-radius:30px; cursor:pointer; font-weight:bold; transition:0.3s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">Lihat Keputusan ➡</button></div>`).join(""); };
     window.paparSejarahPenuh = (idx) => { const h = window.qlp_history_data[idx]; if(!h) return; const ap = h.allPlayers || []; const listHtml = ap.map((p, i) => { const totalAttempts = p.correct + p.wrong; const accuracy = totalAttempts > 0 ? Math.round((p.correct / totalAttempts) * 100) : 0; return `<tr><td style="font-weight:bold; color:${i<3?'#fbbf24':'white'}; text-align:center;">#${i+1}</td><td style="font-weight:bold; text-align:left;">${escapeHtml(p.name)}</td><td style="color:#10b981; text-align:center;">✔ ${p.correct}</td><td style="color:#ef4444; text-align:center;">✖ ${p.wrong}</td><td style="color:#a855f7; font-weight:bold; text-align:center;">${accuracy}%</td><td style="text-align:center;">🔥 ${p.maxStreak}</td><td style="font-weight:900; color:#3b82f6; text-align:center; font-size:16px;">${p.score}</td></tr>`; }).join(""); $("historyContainer").innerHTML = `<div style="display:flex; justify-content:space-between; margin-bottom:15px;"><button onclick="loadHistory()" style="background:transparent; border:1px solid #3b82f6; color:#3b82f6; padding:8px 20px; border-radius:20px; cursor:pointer; font-weight:bold;">⬅ Kembali ke Senarai</button> <button onclick="muatTurunCSV(${idx})" style="background:#10b981; color:white; border:none; padding:8px 20px; border-radius:20px; cursor:pointer; font-weight:bold; box-shadow:0 4px 10px rgba(16, 185, 129, 0.3);">📊 Muat Turun CSV Excel</button></div><div style="background:#0f172a; padding:25px; border-radius:15px; border:1px solid #334155;"><h3 style="color:#10b981; margin-top:0; margin-bottom:5px; font-size:22px;">${escapeHtml(h.quizTitle)}</h3><div style="font-size:13px; color:#94a3b8; margin-bottom:20px;">Dimainkan: ${h.date ? new Date(h.date).toLocaleString('ms-MY') : '-'} &nbsp;|&nbsp; 👤 ${ap.length} Peserta</div><div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; min-width:600px;"><thead><tr><th style="border-bottom:2px solid #334155; padding:12px; text-align:center;">Rank</th><th style="border-bottom:2px solid #334155; padding:12px; text-align:left;">Nama</th><th style="border-bottom:2px solid #334155; padding:12px; text-align:center;">Betul</th><th style="border-bottom:2px solid #334155; padding:12px; text-align:center;">Salah</th><th style="border-bottom:2px solid #334155; padding:12px; text-align:center;">Tepat</th><th style="border-bottom:2px solid #334155; padding:12px; text-align:center;">Streak</th><th style="border-bottom:2px solid #334155; padding:12px; text-align:center;">Markah</th></tr></thead><tbody>${listHtml || '<tr><td colspan="7" style="text-align:center; padding:20px;">Tiada data peserta</td></tr>'}</tbody></table></div></div>`; };
     
@@ -132,16 +125,14 @@
     if ($("quizForm")) $("quizForm").addEventListener("submit", async (e) => { e.preventDefault(); const btn = $("quizForm").querySelector("button"); btn.disabled = true; btn.textContent="..."; try { await apiPost({ action: "createQuiz", title: $("quizTitle").value, description: $("quizDescription").value }); alert("Kuiz Dicipta!"); location.reload(); } catch(e) { btn.disabled = false; btn.textContent="Cipta"; } });
     if ($("questionForm")) $("questionForm").addEventListener("submit", async (e) => { e.preventDefault(); const btn = $("questionForm").querySelector("button"); btn.disabled = true; btn.textContent="..."; try { await apiPost({ action: "addQuestion", quizId: $("questionQuiz").value, questionText: $("questionText").value, optionA: $("optionA").value, optionB: $("optionB").value, optionC: $("optionC").value, optionD: $("optionD").value, correctOption: $("correctOption").value, timeLimitSeconds: Number($("questionTime").value), points: $("doublePoints").checked ? 2000 : 1000, imageUrl: $("questionImage") ? $("questionImage").value.trim() : "" }); alert("Soalan Disimpan!"); $("questionForm").reset(); } catch(e) {} finally { btn.disabled = false; btn.textContent="Simpan"; } });
     
-    // INJECT BUTANG TOGGLE MULTIPLIER SECARA DINAMIK DI ADMIN
     if ($("createSessionBtn")) { 
       const btn = $("createSessionBtn");
       if(!$("useMultiplierToggle")) {
-         btn.insertAdjacentHTML('beforebegin', '<div style="margin: 20px 0; background:#1e293b; padding:15px; border-radius:10px; border:1px solid #334155;"><label style="display:flex; align-items:center; gap:10px; cursor:pointer; color:#fcd34d; font-weight:bold; font-size:16px;"><input type="checkbox" id="useMultiplierToggle" style="width:20px; height:20px;" checked> 🔥 Aktifkan Kuasa "Streak" (Markah x1.5 bagi yang kejar rekod betul berturut-turut)</label></div>');
+         btn.insertAdjacentHTML('beforebegin', '<div style="margin: 20px 0; background:#1e293b; padding:15px; border-radius:10px; border:1px solid #334155;"><label style="display:flex; align-items:center; gap:10px; cursor:pointer; color:#fcd34d; font-weight:bold; font-size:16px;"><input type="checkbox" id="useMultiplierToggle" style="width:20px; height:20px;" checked> 🔥 Streak Multiplier</label></div>');
       }
       btn.addEventListener("click", async () => { 
         const qid = $("sessionQuiz").value; if(!qid) return alert("Sila Pilih Kuiz"); 
         btn.disabled = true; btn.textContent = "Menjana..."; 
-        // HANTAR STATUS TOGGLE KE BACKEND
         const useMult = $("useMultiplierToggle") ? $("useMultiplierToggle").checked : false;
         try { const r = await apiPost({action:"createSession", quizId:qid, useMultiplier: useMult}); storageSet("qlp_session_id", r.sessionId); storageSet("qlp_host_token", r.hostToken); storageSet("qlp_player_pin", r.pin); window.location.href="host.html"; } catch(e) { btn.disabled = false; btn.textContent = "Jana PIN Permainan"; } 
       }); 
@@ -183,9 +174,7 @@
         
         if (res.status === "completed") { if (control) control.style.display = "none"; playBGM(); if (!window.hostCompletedView) window.hostCompletedView = "podium"; const ap = res.fullLeaderboard || [];
           if (window.hostCompletedView === "podium") { 
-            // LETUPAN CONFETTI DAN BERSORAK!
             if (!window.confettiFired) { playSFX('sfx_cheer'); fireConfetti(); window.confettiFired = true; }
-            
             const p1 = ap[0] || {name:"-", score:0}; const p2 = ap[1] || {name:"-", score:0}; const p3 = ap[2] || {name:"-", score:0};
             panel.innerHTML = `<div style="text-align:center;"><h2 style="font-size:50px; color:#fcd34d; margin-bottom:20px; text-transform:uppercase; letter-spacing:3px; text-shadow: 0 4px 20px rgba(252,211,77,0.5);">🏆 TAHNIAH PEMENANG 🏆</h2><div class="podium-wrap"><div class="podium-col pos-2"><div class="p-name">${escapeHtml(p2.name)}</div><div class="p-score">${p2.score} pt</div>2</div><div class="podium-col pos-1"><div class="p-name">${escapeHtml(p1.name)}</div><div class="p-score">${p1.score} pt</div>1</div><div class="podium-col pos-3"><div class="p-name">${escapeHtml(p3.name)}</div><div class="p-score">${p3.score} pt</div>3</div></div><button onclick="tunjukLeaderboardPenuh()" style="background:#3b82f6; color:white; border:none; padding:15px 30px; font-size:18px; font-weight:bold; border-radius:30px; margin-top:40px; cursor:pointer; box-shadow:0 10px 20px rgba(59,130,246,0.3);">Lihat Kedudukan Penuh ➡</button></div>`;
           } else { const listHtml = ap.map((p, i) => { const totalAttempts = p.correct + p.wrong; const accuracy = totalAttempts > 0 ? Math.round((p.correct / totalAttempts) * 100) : 0; return `<tr><td style="font-weight:bold; color:${i<3?'#fbbf24':'white'};">#${i+1}</td><td style="text-align:left; font-weight:bold;">${escapeHtml(p.name)}</td><td style="color:#10b981;">✔ ${p.correct}</td><td style="color:#ef4444;">✖ ${p.wrong}</td><td style="color:#a855f7; font-weight:bold;">${accuracy}%</td><td>🔥 ${p.maxStreak}</td><td style="font-weight:900; color:#3b82f6; font-size:18px;">${p.score}</td></tr>`; }).join("");
@@ -231,13 +220,11 @@
           let hostTimeLeft = q.timeLimitSeconds; const nextBtn = $("nextQuestionBtn"); 
           hostTimerInt = setInterval(async () => { 
             hostTimeLeft--; 
-            // BUNYI SUSPEN 5 SAAT TERAKHIR!
             if (hostTimeLeft === 5) playSFX('sfx_tense');
             if ($("hostTimerDisplay")) {
                $("hostTimerDisplay").textContent = hostTimeLeft; 
                if (hostTimeLeft <= 5 && hostTimeLeft > 0) $("hostTimerDisplay").classList.add("timer-tense");
             }
-
             if (hostTimeLeft <= 0) { 
               clearInterval(hostTimerInt); if (nextBtn) { nextBtn.disabled = true; } 
               try { await apiPost({ action: "revealAnswer", sessionId, hostToken: storageGet("qlp_host_token") }); } catch(e) {} 
@@ -279,13 +266,12 @@
         if (res.status === "active") { localStorage.removeItem("qlp_last_isCorrect"); localStorage.removeItem("qlp_last_earned"); localStorage.removeItem("qlp_bonus_applied"); }
         if (res.status === "revealing_answer") {
           const answeredState = localStorage.getItem("qlp_last_isCorrect"); const earned = parseInt(localStorage.getItem("qlp_last_earned") || "0"); const totalScore = parseInt(localStorage.getItem("qlp_last_score") || "0");
-          const isBonus = localStorage.getItem("qlp_bonus_applied") === "true"; // Periksa jika kuasa streak aktif
+          const isBonus = localStorage.getItem("qlp_bonus_applied") === "true"; 
           const prevScore = totalScore - earned; 
           
           let isCorrect = (answeredState === "true"); let message = (answeredState === null) ? "Masa Tamat" : (isCorrect ? "Tepat!" : "Salah"); let icon = (answeredState === null) ? "⏱️" : (isCorrect ? "✅" : "❌"); let glowColor = (answeredState === null) ? "#f59e0b" : (isCorrect ? "#10b981" : "#ef4444");
           if (sfxPlayedForQ !== (res.question ? res.question.questionId : "0")) { playSFX(isCorrect ? 'sfx_correct' : 'sfx_wrong'); sfxPlayedForQ = (res.question ? res.question.questionId : "0"); }
           
-          // Paparan Tambahan "x1.5" jika mereka berada di dalam Fire Mode
           let bonusHtml = isBonus ? `<div style="font-size:16px; color:#fcd34d; font-weight:bold; margin-bottom:-5px;">🔥 Streak Bonus x1.5</div>` : ``;
 
           panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0f172a;color:white;border-radius:20px;"><div style="background:#1e293b; border: 1px solid #334155; border-radius: 24px; padding: 40px 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 100%; max-width: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;"><div style="font-size:90px; line-height:1; margin-bottom:15px; filter: drop-shadow(0 0 25px ${glowColor});">${icon}</div><div style="font-size:28px; font-weight:800; color: #f8fafc; letter-spacing:1px;">${message}</div>${bonusHtml}<div style="font-size:24px; font-weight:900; color:${glowColor}; margin: 10px 0;">+${earned} XP</div><div style="margin-top:20px; background:rgba(0,0,0,0.3); padding:15px 30px; border-radius:16px; width:80%;"><div style="font-size:14px; color:#94a3b8; text-transform:uppercase; font-weight:bold;">Jumlah Markah</div><div id="playerScoreAnim" style="font-size:40px; font-weight:900; color:#3b82f6; margin-top:5px;">${isCorrect ? prevScore : totalScore}</div></div></div></div>`; 
@@ -304,7 +290,7 @@
           playerTimeLeft--; 
           if ($("playerTimerDisplay")) {
              $("playerTimerDisplay").textContent = playerTimeLeft; 
-             if(playerTimeLeft <= 5 && playerTimeLeft > 0) $("playerTimerDisplay").classList.add("timer-tense"); // Lampu merah panik di skrin pemain
+             if(playerTimeLeft <= 5 && playerTimeLeft > 0) $("playerTimerDisplay").classList.add("timer-tense");
           }
           if (playerTimeLeft <= 0) { clearInterval(playerTimerInt); btns.forEach(b => { b.disabled = true; b.style.opacity = "0.4"; }); if ($("playerAnswerStatus") && !btns.some(b => b.dataset.answered)) { $("playerAnswerStatus").textContent = "Masa Tamat!"; $("playerAnswerStatus").style.color = "#ef4444"; localStorage.setItem("qlp_streak", "0"); } } 
         }, 1000);
