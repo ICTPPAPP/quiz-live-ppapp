@@ -1,4 +1,4 @@
-/* QUIZ LIVE PPAPP - V5.5 (SMART BUTTON) */
+/* QUIZ LIVE PPAPP - V5.6 (ULTIMATE SMART BUTTON) */
 (() => {
   "use strict";
 
@@ -123,21 +123,22 @@
         if (!res || !res.success) throw new Error();
         window.hostPhase = res.status;
         
-        // Simpan status soalan terakhir ke global variable
+        // Simpan status soalan terakhir ke memory browser
         window.hostIsLastQuestion = (res.isLastQuestion === true);
 
         // LOGIK WARNA DAN TEKS "BUTANG PINTAR"
         const nextBtn = $("nextQuestionBtn");
         if (nextBtn) {
           if (res.status === "active") {
-            nextBtn.style.background = "#3b82f6";
+            nextBtn.textContent = "⏭️ BUKA JAWAPAN TERUS";
+            nextBtn.style.background = "#64748b"; // Kelabu (Fungsi Skip Masa)
           } else if (res.status === "revealing_answer") {
             nextBtn.textContent = "🏆 PAPAR LEADERBOARD";
-            nextBtn.style.background = "#f59e0b"; // Kuning/Oren
+            nextBtn.style.background = "#f59e0b"; // Kuning Oren
           } else if (res.status === "leaderboard") {
             if (window.hostIsLastQuestion) {
               nextBtn.textContent = "🏁 TAMATKAN KUIZ";
-              nextBtn.style.background = "#ef4444"; // Merah
+              nextBtn.style.background = "#ef4444"; // Merah! Ke Podium
             } else {
               nextBtn.textContent = "➡ SOALAN SETERUSNYA";
               nextBtn.style.background = "#3b82f6"; // Biru
@@ -192,7 +193,7 @@
 
         const opts = [q.optionA, q.optionB, q.optionC, q.optionD]; const votes = res.voteCounts || {A:0, B:0, C:0, D:0}; const imgHtml = q.imageUrl ? `<img src="${escapeHtml(q.imageUrl)}" style="max-height:25vh; border-radius:15px; margin: 15px auto; display:block; box-shadow:0 10px 30px rgba(0,0,0,0.5); object-fit:contain;">` : '';
         panel.innerHTML = `<div style="text-align:center;margin-bottom:25px"><div style="font-size:14px;font-weight:900;letter-spacing:3px;color:#a5b4fc;text-transform:uppercase">SOALAN ${q.order} ${q.points > 1000 ? '🌟 MARKAH BERGANDA' : ''}</div><h1 style="font-size:clamp(22px,3.5vw,40px);margin:14px 0;line-height:1.3;color:#ffffff">${escapeHtml(q.questionText)}</h1>${imgHtml}${res.status === "active" ? `<div style="display:inline-block;padding:6px 20px;background:#1e293b;border-radius:30px;font-size:28px;font-weight:900;color:#ef4444;border:1px solid #334155;margin-top:6px">⏱ <span id="hostTimerDisplay">${q.timeLimitSeconds}</span>s</div>` : ''}</div><div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;padding:10px;">${ANSWER_COLORS.map((item, i) => { const isDim = (res.status === "revealing_answer" && item.option !== q.correctOption); const vCount = votes[item.option] || 0; const voteBadge = res.status === "revealing_answer" ? `<div style="position:absolute; top:-15px; left:-15px; background:#f8fafc; color:#0f172a; padding:6px 16px; border-radius:30px; font-size:18px; font-weight:900; box-shadow:0 4px 10px rgba(0,0,0,0.5); z-index:10; display:flex; align-items:center; gap:6px;">👤 ${vCount}</div>` : ''; return `<div style="position:relative; opacity:${isDim ? '0.35' : '1'}; min-height:120px; display:flex; align-items:center; gap:16px; padding:20px 20px 20px 40px; border-radius:18px; background:${item.color}; color:${item.textColor}; font-size:clamp(18px,2vw,24px); font-weight:800; box-sizing:border-box; transition: opacity 0.3s ease;">${voteBadge}<span style="font-size:32px;line-height:1">${item.shape}</span><span style="flex:1">${escapeHtml(opts[i])}</span></div>`; }).join("")}</div>`;
-        if (res.status === "active") { let hostTimeLeft = q.timeLimitSeconds; const nextBtn = $("nextQuestionBtn"); hostTimerInt = setInterval(async () => { hostTimeLeft--; if ($("hostTimerDisplay")) $("hostTimerDisplay").textContent = hostTimeLeft; if (hostTimeLeft <= 0) { clearInterval(hostTimerInt); if (nextBtn) { nextBtn.disabled = true; nextBtn.textContent = "Masa Tamat..."; } try { await apiPost({ action: "revealAnswer", sessionId, hostToken: storageGet("qlp_host_token") }); } catch(e) {} if (nextBtn) { nextBtn.disabled = false; } } }, 1000); }
+        if (res.status === "active") { let hostTimeLeft = q.timeLimitSeconds; const nextBtn = $("nextQuestionBtn"); hostTimerInt = setInterval(async () => { hostTimeLeft--; if ($("hostTimerDisplay")) $("hostTimerDisplay").textContent = hostTimeLeft; if (hostTimeLeft <= 0) { clearInterval(hostTimerInt); if (nextBtn) { nextBtn.disabled = true; } try { await apiPost({ action: "revealAnswer", sessionId, hostToken: storageGet("qlp_host_token") }); } catch(e) {} if (nextBtn) { nextBtn.disabled = false; } } }, 1000); }
       } catch (err) {} finally { polling = false; }
     }
     pollHost(); window.setInterval(pollHost, POLL_INTERVAL_MS);
@@ -259,13 +260,15 @@
         nextBtn.disabled = true; 
         
         let action = "";
-        if (window.hostPhase === "revealing_answer") {
+        if (window.hostPhase === "active") {
+          action = "revealAnswer"; // SKIP MASA TERUS DEDAH JAWAPAN
+        } else if (window.hostPhase === "revealing_answer") {
           action = "showLeaderboard"; 
         } else if (window.hostPhase === "leaderboard") {
-          // Jika ini soalan terakhir, terus tamatkan! Jika tidak, soalan seterusnya.
+          // Jika ini soalan terakhir, terus tamatkan!
           action = window.hostIsLastQuestion ? "endQuiz" : "nextQuestion";
         } else {
-          action = "revealAnswer"; // Sebagai sandaran kalau masa habis
+          action = "revealAnswer"; // Sandaran
         }
 
         try { await apiPost({ action, sessionId, hostToken }); } 
