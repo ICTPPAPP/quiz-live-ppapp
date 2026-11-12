@@ -1,14 +1,13 @@
-/* QUIZ LIVE PPAPP - V5.4 (AUDIO STABILIZER & STABLE) */
+/* QUIZ LIVE PPAPP - V5.5 (SMART BUTTON) */
 (() => {
   "use strict";
 
-  // URL Web App rasmi anda 
+  // URL Web App rasmi anda
   const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbzi2T_vr40GxnlWqVqXBs_69HJKYvMWAVzJA00nJlBU2_j-8veU64PmarShnTkiJa2y/exec";
 
   const POLL_INTERVAL_MS = 1500; 
   const $ = (id) => document.getElementById(id);
 
-  // PENSTABIL AUDIO: Pastikan lagu tak jadi laju atau berlapis
   const SOUNDS = { 
     bgm_main: new Audio("bgm-lobby.mp3"), sfx_correct: new Audio("sfx-correct.mp3"), 
     sfx_wrong: new Audio("sfx-wrong.mp3"), sfx_reveal: new Audio("sfx-reveal.mp3"), 
@@ -114,8 +113,7 @@
     if ($("lobbyPin")) $("lobbyPin").textContent = storageGet("qlp_player_pin") || "------";
     const startBtn = $("hostStartBtn");
     if (startBtn) startBtn.addEventListener("click", async () => { startBtn.disabled = true; startBtn.textContent = "MEMULAKAN..."; try { await apiPost({ action: "startSession", sessionId: storageGet("qlp_session_id"), hostToken: storageGet("qlp_host_token") }); } catch(e) { startBtn.disabled = false; startBtn.textContent = "▶ MULA KUIZ SEKARANG"; } });
-    const endQuizBtn = $("endQuizBtn");
-    if (endQuizBtn) { endQuizBtn.addEventListener("click", async () => { if(confirm('Adakah anda pasti untuk tamatkan kuiz sekarang?')) { endQuizBtn.disabled = true; endQuizBtn.textContent = "Menamatkan..."; try { await apiPost({ action: "endQuiz", sessionId: storageGet("qlp_session_id"), hostToken: storageGet("qlp_host_token") }); } catch(e) { endQuizBtn.disabled = false; endQuizBtn.textContent = "Tamatkan Kuiz"; } } }); }
+    
     window.tunjukLeaderboardPenuh = () => { window.hostCompletedView = "full"; currentRenderKey = ""; };
     
     async function pollHost() {
@@ -124,6 +122,28 @@
         const res = await apiPost({ action: "getSessionState", sessionId, isHost: true });
         if (!res || !res.success) throw new Error();
         window.hostPhase = res.status;
+        
+        // Simpan status soalan terakhir ke global variable
+        window.hostIsLastQuestion = (res.isLastQuestion === true);
+
+        // LOGIK WARNA DAN TEKS "BUTANG PINTAR"
+        const nextBtn = $("nextQuestionBtn");
+        if (nextBtn) {
+          if (res.status === "active") {
+            nextBtn.style.background = "#3b82f6";
+          } else if (res.status === "revealing_answer") {
+            nextBtn.textContent = "🏆 PAPAR LEADERBOARD";
+            nextBtn.style.background = "#f59e0b"; // Kuning/Oren
+          } else if (res.status === "leaderboard") {
+            if (window.hostIsLastQuestion) {
+              nextBtn.textContent = "🏁 TAMATKAN KUIZ";
+              nextBtn.style.background = "#ef4444"; // Merah
+            } else {
+              nextBtn.textContent = "➡ SOALAN SETERUSNYA";
+              nextBtn.style.background = "#3b82f6"; // Biru
+            }
+          }
+        }
 
         if (res.emojis && res.emojis.length > 0) {
           res.emojis.forEach((emj, idx) => {
@@ -172,7 +192,7 @@
 
         const opts = [q.optionA, q.optionB, q.optionC, q.optionD]; const votes = res.voteCounts || {A:0, B:0, C:0, D:0}; const imgHtml = q.imageUrl ? `<img src="${escapeHtml(q.imageUrl)}" style="max-height:25vh; border-radius:15px; margin: 15px auto; display:block; box-shadow:0 10px 30px rgba(0,0,0,0.5); object-fit:contain;">` : '';
         panel.innerHTML = `<div style="text-align:center;margin-bottom:25px"><div style="font-size:14px;font-weight:900;letter-spacing:3px;color:#a5b4fc;text-transform:uppercase">SOALAN ${q.order} ${q.points > 1000 ? '🌟 MARKAH BERGANDA' : ''}</div><h1 style="font-size:clamp(22px,3.5vw,40px);margin:14px 0;line-height:1.3;color:#ffffff">${escapeHtml(q.questionText)}</h1>${imgHtml}${res.status === "active" ? `<div style="display:inline-block;padding:6px 20px;background:#1e293b;border-radius:30px;font-size:28px;font-weight:900;color:#ef4444;border:1px solid #334155;margin-top:6px">⏱ <span id="hostTimerDisplay">${q.timeLimitSeconds}</span>s</div>` : ''}</div><div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;padding:10px;">${ANSWER_COLORS.map((item, i) => { const isDim = (res.status === "revealing_answer" && item.option !== q.correctOption); const vCount = votes[item.option] || 0; const voteBadge = res.status === "revealing_answer" ? `<div style="position:absolute; top:-15px; left:-15px; background:#f8fafc; color:#0f172a; padding:6px 16px; border-radius:30px; font-size:18px; font-weight:900; box-shadow:0 4px 10px rgba(0,0,0,0.5); z-index:10; display:flex; align-items:center; gap:6px;">👤 ${vCount}</div>` : ''; return `<div style="position:relative; opacity:${isDim ? '0.35' : '1'}; min-height:120px; display:flex; align-items:center; gap:16px; padding:20px 20px 20px 40px; border-radius:18px; background:${item.color}; color:${item.textColor}; font-size:clamp(18px,2vw,24px); font-weight:800; box-sizing:border-box; transition: opacity 0.3s ease;">${voteBadge}<span style="font-size:32px;line-height:1">${item.shape}</span><span style="flex:1">${escapeHtml(opts[i])}</span></div>`; }).join("")}</div>`;
-        if (res.status === "active") { let hostTimeLeft = q.timeLimitSeconds; const nextBtn = $("nextQuestionBtn"); hostTimerInt = setInterval(async () => { hostTimeLeft--; if ($("hostTimerDisplay")) $("hostTimerDisplay").textContent = hostTimeLeft; if (hostTimeLeft <= 0) { clearInterval(hostTimerInt); if (nextBtn) { nextBtn.disabled = true; nextBtn.textContent = "Masa Tamat..."; } try { await apiPost({ action: "revealAnswer", sessionId, hostToken: storageGet("qlp_host_token") }); } catch(e) {} if (nextBtn) { nextBtn.disabled = false; nextBtn.textContent = "➡ SETERUSNYA"; } } }, 1000); }
+        if (res.status === "active") { let hostTimeLeft = q.timeLimitSeconds; const nextBtn = $("nextQuestionBtn"); hostTimerInt = setInterval(async () => { hostTimeLeft--; if ($("hostTimerDisplay")) $("hostTimerDisplay").textContent = hostTimeLeft; if (hostTimeLeft <= 0) { clearInterval(hostTimerInt); if (nextBtn) { nextBtn.disabled = true; nextBtn.textContent = "Masa Tamat..."; } try { await apiPost({ action: "revealAnswer", sessionId, hostToken: storageGet("qlp_host_token") }); } catch(e) {} if (nextBtn) { nextBtn.disabled = false; } } }, 1000); }
       } catch (err) {} finally { polling = false; }
     }
     pollHost(); window.setInterval(pollHost, POLL_INTERVAL_MS);
@@ -195,7 +215,6 @@
         
         const room = $("waitingRoom");
         
-        // EMOJI HANYA MUNCUL DI STATUS "WAITING" SAHAJA
         if ($("emojiBar") && res.status === "waiting") { $("emojiBar").style.display = "flex"; } else if ($("emojiBar")) { $("emojiBar").style.display = "none"; }
 
         const streak = parseInt(localStorage.getItem("qlp_streak") || "0");
@@ -231,7 +250,28 @@
   document.addEventListener("DOMContentLoaded", () => {
     if ($("pin")) { localStorage.removeItem("qlp_player_session_id"); localStorage.removeItem("qlp_player_id"); }
     initJoinForm(); initAdminLogic(); initLiveHost(); initLiveParticipant();
+    
+    // LOGIK KLIK "BUTANG PINTAR" HOS
     const nextBtn = $("nextQuestionBtn");
-    if (nextBtn) { nextBtn.addEventListener("click", async () => { const sessionId = storageGet("qlp_session_id"), hostToken = storageGet("qlp_host_token"); nextBtn.disabled = true; nextBtn.textContent = "..."; let action = window.hostPhase === "revealing_answer" ? "showLeaderboard" : (window.hostPhase === "leaderboard" ? "nextQuestion" : "revealAnswer"); try { await apiPost({ action, sessionId, hostToken }); } catch (e) { alert("Ralat."); } finally { nextBtn.disabled = false; nextBtn.textContent = "➡ SETERUSNYA"; } }); }
+    if (nextBtn) { 
+      nextBtn.addEventListener("click", async () => { 
+        const sessionId = storageGet("qlp_session_id"), hostToken = storageGet("qlp_host_token"); 
+        nextBtn.disabled = true; 
+        
+        let action = "";
+        if (window.hostPhase === "revealing_answer") {
+          action = "showLeaderboard"; 
+        } else if (window.hostPhase === "leaderboard") {
+          // Jika ini soalan terakhir, terus tamatkan! Jika tidak, soalan seterusnya.
+          action = window.hostIsLastQuestion ? "endQuiz" : "nextQuestion";
+        } else {
+          action = "revealAnswer"; // Sebagai sandaran kalau masa habis
+        }
+
+        try { await apiPost({ action, sessionId, hostToken }); } 
+        catch (e) { alert("Ralat."); } 
+        finally { nextBtn.disabled = false; } 
+      }); 
+    }
   });
 })();
