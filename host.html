@@ -6,13 +6,13 @@
 <title>Paparan Hos • QUIZ LIVE PPAPP</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: white; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; overflow-y: auto; padding-bottom: 100px; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0f172a; color: white; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; overflow-y: auto; padding-bottom: 120px; }
   header { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; background: #0b1120; z-index: 50; }
   .brand { font-size: 24px; font-weight: 900; letter-spacing: 1px; } .brand span { color: #3b82f6; }
   .btn-outline { border: 1px solid #334155; color: #94a3b8; padding: 8px 20px; border-radius: 30px; text-decoration: none; font-size: 14px; font-weight: 600; transition: 0.3s; }
   .btn-outline:hover { background: #1e293b; color: white; border-color: #64748b; }
 
-  #lobbyPanel { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; }
+  #lobbyPanel { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; width: 100%; }
   .pin-wrapper { display: flex; align-items: center; justify-content: center; gap: 40px; background: #1e293b; padding: 30px 60px; border-radius: 20px; border: 2px solid #3b82f6; box-shadow: 0 0 30px rgba(59,130,246,0.3); margin-bottom: 30px; flex-wrap: wrap; }
   .pin-text h2 { font-size: 18px; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
   .pin-text h1 { font-size: 80px; font-weight: 900; color: #ffffff; letter-spacing: 5px; }
@@ -24,6 +24,7 @@
   #lobbyPlayers { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
   .player-chip { background: #3b82f6; color: white; padding: 8px 16px; border-radius: 30px; font-weight: bold; font-size: 16px; }
 
+  /* INI ADALAH TAPAK UNTUK SOALAN MUNCUL - DIPASTIKAN KEBAL */
   #hostLiveQuestionPanel { flex: 1; padding: 40px; display: none; max-width: 1200px; margin: 0 auto; width: 100%; z-index: 10; position: relative; }
   
   #hostControlPanel { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 40px; background: rgba(11, 17, 32, 0.95); backdrop-filter: blur(10px); border-top: 1px solid #1e293b; display: flex; justify-content: space-between; align-items: center; z-index: 9999; box-shadow: 0 -10px 40px rgba(0,0,0,0.6); }
@@ -63,8 +64,9 @@
   <div class="header-right"><a href="admin.html" class="btn-outline">← Kembali Admin</a></div>
 </header>
 
-<!-- BAHAGIAN INI YANG HILANG SEBELUM INI! KINI DIKEMBALIKAN -->
-<main style="flex: 1; display: flex; flex-direction: column;">
+<main style="flex: 1; display: flex; flex-direction: column; width: 100%;">
+  
+  <!-- KOTAK 1: LOBI MENUNGGU -->
   <div id="lobbyPanel">
     <div class="pin-wrapper">
       <div class="pin-text"><h2>Sertai di peranti anda dengan PIN</h2><h1 id="lobbyPin">------</h1></div>
@@ -75,10 +77,13 @@
       <div id="lobbyPlayers"></div>
     </div>
   </div>
+  
+  <!-- KOTAK 2: TAPAK SOALAN (Jangan buang!) -->
   <div id="hostLiveQuestionPanel"></div>
+
 </main>
 
-<!-- PANEL KAWALAN DIPAKU DI BAWAH SKRIN (FIXED BOTTOM) - SMART BUTTON -->
+<!-- PANEL KAWALAN DIPAKU DI BAWAH SKRIN -->
 <div id="hostControlPanel">
   <button id="hostStartBtn" class="btn-primary" style="margin: 0 auto; display: block; background: #10b981; padding: 15px 50px;">▶ MULA KUIZ SEKARANG</button>
   <div style="display:none; width: 100%; justify-content: center; align-items: center;" id="inGameControls">
@@ -86,7 +91,8 @@
   </div>
 </div>
 
-<script src="app.js?v=200"></script>
+<!-- Menambah nombor versi unik supaya browser tidak membaca cache lama -->
+<script src="app.js?v=999"></script>
 <script>
   setInterval(() => {
     if (window.hostPhase && window.hostPhase !== 'waiting') {
