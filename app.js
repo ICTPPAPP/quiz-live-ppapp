@@ -1,4 +1,4 @@
-/* QUIZ LIVE PPAPP - V5.6 (ULTIMATE SMART BUTTON) */
+/* QUIZ LIVE PPAPP - V5.7 (DYNAMIC SCORE ANIMATION) */
 (() => {
   "use strict";
 
@@ -123,25 +123,23 @@
         if (!res || !res.success) throw new Error();
         window.hostPhase = res.status;
         
-        // Simpan status soalan terakhir ke memory browser
         window.hostIsLastQuestion = (res.isLastQuestion === true);
 
-        // LOGIK WARNA DAN TEKS "BUTANG PINTAR"
         const nextBtn = $("nextQuestionBtn");
         if (nextBtn) {
           if (res.status === "active") {
             nextBtn.textContent = "⏭️ BUKA JAWAPAN TERUS";
-            nextBtn.style.background = "#64748b"; // Kelabu (Fungsi Skip Masa)
+            nextBtn.style.background = "#64748b"; 
           } else if (res.status === "revealing_answer") {
             nextBtn.textContent = "🏆 PAPAR LEADERBOARD";
-            nextBtn.style.background = "#f59e0b"; // Kuning Oren
+            nextBtn.style.background = "#f59e0b"; 
           } else if (res.status === "leaderboard") {
             if (window.hostIsLastQuestion) {
               nextBtn.textContent = "🏁 TAMATKAN KUIZ";
-              nextBtn.style.background = "#ef4444"; // Merah! Ke Podium
+              nextBtn.style.background = "#ef4444"; 
             } else {
               nextBtn.textContent = "➡ SOALAN SETERUSNYA";
-              nextBtn.style.background = "#3b82f6"; // Biru
+              nextBtn.style.background = "#3b82f6"; 
             }
           }
         }
@@ -227,13 +225,25 @@
         const newKey = res.status + "_" + (res.question ? res.question.questionId : "0");
         if (currentRenderKey === newKey) return; currentRenderKey = newKey; clearInterval(playerTimerInt);
         if (res.status === "active") { localStorage.removeItem("qlp_last_isCorrect"); localStorage.setItem("qlp_last_earned", "0"); }
+        
+        // PERUBAHAN: Animasi Markah Naik untuk Peserta (Hanya bila betul)
         if (res.status === "revealing_answer") {
           const answeredState = localStorage.getItem("qlp_last_isCorrect"); const earned = parseInt(localStorage.getItem("qlp_last_earned") || "0"); const totalScore = parseInt(localStorage.getItem("qlp_last_score") || "0");
+          const prevScore = totalScore - earned; // Markah sebelum ditambah
+          
           let isCorrect = (answeredState === "true"); let message = (answeredState === null) ? "Masa Tamat" : (isCorrect ? "Tepat!" : "Salah"); let icon = (answeredState === null) ? "⏱️" : (isCorrect ? "✅" : "❌"); let glowColor = (answeredState === null) ? "#f59e0b" : (isCorrect ? "#10b981" : "#ef4444");
           if (sfxPlayedForQ !== (res.question ? res.question.questionId : "0")) { playSFX(isCorrect ? 'sfx_correct' : 'sfx_wrong'); sfxPlayedForQ = (res.question ? res.question.questionId : "0"); }
-          panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0f172a;color:white;border-radius:20px;"><div style="background:#1e293b; border: 1px solid #334155; border-radius: 24px; padding: 40px 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 100%; max-width: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;"><div style="font-size:90px; line-height:1; margin-bottom:15px; filter: drop-shadow(0 0 25px ${glowColor});">${icon}</div><div style="font-size:28px; font-weight:800; color: #f8fafc; letter-spacing:1px;">${message}</div><div style="font-size:24px; font-weight:900; color:${glowColor}; margin: 10px 0;">+${earned} XP</div><div style="margin-top:20px; background:rgba(0,0,0,0.3); padding:15px 30px; border-radius:16px; width:80%;"><div style="font-size:14px; color:#94a3b8; text-transform:uppercase; font-weight:bold;">Jumlah Markah</div><div style="font-size:40px; font-weight:900; color:#3b82f6; margin-top:5px;">${totalScore}</div></div></div></div>`; 
+          
+          // ID "playerScoreAnim" ditambah untuk animasi
+          panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0f172a;color:white;border-radius:20px;"><div style="background:#1e293b; border: 1px solid #334155; border-radius: 24px; padding: 40px 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 100%; max-width: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;"><div style="font-size:90px; line-height:1; margin-bottom:15px; filter: drop-shadow(0 0 25px ${glowColor});">${icon}</div><div style="font-size:28px; font-weight:800; color: #f8fafc; letter-spacing:1px;">${message}</div><div style="font-size:24px; font-weight:900; color:${glowColor}; margin: 10px 0;">+${earned} XP</div><div style="margin-top:20px; background:rgba(0,0,0,0.3); padding:15px 30px; border-radius:16px; width:80%;"><div style="font-size:14px; color:#94a3b8; text-transform:uppercase; font-weight:bold;">Jumlah Markah</div><div id="playerScoreAnim" style="font-size:40px; font-weight:900; color:#3b82f6; margin-top:5px;">${isCorrect ? prevScore : totalScore}</div></div></div></div>`; 
+          
+          // Animasi mendaki jika betul, statik jika salah
+          if (isCorrect && earned > 0) {
+            animateValue("playerScoreAnim", prevScore, totalScore, 1500);
+          }
           return;
         }
+
         if (res.status === "leaderboard") { const score = parseInt(localStorage.getItem("qlp_last_score") || "0"); panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0f172a;color:white;"><div style="background:#1e293b; border: 1px solid #334155; border-radius: 24px; padding: 40px 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); width: 100%; max-width: 400px;"><div style="font-size:18px;font-weight:700;color:#94a3b8;text-transform:uppercase;">Jumlah Markah</div><div style="font-size:70px;font-weight:900;color:#3b82f6;margin-top:10px;">${score}</div></div></div>`; return; }
         
         const q = res.question; if (!q) return; const startTime = Date.now();
@@ -252,7 +262,6 @@
     if ($("pin")) { localStorage.removeItem("qlp_player_session_id"); localStorage.removeItem("qlp_player_id"); }
     initJoinForm(); initAdminLogic(); initLiveHost(); initLiveParticipant();
     
-    // LOGIK KLIK "BUTANG PINTAR" HOS
     const nextBtn = $("nextQuestionBtn");
     if (nextBtn) { 
       nextBtn.addEventListener("click", async () => { 
@@ -261,14 +270,13 @@
         
         let action = "";
         if (window.hostPhase === "active") {
-          action = "revealAnswer"; // SKIP MASA TERUS DEDAH JAWAPAN
+          action = "revealAnswer"; 
         } else if (window.hostPhase === "revealing_answer") {
           action = "showLeaderboard"; 
         } else if (window.hostPhase === "leaderboard") {
-          // Jika ini soalan terakhir, terus tamatkan!
           action = window.hostIsLastQuestion ? "endQuiz" : "nextQuestion";
         } else {
-          action = "revealAnswer"; // Sandaran
+          action = "revealAnswer";
         }
 
         try { await apiPost({ action, sessionId, hostToken }); } 
