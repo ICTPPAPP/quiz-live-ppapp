@@ -1,4 +1,4 @@
-/* QUIZ LIVE PPAPP - V5.7 (DYNAMIC SCORE ANIMATION) */
+/* QUIZ LIVE PPAPP - V5.8 (SMART LEADERBOARD ANIMATION) */
 (() => {
   "use strict";
 
@@ -24,7 +24,11 @@
   document.body.addEventListener('click', () => { if (!window.audioUnlocked) { window.audioUnlocked = true; if (window.hostPhase === "waiting" || window.hostPhase === "active" || window.hostPhase === "completed") playBGM(); } }, { capture: true });
 
   function animateValue(id, start, end, duration, onComplete) {
-    const obj = $(id); if (!obj) return; let startTimestamp = null;
+    const obj = $(id); if (!obj) return; 
+    // JIKA MARKAH SAMA (SALAH JAWAB), KEKAL STATIK TERUS
+    if (start === end) { obj.textContent = end; if (onComplete) onComplete(); return; }
+    
+    let startTimestamp = null;
     const step = (timestamp) => {
       if (!startTimestamp) startTimestamp = timestamp;
       const progress = Math.min((timestamp - startTimestamp) / duration, 1);
@@ -155,7 +159,11 @@
           });
         }
 
-        if (res.status === "waiting") { if (currentPhase !== "waiting") { currentPhase = "waiting"; playBGM(); } if (lobby) { lobby.style.display = "flex"; if ($("lobbyPin")) $("lobbyPin").textContent = storageGet("qlp_player_pin") || "------"; const players = Array.isArray(res.players) ? res.players : []; if ($("lobbyCount")) $("lobbyCount").textContent = players.length; if ($("lobbyPlayers")) { $("lobbyPlayers").innerHTML = players.length > 0 ? players.map(p => `<div class="player-chip">${escapeHtml(p)}</div>`).join("") : `<p style="color:#94a3b8;">Menunggu pemain masuk...</p>`; } } if (panel) panel.style.display = "none"; if (control) control.style.display = "flex"; return; } 
+        if (res.status === "waiting") { 
+          window.hostPrevScores = {}; // Kosongkan ingatan markah jika di lobi
+          if (currentPhase !== "waiting") { currentPhase = "waiting"; playBGM(); } if (lobby) { lobby.style.display = "flex"; if ($("lobbyPin")) $("lobbyPin").textContent = storageGet("qlp_player_pin") || "------"; const players = Array.isArray(res.players) ? res.players : []; if ($("lobbyCount")) $("lobbyCount").textContent = players.length; if ($("lobbyPlayers")) { $("lobbyPlayers").innerHTML = players.length > 0 ? players.map(p => `<div class="player-chip">${escapeHtml(p)}</div>`).join("") : `<p style="color:#94a3b8;">Menunggu pemain masuk...</p>`; } } if (panel) panel.style.display = "none"; if (control) control.style.display = "flex"; return; 
+        } 
+        
         if (lobby) lobby.style.display = "none"; if (panel) panel.style.display = "block"; if (control) control.style.display = "flex";
 
         const newKey = res.status + "_" + (res.question ? res.question.questionId : "0") + "_" + (window.hostCompletedView || "podium");
@@ -171,9 +179,30 @@
 
         if (res.status === "active") { playBGM(); } else { stopBGM(); }
 
+        // PAPARAN LEADERBOARD: ANIMASI STATIK JIKA SALAH
         if (res.status === "leaderboard") {
-          const tops = (res.leaderboard || []).map((p, i) => `<div style="font-size:24px; margin:12px auto; max-width:600px; background:#1e293b; padding:16px 26px; border-radius:14px; display:flex; justify-content:space-between; align-items:center; border:1px solid #334155;"><span><b style="color:#3b82f6;">#${i+1}</b> ${escapeHtml(p.name)}</span><span style="font-weight:900;color:#fcd34d;font-size:30px;"><span id="hostLdbAnim_${i}">0</span> pt</span></div>`).join("");
-          panel.innerHTML = `<div style="text-align:center"><h2 style="font-size:36px; margin-bottom:30px;">🏆 TOP 5 LEADERBOARD 🏆</h2>${tops}</div>`; let animationDone = 0; const totalTops = (res.leaderboard || []).length; if (totalTops > 0) { playSFX('sfx_count'); (res.leaderboard || []).forEach((p, i) => { animateValue(`hostLdbAnim_${i}`, 0, p.score, 1500, () => { animationDone++; if (animationDone === totalTops) stopSFX('sfx_count'); }); }); } return;
+          window.hostPrevScores = window.hostPrevScores || {};
+          
+          const tops = (res.leaderboard || []).map((p, i) => `<div style="font-size:24px; margin:12px auto; max-width:600px; background:#1e293b; padding:16px 26px; border-radius:14px; display:flex; justify-content:space-between; align-items:center; border:1px solid #334155;"><span><b style="color:#3b82f6;">#${i+1}</b> ${escapeHtml(p.name)}</span><span style="font-weight:900;color:#fcd34d;font-size:30px;"><span id="hostLdbAnim_${i}">${window.hostPrevScores[p.name] || 0}</span> pt</span></div>`).join("");
+          panel.innerHTML = `<div style="text-align:center"><h2 style="font-size:36px; margin-bottom:30px;">🏆 TOP 5 LEADERBOARD 🏆</h2>${tops}</div>`; 
+          
+          let animationDone = 0; const totalTops = (res.leaderboard || []).length; 
+          
+          let hasChanges = false;
+          (res.leaderboard || []).forEach(p => { if((window.hostPrevScores[p.name] || 0) !== p.score) hasChanges = true; });
+
+          if (totalTops > 0) { 
+            if(hasChanges) playSFX('sfx_count'); 
+            
+            (res.leaderboard || []).forEach((p, i) => { 
+              let prevScore = window.hostPrevScores[p.name] || 0;
+              animateValue(`hostLdbAnim_${i}`, prevScore, p.score, 1500, () => { 
+                animationDone++; if (animationDone === totalTops) stopSFX('sfx_count'); 
+              }); 
+              window.hostPrevScores[p.name] = p.score;
+            }); 
+            if(!hasChanges) stopSFX('sfx_count');
+          } return;
         }
 
         const q = res.question; if (!q) return;
@@ -225,22 +254,16 @@
         const newKey = res.status + "_" + (res.question ? res.question.questionId : "0");
         if (currentRenderKey === newKey) return; currentRenderKey = newKey; clearInterval(playerTimerInt);
         if (res.status === "active") { localStorage.removeItem("qlp_last_isCorrect"); localStorage.setItem("qlp_last_earned", "0"); }
-        
-        // PERUBAHAN: Animasi Markah Naik untuk Peserta (Hanya bila betul)
         if (res.status === "revealing_answer") {
           const answeredState = localStorage.getItem("qlp_last_isCorrect"); const earned = parseInt(localStorage.getItem("qlp_last_earned") || "0"); const totalScore = parseInt(localStorage.getItem("qlp_last_score") || "0");
-          const prevScore = totalScore - earned; // Markah sebelum ditambah
+          const prevScore = totalScore - earned; 
           
           let isCorrect = (answeredState === "true"); let message = (answeredState === null) ? "Masa Tamat" : (isCorrect ? "Tepat!" : "Salah"); let icon = (answeredState === null) ? "⏱️" : (isCorrect ? "✅" : "❌"); let glowColor = (answeredState === null) ? "#f59e0b" : (isCorrect ? "#10b981" : "#ef4444");
           if (sfxPlayedForQ !== (res.question ? res.question.questionId : "0")) { playSFX(isCorrect ? 'sfx_correct' : 'sfx_wrong'); sfxPlayedForQ = (res.question ? res.question.questionId : "0"); }
           
-          // ID "playerScoreAnim" ditambah untuk animasi
           panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0f172a;color:white;border-radius:20px;"><div style="background:#1e293b; border: 1px solid #334155; border-radius: 24px; padding: 40px 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 100%; max-width: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;"><div style="font-size:90px; line-height:1; margin-bottom:15px; filter: drop-shadow(0 0 25px ${glowColor});">${icon}</div><div style="font-size:28px; font-weight:800; color: #f8fafc; letter-spacing:1px;">${message}</div><div style="font-size:24px; font-weight:900; color:${glowColor}; margin: 10px 0;">+${earned} XP</div><div style="margin-top:20px; background:rgba(0,0,0,0.3); padding:15px 30px; border-radius:16px; width:80%;"><div style="font-size:14px; color:#94a3b8; text-transform:uppercase; font-weight:bold;">Jumlah Markah</div><div id="playerScoreAnim" style="font-size:40px; font-weight:900; color:#3b82f6; margin-top:5px;">${isCorrect ? prevScore : totalScore}</div></div></div></div>`; 
           
-          // Animasi mendaki jika betul, statik jika salah
-          if (isCorrect && earned > 0) {
-            animateValue("playerScoreAnim", prevScore, totalScore, 1500);
-          }
+          if (isCorrect && earned > 0) { animateValue("playerScoreAnim", prevScore, totalScore, 1500); }
           return;
         }
 
