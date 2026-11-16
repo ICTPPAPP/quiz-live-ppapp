@@ -63,18 +63,18 @@
   <div class="grid-layout">
     
     <div class="card">
-      <h3>1. Cipta Sesi Live (PIN)</h3>
+      <h3>Cipta Sesi Live (PIN)</h3>
       <div class="form-group"><label>Pilih Kuiz</label><select id="sessionQuiz"></select></div>
       <button id="createSessionBtn" class="btn-primary" style="background:#10b981;">Jana PIN Permainan</button>
     </div>
     
     <div class="card">
-      <h3>2. Cipta Kuiz Baharu</h3>
+      <h3>Cipta Kuiz Baharu</h3>
       <form id="quizForm"><div class="form-group"><label>Tajuk Kuiz</label><input type="text" id="quizTitle" required></div><div class="form-group"><label>Penerangan (Pilihan)</label><input type="text" id="quizDescription" placeholder="Contoh: Kuiz Sejarah"></div><button type="submit" class="btn-primary">Cipta</button></form>
     </div>
     
     <div class="card">
-      <h3>3. Tambah Soalan</h3>
+      <h3>Tambah Soalan</h3>
       <div id="setupKuizArea"><div class="form-group"><label>Pilih Kuiz Anda</label><select id="questionQuiz"></select></div><button type="button" class="btn-primary" onclick="bukaPageSoalan()" style="background:#8b5cf6;">Mula Tambah Soalan ➡</button></div>
       <div id="borangSoalanArea" style="display:none;">
         <div style="background:#0b1120; padding:15px; border-radius:10px; border:1px solid #334155; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;"><div>📝 Menambah ke: <strong id="namaKuizAktif" style="color:#3b82f6;">-</strong></div><button type="button" onclick="tutupPageSoalan()" style="background:transparent; border:1px solid #ef4444; color:#ef4444; padding:5px 15px; border-radius:20px; cursor:pointer; font-size:12px; font-weight:bold;">Tukar Kuiz</button></div>
@@ -91,7 +91,7 @@
 
     <!-- KAD 4: URUS & EDIT SOALAN SEDIA ADA -->
     <div class="card" style="grid-column: 1 / -1; border-color: #8b5cf6;">
-      <h3 style="color:#8b5cf6;">4. Urus & Edit Soalan Sedia Ada</h3>
+      <h3 style="color:#8b5cf6;">Urus & Edit Soalan Sedia Ada</h3>
       <div class="form-group" style="max-width: 400px;">
         <label>Pilih Kuiz Untuk Diuruskan</label>
         <select id="manageQuestionQuiz"></select>
