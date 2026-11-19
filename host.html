@@ -24,7 +24,6 @@
   #lobbyPlayers { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
   .player-chip { background: #3b82f6; color: white; padding: 8px 16px; border-radius: 30px; font-weight: bold; font-size: 16px; }
 
-  /* INI ADALAH TAPAK UNTUK SOALAN MUNCUL - DIPASTIKAN KEBAL */
   #hostLiveQuestionPanel { flex: 1; padding: 40px; display: none; max-width: 1200px; margin: 0 auto; width: 100%; z-index: 10; position: relative; }
   
   #hostControlPanel { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 40px; background: rgba(11, 17, 32, 0.95); backdrop-filter: blur(10px); border-top: 1px solid #1e293b; display: flex; justify-content: space-between; align-items: center; z-index: 9999; box-shadow: 0 -10px 40px rgba(0,0,0,0.6); }
@@ -58,20 +57,22 @@
 </style>
 </head>
 <body>
- 
-<!-- KAWALAN AUDIO HOS (V5.9) -->
-<div id="audioControls" style="position:fixed; top:20px; left:20px; z-index:9999; display:flex; align-items:center; gap:12px; background:rgba(30,41,59,0.9); padding:10px 20px; border-radius:30px; backdrop-filter:blur(5px); border:1px solid #334155; box-shadow:0 4px 15px rgba(0,0,0,0.5);">
-  <button id="muteBtn" style="background:none;border:none;color:white;font-size:22px;cursor:pointer;transition:0.2s;" title="Mute/Unmute">🔊</button>
-  <input type="range" id="volSlider" min="0" max="1" step="0.05" value="1" style="cursor:pointer; width:100px;">
-</div>
+
 <header>
   <div class="brand">QUIZ LIVE <span>PPAPP</span></div>
-  <div class="header-right"><a href="admin.html" class="btn-outline">← Kembali Admin</a></div>
+  
+  <!-- KAWALAN AUDIO DAN BUTANG ADMIN DISEKALIKAN -->
+  <div class="header-right" style="display:flex; align-items:center; gap:20px;">
+    <div id="audioControls" style="display:flex; align-items:center; gap:12px; background:rgba(30,41,59,0.9); padding:5px 15px; border-radius:30px; border:1px solid #334155;">
+      <button id="muteBtn" style="background:none;border:none;color:white;font-size:18px;cursor:pointer;transition:0.2s;" title="Mute/Unmute">🔊</button>
+      <input type="range" id="volSlider" min="0" max="1" step="0.05" value="1" style="cursor:pointer; width:80px;">
+    </div>
+    <a href="admin.html" class="btn-outline">← Kembali Admin</a>
+  </div>
 </header>
 
 <main style="flex: 1; display: flex; flex-direction: column; width: 100%;">
   
-  <!-- KOTAK 1: LOBI MENUNGGU -->
   <div id="lobbyPanel">
     <div class="pin-wrapper">
       <div class="pin-text"><h2>Sertai di peranti anda dengan PIN</h2><h1 id="lobbyPin">------</h1></div>
@@ -83,12 +84,10 @@
     </div>
   </div>
   
-  <!-- KOTAK 2: TAPAK SOALAN (Jangan buang!) -->
   <div id="hostLiveQuestionPanel"></div>
 
 </main>
 
-<!-- PANEL KAWALAN DIPAKU DI BAWAH SKRIN -->
 <div id="hostControlPanel">
   <button id="hostStartBtn" class="btn-primary" style="margin: 0 auto; display: block; background: #10b981; padding: 15px 50px;">▶ MULA KUIZ SEKARANG</button>
   <div style="display:none; width: 100%; justify-content: center; align-items: center;" id="inGameControls">
@@ -96,7 +95,6 @@
   </div>
 </div>
 
-<!-- Menambah nombor versi unik supaya browser tidak membaca cache lama -->
 <script src="app.js?v=999"></script>
 <script>
   setInterval(() => {
