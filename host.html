@@ -58,7 +58,12 @@
 </style>
 </head>
 <body>
-
+ 
+<!-- KAWALAN AUDIO HOS (V5.9) -->
+<div id="audioControls" style="position:fixed; top:20px; left:20px; z-index:9999; display:flex; align-items:center; gap:12px; background:rgba(30,41,59,0.9); padding:10px 20px; border-radius:30px; backdrop-filter:blur(5px); border:1px solid #334155; box-shadow:0 4px 15px rgba(0,0,0,0.5);">
+  <button id="muteBtn" style="background:none;border:none;color:white;font-size:22px;cursor:pointer;transition:0.2s;" title="Mute/Unmute">🔊</button>
+  <input type="range" id="volSlider" min="0" max="1" step="0.05" value="1" style="cursor:pointer; width:100px;">
+</div>
 <header>
   <div class="brand">QUIZ LIVE <span>PPAPP</span></div>
   <div class="header-right"><a href="admin.html" class="btn-outline">← Kembali Admin</a></div>
