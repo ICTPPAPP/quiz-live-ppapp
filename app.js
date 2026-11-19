@@ -1,11 +1,9 @@
-/* QUIZ LIVE PPAPP - V5.8 (ULTIMATE FINALE + TENSE + CSV + TEXT UPDATE) */
+/* QUIZ LIVE PPAPP - V5.9 (EVENT PRO: AVATAR, AUDIO & KICK) */
 (() => {
   "use strict";
 
   const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbzi2T_vr40GxnlWqVqXBs_69HJKYvMWAVzJA00nJlBU2_j-8veU64PmarShnTkiJa2y/exec";
-
-  const POLL_INTERVAL_MS = 1500; 
-  const $ = (id) => document.getElementById(id);
+  const POLL_INTERVAL_MS = 1500; const $ = (id) => document.getElementById(id);
 
   const SOUNDS = { 
     bgm_main: new Audio("bgm-lobby.mp3"), sfx_correct: new Audio("sfx-correct.mp3"), 
@@ -16,9 +14,13 @@
   Object.values(SOUNDS).forEach(audio => { audio.playbackRate = 1.0; audio.preservesPitch = true; });
   SOUNDS.bgm_main.loop = true; SOUNDS.sfx_count.loop = true; 
   
-  function playBGM() { SOUNDS.bgm_main.playbackRate = 1.0; if (SOUNDS.bgm_main.paused) { const p = SOUNDS.bgm_main.play(); if (p !== undefined) p.catch(() => {}); } }
+  // LOGIK KAWALAN AUDIO HOS
+  let isMuted = false; let masterVol = 1.0;
+  function applyVolume() { const v = isMuted ? 0 : masterVol; Object.values(SOUNDS).forEach(audio => { audio.volume = v; }); }
+  
+  function playBGM() { applyVolume(); SOUNDS.bgm_main.playbackRate = 1.0; if (SOUNDS.bgm_main.paused) { const p = SOUNDS.bgm_main.play(); if (p !== undefined) p.catch(() => {}); } }
   function stopBGM() { SOUNDS.bgm_main.pause(); SOUNDS.bgm_main.currentTime = 0; }
-  function playSFX(key) { if (SOUNDS[key]) { SOUNDS[key].playbackRate = 1.0; SOUNDS[key].currentTime = 0; SOUNDS[key].play().catch(() => {}); } }
+  function playSFX(key) { applyVolume(); if (SOUNDS[key]) { SOUNDS[key].playbackRate = 1.0; SOUNDS[key].currentTime = 0; SOUNDS[key].play().catch(() => {}); } }
   function stopSFX(key) { if (SOUNDS[key]) { SOUNDS[key].pause(); SOUNDS[key].currentTime = 0; } }
   
   const style = document.createElement('style');
@@ -52,6 +54,13 @@
     link.download = `Keputusan_Kuiz_${h.quizTitle.replace(/\s+/g, '_')}.csv`; link.click();
   };
 
+  // FUNGSI TENDANG PESERTA
+  window.kickPlayer = async (playerName) => {
+    if(!confirm(`Adakah anda pasti mahu menyingkirkan "${playerName}" dari permainan ini?`)) return;
+    const sessionId = storageGet("qlp_session_id");
+    try { await apiPost({action:"kickPlayer", sessionId, playerName}); } catch(e) {}
+  };
+
   document.body.addEventListener('click', () => { if (!window.audioUnlocked) { window.audioUnlocked = true; if (window.hostPhase === "waiting" || window.hostPhase === "active" || window.hostPhase === "completed") playBGM(); } }, { capture: true });
 
   function animateValue(id, start, end, duration, onComplete) {
@@ -65,12 +74,7 @@
     window.requestAnimationFrame(step);
   }
 
-  const ANSWER_COLORS = [
-    { option: "A", color: "#e53232", shape: "▲", label: "Merah", textColor: "#ffffff" },
-    { option: "B", color: "#2878e8", shape: "◆", label: "Biru", textColor: "#ffffff" },
-    { option: "C", color: "#20a464", shape: "●", label: "Hijau", textColor: "#ffffff" },
-    { option: "D", color: "#f4c430", shape: "■", label: "Kuning", textColor: "#172033" }
-  ];
+  const ANSWER_COLORS = [ { option: "A", color: "#e53232", shape: "▲", label: "Merah", textColor: "#ffffff" }, { option: "B", color: "#2878e8", shape: "◆", label: "Biru", textColor: "#ffffff" }, { option: "C", color: "#20a464", shape: "●", label: "Hijau", textColor: "#ffffff" }, { option: "D", color: "#f4c430", shape: "■", label: "Kuning", textColor: "#172033" } ];
 
   function getApiUrl() { try { const url = localStorage.getItem("qlp_api_url"); return (url && url.length > 10) ? url.replace(/\s/g, '') : DEFAULT_API_URL.replace(/\s/g, ''); } catch (e) { return DEFAULT_API_URL.replace(/\s/g, ''); } }
   function storageGet(key, fallback = "") { try { return localStorage.getItem(key) ?? fallback; } catch (e) { return fallback; } }
@@ -84,16 +88,24 @@
     const pinInput = $("pin"), joinButton = $("joinBtn"); if (!pinInput || !joinButton) return;
     pinInput.addEventListener("input", () => { pinInput.value = pinInput.value.replace(/\D/g, "").slice(0, 6); });
     joinButton.addEventListener("click", async () => {
-      const pin = pinInput.value.trim(), name = ($("playerName") ? $("playerName").value.trim() : "");
+      const pin = pinInput.value.trim(); let name = ($("playerName") ? $("playerName").value.trim() : "");
       if (!/^\d{6}$/.test(pin) || !name) return alert("Sila masukkan 6 digit PIN dan Nama.");
+      
+      // PENJANA AVATAR RAWAK
+      const emojis = ['🦊','🐼','🦁','🐯','🐵','🐶','🐮','🐷','🐸','🐙','🦖','🦄','🚀','💎','🔥','⚡'];
+      let myAvatar = localStorage.getItem("qlp_avatar");
+      if(!myAvatar) { myAvatar = emojis[Math.floor(Math.random() * emojis.length)]; localStorage.setItem("qlp_avatar", myAvatar); }
+      // Hanya tambah jika pengguna belum letak emoji tersebut (elak double emoji jika reconnect)
+      const finalName = name.startsWith(myAvatar) ? name : (myAvatar + " " + name);
+
       joinButton.disabled = true; joinButton.textContent = "Menyemak...";
       try {
-        const res = await apiPost({ action: "join", pin, displayName: name });
+        const res = await apiPost({ action: "join", pin, displayName: finalName });
         if (!res.success) throw new Error(res.message);
         storageSet("qlp_player_session_id", res.sessionId); storageSet("qlp_player_id", res.playerId); localStorage.removeItem("qlp_streak"); 
         if ($("waitingRoom")) { $("waitingRoom").hidden = false; $("waitingRoom").style.display = "block"; }
         if (document.querySelector(".hero-wrap")) document.querySelector(".hero-wrap").style.display = "none"; document.body.classList.add("waiting-page");
-        if ($("waitingPin")) $("waitingPin").textContent = pin; if ($("waitingName")) $("waitingName").textContent = `Peserta: ${name}`;
+        if ($("waitingPin")) $("waitingPin").textContent = pin; if ($("waitingName")) $("waitingName").textContent = finalName;
       } catch (err) { alert(err.message); } finally { joinButton.disabled = false; joinButton.textContent = "Sertai Kuiz 🚀"; }
     });
   }
@@ -109,7 +121,6 @@
     if(myName) loadQ();
     window.loadHistory = async () => { if (!$("historyContainer")) return; $("historyContainer").innerHTML = "Sedang memuat turun rekod..."; const r = await apiPost({action:"getHistory"}); if(!r.success || r.history.length === 0) return $("historyContainer").innerHTML = "Tiada rekod kuiz."; window.qlp_history_data = r.history; $("historyContainer").innerHTML = r.history.map((h, i) => `<div style="background:#0f172a; padding:15px 20px; border-radius:10px; margin-bottom:15px; border:1px solid #334155; display:flex; justify-content:space-between; align-items:center;"><div><div style="color:#3b82f6; font-weight:bold; font-size:18px;">${escapeHtml(h.quizTitle)}</div><div style="font-size:12px; color:#94a3b8; margin-top:5px;">Dimainkan: ${h.date ? new Date(h.date).toLocaleString('ms-MY') : 'Tarikh tiada'}</div><div style="font-size:12px; margin-top:5px; color:#10b981; font-weight:bold;">👤 ${h.allPlayers ? h.allPlayers.length : 0} Peserta Menjawab</div></div><button onclick="paparSejarahPenuh(${i})" style="background:#3b82f6; color:white; border:none; padding:10px 20px; border-radius:30px; cursor:pointer; font-weight:bold; transition:0.3s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">Lihat Keputusan ➡</button></div>`).join(""); };
     window.paparSejarahPenuh = (idx) => { const h = window.qlp_history_data[idx]; if(!h) return; const ap = h.allPlayers || []; const listHtml = ap.map((p, i) => { const totalAttempts = p.correct + p.wrong; const accuracy = totalAttempts > 0 ? Math.round((p.correct / totalAttempts) * 100) : 0; return `<tr><td style="font-weight:bold; color:${i<3?'#fbbf24':'white'}; text-align:center;">#${i+1}</td><td style="font-weight:bold; text-align:left;">${escapeHtml(p.name)}</td><td style="color:#10b981; text-align:center;">✔ ${p.correct}</td><td style="color:#ef4444; text-align:center;">✖ ${p.wrong}</td><td style="color:#a855f7; font-weight:bold; text-align:center;">${accuracy}%</td><td style="text-align:center;">🔥 ${p.maxStreak}</td><td style="font-weight:900; color:#3b82f6; text-align:center; font-size:16px;">${p.score}</td></tr>`; }).join(""); $("historyContainer").innerHTML = `<div style="display:flex; justify-content:space-between; margin-bottom:15px;"><button onclick="loadHistory()" style="background:transparent; border:1px solid #3b82f6; color:#3b82f6; padding:8px 20px; border-radius:20px; cursor:pointer; font-weight:bold;">⬅ Kembali ke Senarai</button> <button onclick="muatTurunCSV(${idx})" style="background:#10b981; color:white; border:none; padding:8px 20px; border-radius:20px; cursor:pointer; font-weight:bold; box-shadow:0 4px 10px rgba(16, 185, 129, 0.3);">📊 Muat Turun CSV Excel</button></div><div style="background:#0f172a; padding:25px; border-radius:15px; border:1px solid #334155;"><h3 style="color:#10b981; margin-top:0; margin-bottom:5px; font-size:22px;">${escapeHtml(h.quizTitle)}</h3><div style="font-size:13px; color:#94a3b8; margin-bottom:20px;">Dimainkan: ${h.date ? new Date(h.date).toLocaleString('ms-MY') : '-'} &nbsp;|&nbsp; 👤 ${ap.length} Peserta</div><div style="overflow-x:auto;"><table style="width:100%; border-collapse:collapse; min-width:600px;"><thead><tr><th style="border-bottom:2px solid #334155; padding:12px; text-align:center;">Rank</th><th style="border-bottom:2px solid #334155; padding:12px; text-align:left;">Nama</th><th style="border-bottom:2px solid #334155; padding:12px; text-align:center;">Betul</th><th style="border-bottom:2px solid #334155; padding:12px; text-align:center;">Salah</th><th style="border-bottom:2px solid #334155; padding:12px; text-align:center;">Tepat</th><th style="border-bottom:2px solid #334155; padding:12px; text-align:center;">Streak</th><th style="border-bottom:2px solid #334155; padding:12px; text-align:center;">Markah</th></tr></thead><tbody>${listHtml || '<tr><td colspan="7" style="text-align:center; padding:20px;">Tiada data peserta</td></tr>'}</tbody></table></div></div>`; };
-    
     window.loadAdmins = async () => { if (!$("adminTableBody")) return; const r = await apiPost({action:"getAdmins"}); if(r.success) { $("adminTableBody").innerHTML = r.admins.map(a => `<tr><td><div style="font-size:11px;color:#64748b;">${a.id}</div>${escapeHtml(a.email)}</td><td>${escapeHtml(a.name)}</td><td><span class="badge ${a.role==='master'?'master':''}">${a.role.toUpperCase()}</span></td><td><button onclick="editAdm('${a.id}','${escapeHtml(a.name)}','${escapeHtml(a.email)}','${a.role}')" style="background:#3b82f6;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">Edit</button> <button onclick="delAdm('${a.id}')" style="background:#ef4444;color:white;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;">Padam</button></td></tr>`).join(""); } };
     window.editAdm = (id, nm, em, rl) => { $("targetAdminId").value=id; $("mName").value=nm; $("mEmail").value=em; $("mPassword").value=""; $("mRole").value=rl; $("mSubmitBtn").textContent="Simpan Perubahan"; $("mSubmitBtn").style.background="#f59e0b"; $("mCancelBtn").style.display="inline-block"; };
     window.delAdm = async (id) => { if(confirm("Padam akaun ini?")) { await apiPost({action:"deleteAdmin", targetId:id}); window.loadAdmins(); } };
@@ -124,18 +135,10 @@
     if($("editQuestionForm")) { $("editQuestionForm").addEventListener("submit", async (e) => { e.preventDefault(); const btn = $("editQuestionForm").querySelector("button[type='submit']"); btn.disabled = true; btn.textContent = "Menyimpan..."; try { await apiPost({ action: "updateQuestion", questionId: $("editQuestionId").value, questionText: $("editQText").value, imageUrl: $("editQImage").value.trim(), optionA: $("editOptA").value, optionB: $("editOptB").value, optionC: $("editOptC").value, optionD: $("editOptD").value, correctOption: $("editCorrect").value, timeLimitSeconds: Number($("editTime").value), points: $("editDoublePoints").checked ? 2000 : 1000 }); $("editQuestionModal").style.display = "none"; window.loadQuestionsForManage($("manageQuestionQuiz").value); } catch(e) { alert("Gagal mengemaskini soalan."); } finally { btn.disabled = false; btn.textContent = "Simpan Perubahan"; } }); }
     if ($("quizForm")) $("quizForm").addEventListener("submit", async (e) => { e.preventDefault(); const btn = $("quizForm").querySelector("button"); btn.disabled = true; btn.textContent="..."; try { await apiPost({ action: "createQuiz", title: $("quizTitle").value, description: $("quizDescription").value }); alert("Kuiz Dicipta!"); location.reload(); } catch(e) { btn.disabled = false; btn.textContent="Cipta"; } });
     if ($("questionForm")) $("questionForm").addEventListener("submit", async (e) => { e.preventDefault(); const btn = $("questionForm").querySelector("button"); btn.disabled = true; btn.textContent="..."; try { await apiPost({ action: "addQuestion", quizId: $("questionQuiz").value, questionText: $("questionText").value, optionA: $("optionA").value, optionB: $("optionB").value, optionC: $("optionC").value, optionD: $("optionD").value, correctOption: $("correctOption").value, timeLimitSeconds: Number($("questionTime").value), points: $("doublePoints").checked ? 2000 : 1000, imageUrl: $("questionImage") ? $("questionImage").value.trim() : "" }); alert("Soalan Disimpan!"); $("questionForm").reset(); } catch(e) {} finally { btn.disabled = false; btn.textContent="Simpan"; } });
-    
     if ($("createSessionBtn")) { 
       const btn = $("createSessionBtn");
-      if(!$("useMultiplierToggle")) {
-         btn.insertAdjacentHTML('beforebegin', '<div style="margin: 20px 0; background:#1e293b; padding:15px; border-radius:10px; border:1px solid #334155;"><label style="display:flex; align-items:center; gap:10px; cursor:pointer; color:#fcd34d; font-weight:bold; font-size:16px;"><input type="checkbox" id="useMultiplierToggle" style="width:20px; height:20px;" checked> 🔥 Streak Multiplier</label></div>');
-      }
-      btn.addEventListener("click", async () => { 
-        const qid = $("sessionQuiz").value; if(!qid) return alert("Sila Pilih Kuiz"); 
-        btn.disabled = true; btn.textContent = "Menjana..."; 
-        const useMult = $("useMultiplierToggle") ? $("useMultiplierToggle").checked : false;
-        try { const r = await apiPost({action:"createSession", quizId:qid, useMultiplier: useMult}); storageSet("qlp_session_id", r.sessionId); storageSet("qlp_host_token", r.hostToken); storageSet("qlp_player_pin", r.pin); window.location.href="host.html"; } catch(e) { btn.disabled = false; btn.textContent = "Jana PIN Permainan"; } 
-      }); 
+      if(!$("useMultiplierToggle")) { btn.insertAdjacentHTML('beforebegin', '<div style="margin: 20px 0; background:#1e293b; padding:15px; border-radius:10px; border:1px solid #334155;"><label style="display:flex; align-items:center; gap:10px; cursor:pointer; color:#fcd34d; font-weight:bold; font-size:16px;"><input type="checkbox" id="useMultiplierToggle" style="width:20px; height:20px;" checked> 🔥 Streak Multiplier</label></div>'); }
+      btn.addEventListener("click", async () => { const qid = $("sessionQuiz").value; if(!qid) return alert("Sila Pilih Kuiz"); btn.disabled = true; btn.textContent = "Menjana..."; const useMult = $("useMultiplierToggle") ? $("useMultiplierToggle").checked : false; try { const r = await apiPost({action:"createSession", quizId:qid, useMultiplier: useMult}); storageSet("qlp_session_id", r.sessionId); storageSet("qlp_host_token", r.hostToken); storageSet("qlp_player_pin", r.pin); window.location.href="host.html"; } catch(e) { btn.disabled = false; btn.textContent = "Jana PIN Permainan"; } }); 
     }
   }
 
@@ -144,6 +147,13 @@
     if (!lobby && !panel) return;
     let polling = false, currentRenderKey = "", hostTimerInt = null, currentPhase = "", sfxPlayedForQ = "";
     
+    // IKAT FUNGSI AUDIO CONTROLS
+    const mBtn = $("muteBtn"), vSld = $("volSlider");
+    if(mBtn && vSld) {
+      mBtn.addEventListener("click", () => { isMuted = !isMuted; mBtn.textContent = isMuted ? "🔇" : "🔊"; if(isMuted) vSld.value = 0; else vSld.value = masterVol; applyVolume(); });
+      vSld.addEventListener("input", (e) => { masterVol = parseFloat(e.target.value); if(masterVol === 0) { isMuted = true; mBtn.textContent = "🔇"; } else { isMuted = false; mBtn.textContent = "🔊"; } applyVolume(); });
+    }
+
     if ($("lobbyPin")) $("lobbyPin").textContent = storageGet("qlp_player_pin") || "------";
     const startBtn = $("hostStartBtn");
     if (startBtn) startBtn.addEventListener("click", async () => { startBtn.disabled = true; startBtn.textContent = "MEMULAKAN..."; try { await apiPost({ action: "startSession", sessionId: storageGet("qlp_session_id"), hostToken: storageGet("qlp_host_token") }); } catch(e) { startBtn.disabled = false; startBtn.textContent = "▶ MULA KUIZ SEKARANG"; } });
@@ -166,7 +176,16 @@
 
         if (res.emojis && res.emojis.length > 0) { res.emojis.forEach((emj, idx) => { setTimeout(() => { const el = document.createElement("div"); el.className = "floating-emoji"; el.textContent = emj; el.style.left = (Math.random() * 25 + 70) + "%"; document.body.appendChild(el); setTimeout(() => el.remove(), 2500); }, idx * 150); }); }
 
-        if (res.status === "waiting") { window.confettiFired = false; window.hostPrevScores = {}; if (currentPhase !== "waiting") { currentPhase = "waiting"; playBGM(); } if (lobby) { lobby.style.display = "flex"; if ($("lobbyPin")) $("lobbyPin").textContent = storageGet("qlp_player_pin") || "------"; const players = Array.isArray(res.players) ? res.players : []; if ($("lobbyCount")) $("lobbyCount").textContent = players.length; if ($("lobbyPlayers")) { $("lobbyPlayers").innerHTML = players.length > 0 ? players.map(p => `<div class="player-chip">${escapeHtml(p)}</div>`).join("") : `<p style="color:#94a3b8;">Menunggu pemain masuk...</p>`; } } if (panel) panel.style.display = "none"; if (control) control.style.display = "flex"; return; } 
+        if (res.status === "waiting") { 
+          window.confettiFired = false; window.hostPrevScores = {}; if (currentPhase !== "waiting") { currentPhase = "waiting"; playBGM(); } 
+          if (lobby) { 
+            lobby.style.display = "flex"; if ($("lobbyPin")) $("lobbyPin").textContent = storageGet("qlp_player_pin") || "------"; 
+            const players = Array.isArray(res.players) ? res.players : []; if ($("lobbyCount")) $("lobbyCount").textContent = players.length; 
+            // BUTANG TENDANG PESERTA MUNCUL DI SINI! (✖)
+            if ($("lobbyPlayers")) { $("lobbyPlayers").innerHTML = players.length > 0 ? players.map(p => `<div class="player-chip" style="display:inline-flex; align-items:center; gap:8px;">${escapeHtml(p)} <span onclick="window.kickPlayer('${escapeHtml(p).replace(/'/g, "\\'")}')" style="cursor:pointer; background:rgba(0,0,0,0.3); border-radius:50%; width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; transition:0.2s;" onmouseover="this.style.background='#ef4444'" onmouseout="this.style.background='rgba(0,0,0,0.3)'" title="Tendang Peserta">✖</span></div>`).join("") : `<p style="color:#94a3b8;">Menunggu pemain masuk...</p>`; } 
+          } 
+          if (panel) panel.style.display = "none"; if (control) control.style.display = "flex"; return; 
+        } 
         if (lobby) lobby.style.display = "none"; if (panel) panel.style.display = "block"; if (control) control.style.display = "flex";
 
         const newKey = res.status + "_" + (res.question ? res.question.questionId : "0") + "_" + (window.hostCompletedView || "podium");
@@ -246,14 +265,12 @@
         
         let panel = $("liveQuestionPanel");
         if (!panel) {
-          panel = document.createElement("section");
-          panel.id = "liveQuestionPanel";
+          panel = document.createElement("section"); panel.id = "liveQuestionPanel";
           panel.style.cssText = "position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;box-sizing:border-box;padding:20px;display:none;flex-direction:column;justify-content:center;background:#0f172a;color:#fff;";
           document.body.appendChild(panel);
         }
         
         const room = $("waitingRoom");
-        
         if ($("emojiBar") && res.status === "waiting") { $("emojiBar").style.display = "flex"; } else if ($("emojiBar")) { $("emojiBar").style.display = "none"; }
         const streak = parseInt(localStorage.getItem("qlp_streak") || "0");
         if (streak >= 3) { document.body.classList.add("fire-mode"); } else { document.body.classList.remove("fire-mode"); }
@@ -266,12 +283,9 @@
         if (res.status === "active") { localStorage.removeItem("qlp_last_isCorrect"); localStorage.removeItem("qlp_last_earned"); localStorage.removeItem("qlp_bonus_applied"); }
         if (res.status === "revealing_answer") {
           const answeredState = localStorage.getItem("qlp_last_isCorrect"); const earned = parseInt(localStorage.getItem("qlp_last_earned") || "0"); const totalScore = parseInt(localStorage.getItem("qlp_last_score") || "0");
-          const isBonus = localStorage.getItem("qlp_bonus_applied") === "true"; 
-          const prevScore = totalScore - earned; 
-          
+          const isBonus = localStorage.getItem("qlp_bonus_applied") === "true"; const prevScore = totalScore - earned; 
           let isCorrect = (answeredState === "true"); let message = (answeredState === null) ? "Masa Tamat" : (isCorrect ? "Tepat!" : "Salah"); let icon = (answeredState === null) ? "⏱️" : (isCorrect ? "✅" : "❌"); let glowColor = (answeredState === null) ? "#f59e0b" : (isCorrect ? "#10b981" : "#ef4444");
           if (sfxPlayedForQ !== (res.question ? res.question.questionId : "0")) { playSFX(isCorrect ? 'sfx_correct' : 'sfx_wrong'); sfxPlayedForQ = (res.question ? res.question.questionId : "0"); }
-          
           let bonusHtml = isBonus ? `<div style="font-size:16px; color:#fcd34d; font-weight:bold; margin-bottom:-5px;">🔥 Streak Bonus x1.5</div>` : ``;
 
           panel.innerHTML = `<div style="text-align:center;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0f172a;color:white;border-radius:20px;"><div style="background:#1e293b; border: 1px solid #334155; border-radius: 24px; padding: 40px 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 100%; max-width: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center;"><div style="font-size:90px; line-height:1; margin-bottom:15px; filter: drop-shadow(0 0 25px ${glowColor});">${icon}</div><div style="font-size:28px; font-weight:800; color: #f8fafc; letter-spacing:1px;">${message}</div>${bonusHtml}<div style="font-size:24px; font-weight:900; color:${glowColor}; margin: 10px 0;">+${earned} XP</div><div style="margin-top:20px; background:rgba(0,0,0,0.3); padding:15px 30px; border-radius:16px; width:80%;"><div style="font-size:14px; color:#94a3b8; text-transform:uppercase; font-weight:bold;">Jumlah Markah</div><div id="playerScoreAnim" style="font-size:40px; font-weight:900; color:#3b82f6; margin-top:5px;">${isCorrect ? prevScore : totalScore}</div></div></div></div>`; 
@@ -309,21 +323,13 @@
       nextBtn.addEventListener("click", async () => { 
         const sessionId = storageGet("qlp_session_id"), hostToken = storageGet("qlp_host_token"); 
         nextBtn.disabled = true; 
-        
         let action = "";
-        if (window.hostPhase === "active") {
-          action = "revealAnswer"; 
-        } else if (window.hostPhase === "revealing_answer") {
-          action = "showLeaderboard"; 
-        } else if (window.hostPhase === "leaderboard") {
-          action = window.hostIsLastQuestion ? "endQuiz" : "nextQuestion";
-        } else {
-          action = "revealAnswer";
-        }
+        if (window.hostPhase === "active") action = "revealAnswer"; 
+        else if (window.hostPhase === "revealing_answer") action = "showLeaderboard"; 
+        else if (window.hostPhase === "leaderboard") action = window.hostIsLastQuestion ? "endQuiz" : "nextQuestion";
+        else action = "revealAnswer";
 
-        try { await apiPost({ action, sessionId, hostToken }); } 
-        catch (e) { alert("Ralat."); } 
-        finally { nextBtn.disabled = false; } 
+        try { await apiPost({ action, sessionId, hostToken }); } catch (e) { alert("Ralat."); } finally { nextBtn.disabled = false; } 
       }); 
     }
   });
